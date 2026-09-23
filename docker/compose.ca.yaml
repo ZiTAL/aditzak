@@ -1,0 +1,11 @@
+# Optional corporate-proxy trust bundle, mounted only while building.
+services:
+  api:
+    build:
+      secrets: [build_ca]
+  web:
+    build:
+      secrets: [build_ca]
+secrets:
+  build_ca:
+    file: ${BUILD_CA_FILE:-/etc/ssl/certs/ca-certificates.crt}

@@ -1,0 +1,10 @@
+node_modules/
+dist/
+data/generated/
+data/vendor/
+.env
+compose.override.yaml
+playwright-report/
+test-results/
+*.sqlite*
+*.log
