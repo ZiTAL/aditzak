@@ -1,7 +1,7 @@
 # Aditzak deseraiki
 
 Euskarazko **adizki bakarra** emanda, haren analisi gramatikal guztiak bilatzen
-dituen prototipo lokala. Vue + TypeScript, Fastify + Node.js eta SQLite.
+dituen prototipo lokala. Vue + TypeScript, Fastify + Deno eta SQLite.
 
 `hatzait` → **indikatiboa · orainaldia · NOR–NORI · hi · niri**.
 Morfemen adibidea: `ha · tzai · t`, erreferentziak eta zatiketa-mailaren azalpena
@@ -40,6 +40,9 @@ Ataka `127.0.0.1` helbidean bakarrik argitaratzen da. Edukiontziak ez dira root
 gisa exekutatzen, fitxategi-sistema irakurtzeko soilik dute, eta ez dago kanpoko
 datu-base zerbitzaririk. SQLite irudiaren barruan dago; bilaketek ez dute daturik
 aldatzen, eta ez da erabiltzailearen bilaketa-historiarik gordetzen.
+Caddyk web estatikoa eta APIaren proxy-a zerbitzatzen ditu; tokiko konfigurazio
+honetan HTTPS automatikoa desaktibatuta dago, domeinurik edo ataka publikorik ez
+dagoelako.
 
 TLS proxy korporatiboa badago, hosteko CA multzoa build-secret gisa pasa:
 
@@ -72,8 +75,12 @@ npm run dev
 ```
 
 Weba: <http://127.0.0.1:5173>; APIa: <http://127.0.0.1:3000>.
-SQLite Node-ren `node:sqlite` modulutik erabiltzen da; Node 24k modulu
-esperimentalaren abisua erakuts dezake. Ez da instalazio natibo osagarririk behar.
+SQLite `node:sqlite` modulutik erabiltzen da, bai Node-n bai Deno-n; Node 24k
+modulu esperimentalaren abisua erakuts dezake. Ez da instalazio natibo osagarririk behar.
+Garapen lokaleko npm komandoek Node erabiltzen dute oraindik; edukiontziko APIak,
+aldiz, Deno 2.9rekin TypeScript iturburua zuzenean exekutatzen du, APIa
+JavaScriptera konpilatu gabe. Eraikuntza-etapak Node erabiltzen jarraitzen du
+corpusaren datu-basea sortzeko eta Vue/Vite frontenda browser-erako biltzeko.
 
 ```sh
 npm run check
@@ -84,25 +91,47 @@ E2E_BASE_URL=http://127.0.0.1:8080 npm run test:e2e
 E2E probek `/usr/bin/chromium` erabiltzen dute. Beste kokaleku bat:
 `CHROMIUM_PATH=/path/to/chromium npm run test:e2e`.
 
-## Estaldura: ez da oraindik osoa
+## Estaldura: taula nagusiak auditatuak, baina ez oraindik osoa
 
-Uneko corpusak **40 lema** hartzen ditu: Apertiumeko 35 paradigma eta `ba-`
-sailetik ateratako beste bost. Zenbaketa zehatza webeko estaldura-panelean,
+Uneko datu-baseak **42 lema** hartzen ditu: Apertiumeko 35 paradigma, `ba-`
+sailetik ateratako beste bost, eta *iro/*io osagarriak. Zenbaketa zehatza webeko estaldura-panelean,
 `GET /api/v1/meta` erantzunean eta `data/generated/coverage.json` fitxategian dago.
 Forma atzizkidunak eta nominalizazioak ere zenbatzen dira: ez nahasi azaleko
 forma-kopurua oinarrizko adizki-kopuruarekin.
+
+Euskaltzaindiaren [14. arauaren](https://www.euskaltzaindia.eus/dok/arauak/Araua_0014.pdf)
+PDFko hiru zutabeko 5.252 forma/aldaera konparagarriak aztertu dira: azaleko
+formarik eta lema/tratamendu analisi parekaturik ez da falta. Errenkada
+bakoitzeko hiru tratamenduetan aldi, modu eta pertsona bateragarritasuna ere
+egiaztatu da; aurkitutako lau desadostasunak zuzendu dira.
+[78. arauaren](https://www.euskaltzaindia.eus/dok/arauak/Araua_0078.pdf)
+taula argiko 2.779 gelaxka (bi hizki edo gehiago; zutabe-izenak eta zatiketa
+morfologikoko piezak baztertuta) alderatzean ere ez da
+azaleko hutsunerik atzeman. Auditak ez dira bi dokumentuen irakurketa exhaustiboa:
+ez dituzte PDF erauzketako lerro hautsiak, forma guztiak edo analisi
+gramatikal bakoitzaren egiaztapena barne hartzen. Errepikatzeko, PDFak lokalean
+deskargatu eta hau exekutatu:
+
+```sh
+npm run audit:alokutibo -- /bidea/Araua_0014.pdf
+npm run audit:laguntzaile -- /bidea/Araua_0078.pdf
+```
 
 Mugak garrantzitsuak dira:
 
 - **Ez dago euskara batuko forma guztien estaldura edo arautasun-auditoria
   amaituta.** `complete: false` da. Apertiumek forma literario eta arraroak ere
   biltzen ditu; analisi inportatu bat ez da automatikoki batuko baliozkotzea.
-- Erauntsi, eroan, iharduki, irakin eta jario lemen estaldura partziala da.
-  Haien indikatiboko oinarriak `ba-` paradigmaren bidez berreskuratu dira;
-  eratorritako gisa etiketatzen dira.
-- EHUko inbentarioko `atxeki`, `erion`, `io` eta `irudi` ez dira izen horiekin
-  ageri. `atxiki`, `jario`, `erran` eta `iruditu` lemekiko baliokidetasunak
-  banaka egiaztatzeko daude; ez dira automatikoki parekatu.
+- Erauntsi, eroan, iharduki, irakin eta jario lemen indikatiboko oinarriak
+  `ba-` sailetik berreskuratu dira; 14. arauko hikako oinarri batzuk gehitu dira,
+  baina beste sailen estaldura partziala izan daiteke.
+- `atxeki` forma historikoa [Hiztegi Batuak atxiki-ra bidaltzen du](https://www.euskaltzaindia.eus/dok/euskera/56115.pdf);
+  [irudi/iruditu](https://www.euskaltzaindia.eus/dok/euskera/74851.pdf) lotura ere
+  lexiko arauemailean dokumentatua dago. *io bereizi da `erran` lematik.
+  [erion ere jario-ren bizkaierazko aldaera urritzat](https://www.euskaltzaindia.eus/dok/euskera/66559.pdf)
+  jotzen du Hiztegi Batuak; ez da batuko lema bereizi gisa inportatu.
+- Hitano-forma sortuak `validation: generated` gisa markatuta daude; taulako
+  azaleko bat-etortzeak ez du esan nahi haien guztien erabilera banaka ziurtatua denik.
 - Morfema-zatiketa oso egiaztatuak sei formatarako daude. Beste indikatiboko
   forma batzuetan kanpoko marka batzuen **zatiketa partziala** dago. Gainerakoetan
   ez da zatiketa ziurrik asmatzen.
@@ -141,7 +170,7 @@ curl 'http://localhost:8080/health'
 Analisi bakoitzak honako hauek ditu: `lemma`, `kind`, `mood`, `tense`, `type`,
 `nor/nori/nork`, `treatment`, `allocutive`, `affixes`, `baseForm`, `rawTags`,
 `origin`, `validation`, `citations`, `segmentation` eta `history`.
-URL bidez forma parteka daiteke: `/?adizkia=hatzait`.
+URL bidez forma parteka daiteke: `/?q=hatzait`.
 
 ## Egitura
 
@@ -154,7 +183,7 @@ data/sources.json  Bibliografia eta erabilera/lizentzia metadatuak
 data/vendor/       Jatorrizko corpusa; sortua, Git-etik kanpo
 data/generated/    SQLite eta estaldura-txostena; sortuak, Git-etik kanpo
 tests/             Unitate, API eta arakatzaile-probak
-docker/            Containerfile, Compose, Nginx eta eraikuntza-konfigurazioa
+docker/            Containerfile, Compose, Caddy eta eraikuntza-konfigurazioa
 PLAN.md            Garapena hasi aurreko plana eta amaierako egoera
 ```
 

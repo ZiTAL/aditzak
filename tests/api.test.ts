@@ -17,7 +17,7 @@ test('synthetic and four auxiliary agreement families',async()=>{
 });
 test('nauk and naun preserve argument versus allocutive ambiguity and gender',async()=>{
   for(const [form,gender] of [['nauk','toka'],['naun','noka']]){
-    const {analyses}=await analyze(form);assert.ok(analyses.some(a=>a.nork==='hi'&&!a.allocutive&&a.treatment===gender));assert.ok(analyses.some(a=>a.allocutive&&a.nork===null&&a.treatment===gender));
+    const {analyses}=await analyze(form);assert.ok(analyses.some(a=>a.lemma==='ukan'&&a.nork==='hi'&&!a.allocutive&&a.treatment===gender));assert.ok(analyses.some(a=>a.lemma==='izan'&&a.allocutive&&a.nork===null&&a.treatment===gender));
   }
 });
 test('subordination and nominalized chains preserve underlying form',async()=>{
@@ -47,6 +47,46 @@ test('conditional premise differs from present consequence',async()=>{
   assert.ok((await analyze('balitz')).analyses.some(a=>a.mood==='conditional'));
   assert.ok((await analyze('nintzateke')).analyses.some(a=>a.mood==='consequence'));
 });
+test('normative auxiliary omissions and dukezu agreement are corrected',async()=>{
+  const dukezu=(await analyze('dukezu')).analyses.find(a=>a.lemma==='ukan'&&a.mood==='probability');
+  assert.equal(dukezu?.nork,'zu');
+  const dukezue=(await analyze('dukezue')).analyses.find(a=>a.lemma==='ukan'&&a.mood==='probability');
+  assert.equal(dukezue?.nork,'zuek');
+  assert.ok((await analyze('zakizkigukete')).analyses.some(a=>a.lemma==='edin'&&a.nor==='zuek'&&a.nori==='gu'));
+  assert.ok((await analyze('baditzat')).analyses.some(a=>a.lemma==='ezan'&&a.nor==='haiek'&&a.nork==='ni'));
+  assert.ok((await analyze('didake')).analyses.some(a=>a.lemma==='ukan'&&a.nori==='ni'&&a.nork==='hura'&&a.treatment==='neutral'));
+  assert.ok((await analyze('geniezaiekean')).analyses.some(a=>a.lemma==='ezan'&&a.treatment==='toka'&&a.allocutive));
+  for(const form of ['lekizkigukek','liezazkidaketek','liezazkiguketek'])
+    assert.ok((await analyze(form)).analyses.some(a=>a.treatment==='toka'&&a.allocutive),form);
+});
+test('rule 14 rows preserve agreement across neutral, toka and noka',async()=>{
+  for(const [form,lemma,nor,nori,nork,treatment] of [
+    ['zitzaizkigun','izan','haiek','gu',null,'neutral'],
+    ['zitzaizkiguan','izan','haiek','gu',null,'toka'],
+    ['zitzaizkigunan','izan','haiek','gu',null,'noka'],
+    ['didake','ukan','hura','ni','hura','neutral'],
+    ['zidakek','ukan','hura','ni','hura','toka'],
+    ['zidaken','ukan','hura','ni','hura','noka'],
+    ['negien','egin','hura','haiek','ni','neutral'],
+    ['negiean','egin','hura','haiek','ni','toka'],
+    ['negienan','egin','hura','haiek','ni','noka'],
+    ['genegien','egin','hura','haiek','gu','neutral'],
+    ['genegiean','egin','hura','haiek','gu','toka'],
+    ['genegienan','egin','hura','haiek','gu','noka'],
+  ] as const){
+    assert.ok((await analyze(form)).analyses.some(a=>a.lemma===lemma&&a.nor===nor&&a.nori===nori&&a.nork===nork&&a.treatment===treatment),form);
+  }
+});
+test('iro, io and missing synthetic hika keep exact roles and provenance',async()=>{
+  const iro=(await analyze('ziroagu')).analyses.find(a=>a.lemma==='iro'&&a.treatment==='toka');
+  assert.ok(iro);assert.equal(iro.kind,'auxiliary');assert.equal(iro.nork,'gu');assert.equal(iro.mood,'potential');
+  const io=(await analyze('ziostazak')).analyses.find(a=>a.lemma==='io'&&a.treatment==='toka');
+  assert.ok(io);assert.equal(io.nor,'haiek');assert.equal(io.nori,'ni');assert.equal(io.nork,'hura');
+  assert.ok((await analyze('zion')).analyses.some(a=>a.lemma==='io'&&a.treatment==='noka'&&a.allocutive));
+  for(const [form,lemma] of [['zeridak','jario'],['zaramakidak','eraman'],['zarabilkidak','erabili'],['nerizteke','iritzi'],['nerrake','erran'],['leroakek','eroan']])
+    assert.ok((await analyze(form)).analyses.some(a=>a.lemma===lemma),form);
+  assert.equal((await analyze('zaramakidak')).analyses.find(a=>a.lemma==='eraman')?.validation,'generated');
+});
 test('all segmentation offsets reconstruct their surface and unknown history stays absent',async()=>{
   for(const form of ['hatzait','dut','du','haiz','naiz','didazue','dator','dakit','zarete']){
     for(const a of (await analyze(form)).analyses){
@@ -70,6 +110,6 @@ test('typo suggestions and absence are not fabricated analyses',async()=>{
   const unknown=await analyze('qqqqqqqq');assert.deepEqual(unknown.analyses,[]);assert.deepEqual(unknown.suggestions,[]);
 });
 test('coverage counts and provenance remain explicit',async()=>{
-  const meta=(await app.inject({url:'/api/v1/meta'})).json();assert.ok(meta.forms>400000);assert.ok(meta.analyses>650000);assert.equal(meta.lemmas.length,40);assert.equal(meta.complete,false);assert.equal(meta.reviewedSegmentations,6);
+  const meta=(await app.inject({url:'/api/v1/meta'})).json();assert.ok(meta.forms>412000);assert.ok(meta.analyses>664000);assert.equal(meta.lemmas.length,42);assert.equal(meta.complete,false);assert.equal(meta.reviewedSegmentations,6);
   const a=(await analyze('hatzait')).analyses[0];const byId=(await app.inject({url:'/api/v1/forms/'+a.id})).json<Analysis>();assert.equal(byId.id,a.id);
 });

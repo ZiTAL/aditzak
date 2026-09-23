@@ -2,7 +2,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import type { Analysis, AnalyzeResponse, Coverage, Source } from '@aditzak/shared';
-import { enrich, normalizeInput, baitCandidates, baitSurface, withBait, withConsequence, editDistance } from './linguistics.js';
+import { enrich, normalizeInput, baitCandidates, baitSurface, withBait, withConsequence, editDistance } from './linguistics.ts';
 
 export function defaultDatabasePath():string {
   if(process.env.DATABASE_PATH) return resolve(process.env.DATABASE_PATH);

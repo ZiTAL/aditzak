@@ -13,7 +13,7 @@ export interface Analysis {
   mood: Mood; tense: Tense; type: 'nor' | 'nor-nori' | 'nor-nork' | 'nor-nori-nork';
   nor: Person; nori: Person | null; nork: Person | null; treatment: Treatment;
   allocutive: boolean; affixes: string[]; rawTags: string[]; baseForm: string | null;
-  origin: 'lexicon' | 'rule'; validation: 'imported' | 'reviewed';
+  origin: 'lexicon' | 'rule'; validation: 'imported' | 'generated' | 'reviewed';
   citations: Citation[]; segmentation: Segmentation | null; history: Hypothesis[];
 }
 export interface AnalyzeResponse { input: string; normalized: string; analyses: Analysis[]; suggestions: string[]; sources: Source[]; version: string }

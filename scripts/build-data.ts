@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import { DatabaseSync } from 'node:sqlite';
 import { fileURLToPath } from 'node:url';
 import { parseDictionary, expandEntry, type Entry } from './dictionary.js';
+import { allocutiveCandidates } from './allocutive.js';
 import type { Analysis, Coverage, Mood, Tense, Person, Source, Treatment } from '../packages/shared/src/index.js';
 
 const root = new URL('../', import.meta.url);
@@ -38,9 +39,12 @@ const moods: Record<string, [Mood,Tense]> = {
   prs: ['subjunctive','present'], pis: ['subjunctive','past'], hs: ['subjunctive','hypothetical'],
   imp: ['imperative','present'], onpr: ['consequence','present'],
   prob1: ['probability','present'], prob2: ['probability','past'], bald: ['conditional','hypothetical'], prs2: ['subjunctive','present'],
+  // *iro is encoded as ADL rather than vbsint in Apertium. Euskaltzaindia's
+  // 14th rule lists these three finite series under the standardized hika tables.
+  A5: ['potential','present'], B8: ['potential','past'], B7: ['potential','hypothetical'],
 };
 const people: Record<string,Person> = { NI:'ni', HI:'hi', HU:'hura', GU:'gu', ZU:'zu', ZK:'zuek', HK:'haiek' };
-const auxiliaries = new Set(['izan','ukan','edin','ezan']);
+const auxiliaries = new Set(['izan','ukan','edin','ezan','iro']);
 const insert = db.prepare('INSERT OR IGNORE INTO analyses VALUES (?,?,?,?,?,?,?)');
 const lemmaInsert = db.prepare('INSERT OR IGNORE INTO lemmas VALUES (?,?)');
 const skipped: Record<string,number> = {};
@@ -48,15 +52,21 @@ let attempted = 0;
 function importEntry(entry: Entry, paradigm: string, lemma: string | null, prefix = '', extracted = false) {
   const bare = entry.right.split('+')[0];
   const tags = [...bare.matchAll(/<([^>]+)>/g)].map(m => m[1]);
-  const verb = lemma ?? bare.replace(/<[^>]*>/g, '');
+  // Apertium groups the dio-/nio- finite series under erran. Rule 14 treats
+  // *io and erran as separate synthetic paradigms; retain erran imperatives.
+  const correctedIzan=lemma==='ukan' && (tags.includes('TO') || tags.includes('NO')) &&
+    !tags.some(t=>t.startsWith('NI_') || t.startsWith('NK_'));
+  const verb = correctedIzan ? 'izan' : lemma === 'erran' && (tags.includes('pri') || tags.includes('pii')) ? 'io' : lemma ?? bare.replace(/<[^>]*>/g, '');
   const temporal = tags.find(tag => moods[tag]);
   const nor = people[tags.find(t => t.startsWith('NR_'))?.slice(3) ?? ''];
-  if (!verb || !nor || !temporal || !tags.includes('vbsint')) {
+  if (!verb || !nor || !temporal || !(tags.includes('vbsint') || (verb === 'iro' && tags.includes('ADL')))) {
     const key = tags.slice(0,2).join(':'); skipped[key] = (skipped[key] ?? 0) + 1; return;
   }
   const [mood, tense] = moods[temporal];
   const nori = people[tags.find(t => t.startsWith('NI_'))?.slice(3) ?? ''] ?? null;
-  const nork = people[tags.find(t => t.startsWith('NK_'))?.slice(3) ?? ''] ?? null;
+  let nork = people[tags.find(t => t.startsWith('NK_'))?.slice(3) ?? ''] ?? null;
+  const correctedDukezu=verb==='ukan' && entry.left==='dukezu' && nork==='zuek';
+  if(correctedDukezu)nork='zu'; // rule 78: dukezu / dukezue
   const kind = auxiliaries.has(verb) ? 'auxiliary' : 'synthetic';
   lemmaInsert.run(verb, kind);
   const expanded = expandEntry(entry, dictionary);
@@ -65,6 +75,12 @@ function importEntry(entry: Entry, paradigm: string, lemma: string | null, prefi
   for (const e of expanded) {
     const form = (prefix + e.left).normalize('NFC').toLowerCase();
     if (!/^[a-zñü]+$/.test(form)) { skipped['invalid-surface'] = (skipped['invalid-surface'] ?? 0) + 1; continue; }
+    // Two upstream hika rows have agreement tags that contradict the
+    // neutral/toka/noka row in Euskaltzaindia's 14th rule.
+    const correctedNor=verb==='izan' && (form.startsWith('zitzaizkiguan') || form.startsWith('zitzaizkigunan'));
+    const correctedNork=verb==='ukan' && (form.startsWith('zidakek') || form.startsWith('zidaken'));
+    const actualNor=correctedNor?'haiek':nor;
+    const actualNork=correctedNork?'hura':nork;
     const suffixes = e.right.split('+').slice(1);
     const affixes = [...(prefix ? ['ba<cnjsub>'] : []), ...suffixes];
     let treatment: Treatment = tags.includes('TO') ? 'toka' : tags.includes('NO') ? 'noka' : 'neutral';
@@ -76,13 +92,25 @@ function importEntry(entry: Entry, paradigm: string, lemma: string | null, prefi
       else if (entry.refs.includes('LAT_20')) treatment = 'toka';
       else treatment = 'hika'; // never infer an unencoded gender from an arbitrary final letter
     }
+    // The continuation lexicon leaves these two standardized noka forms
+    // untagged; the 14th rule explicitly places them in the noka column.
+    const standardizedNoka=verb === 'ezan' && ['liezazkidaketen','liezazkiguketen'].includes(form);
+    if (standardizedNoka) treatment='noka';
+    const standardizedToka=verb === 'ezan' && form==='geniezaiekean';
+    if (standardizedToka)treatment='toka';
     const payload: Analysis = {
       id: '', form, lemma: verb, kind, variety:'batua', mood, tense,
-      type: nori ? (nork ? 'nor-nori-nork' : 'nor-nori') : (nork ? 'nor-nork' : 'nor'),
-      nor, nori, nork, treatment, allocutive: tags.includes('TO') || tags.includes('NO'),
+      type: nori ? (actualNork ? 'nor-nori-nork' : 'nor-nori') : (actualNork ? 'nor-nork' : 'nor'),
+      nor:actualNor, nori, nork:actualNork, treatment, allocutive: tags.includes('TO') || tags.includes('NO') || standardizedNoka || standardizedToka,
       affixes, rawTags: [...tags, ...suffixes], baseForm: affixes.length ? baseForm : form,
       origin: extracted ? 'rule' : 'lexicon', validation: 'imported',
-      citations: [{ sourceId:'apertium', locator:`apertium-eus.eus.dix:${entry.line} (${paradigm}${entry.refs.length ? ' → '+entry.refs.join(', ') : ''}${extracted ? '; ba- gabe berreskuratutako indikatiboko oinarria' : ''})` }],
+      citations: [{ sourceId:'apertium', locator:`apertium-eus.eus.dix:${entry.line} (${paradigm}${entry.refs.length ? ' → '+entry.refs.join(', ') : ''}${extracted ? '; ba- gabe berreskuratutako indikatiboko oinarria' : ''})` },
+        ...(standardizedNoka?[{sourceId:'euskaltzaindia14',locator:'14. araua, *ezan-en NOR-NORI-NORK alokutiboak; noka zutabea'}]:[]),
+        ...(standardizedToka?[{sourceId:'euskaltzaindia14',locator:'14. araua, *ezan-en NOR-NORI-NORK alokutiboak; toka zutabea'}]:[]),
+        ...(correctedIzan?[{sourceId:'euskaltzaindia14',locator:'14. araua, izan-en NOR bakarreko alokutiboak; *edun etiketaren zuzenketa'}]:[]),
+        ...(correctedNor?[{sourceId:'euskaltzaindia14',locator:'14. araua, izan-en NOR-NORI: zitzaizkigun / zitzaizkiguan / zitzaizkigunan'}]:[]),
+        ...(correctedNork?[{sourceId:'euskaltzaindia14',locator:'14. araua, *edun-en NOR-NORI-NORK: didake / zidakek / zidaken'}]:[]),
+        ...(correctedDukezu?[{sourceId:'euskaltzaindia78',locator:'78. araua, *edun NOR-NORK (nor: hura): dukezu/dukezue'}]:[])],
       segmentation:null, history:[],
     };
     const key = JSON.stringify([form,verb,tags,affixes,treatment]);
@@ -104,17 +132,178 @@ for (const entry of dictionary.paradigms.get('BABALD') ?? []) {
   const verb=entry.right.split('<')[0];
   if (['erauntsi','eroan','iharduki','irakin','jario'].includes(verb) && /<(pri|pii)>/.test(entry.right)) importEntry(entry,'BABALD',null,'',true);
 }
+for (const [name, entries] of dictionary.paradigms) {
+  if (!name.startsWith('LAT_')) continue;
+  for (const entry of entries) {
+    if (entry.right.startsWith('iro<ADL>')) importEntry(entry, name, 'iro');
+  }
+}
+function insertGeneratedBase(form:string,lemma:string,kind:'auxiliary'|'synthetic',mood:Mood,tense:Tense,
+  nor:Person,nori:Person|null,nork:Person|null,rulePage:number,sourceLocator:string|null=null,validation:Analysis['validation']='generated') {
+  lemmaInsert.run(lemma,kind);
+  const analysis:Analysis={id:createHash('sha256').update(JSON.stringify(['generated-base',form,lemma,mood,tense,nor,nori,nork])).digest('hex').slice(0,24),
+    form,lemma,kind,variety:'batua',mood,tense,type:nori?(nork?'nor-nori-nork':'nor-nori'):(nork?'nor-nork':'nor'),
+    nor,nori,nork,treatment:'neutral',allocutive:false,affixes:[],rawTags:['generated-base',lemma,mood,tense],
+    baseForm:form,origin:'rule',validation,segmentation:null,history:[],
+    citations:[...(sourceLocator?[{sourceId:'wiktionary-eu-verb',locator:sourceLocator}]:[]),
+      {sourceId:'euskaltzaindia14',locator:`${rulePage}. or., ${lemma} paradigma; oinarrizko forma`}]};
+  insert.run(analysis.id,form,lemma,'batua',1,sourceLocator?'wiktionary-eu-verb':'euskaltzaindia14',JSON.stringify(analysis));
+}
+// The Apertium ADL entries are continuation stems and often lack the free
+// finite form (e.g. dirot, niroen). Reconstruct the small *iro paradigm from
+// its licensed stem/affix specification, then audit it against rule 14.
+for (const [tense, forms] of [
+  ['present',[['dirot','ni'],['diro','hura'],['dirogu','gu'],['dirote','haiek']]],
+  ['past',[['niroen','ni'],['ziroen','hura'],['geniroen','gu'],['ziroten','haiek']]],
+  ['hypothetical',[['niro','ni'],['liro','hura'],['geniro','gu'],['lirote','haiek']]],
+] as [Tense,[string,Person][]][]) for (const [form,nork] of forms) {
+  insertGeneratedBase(form,'iro','auxiliary','potential',tense,'hura',null,nork,62,'Module:eu-verb, -iro- paradigma: iro erroa eta NOR-NORK pertsona-markak');
+}
+// The licensed eu-verb module distinguishes the io stem from erran. Apertium
+// has only the singular NOR-NORK subset; complete the plural NOR and the
+// NOR-NORI-NORK matrix by regular stem/person composition.
+for(const [nork,present,past] of [
+  ['ni','diodaz','niozen'],['hura','dioz','ziozen'],
+  ['gu','dioguz','geniozen'],['haiek','diotez','ziotezen'],
+] as [Person,string,string][]) {
+  insertGeneratedBase(present,'io','synthetic','indicative','present','haiek',null,nork,105,'Module:eu-verb, esan / nor-nork: io erroa eta NOR plurala');
+  insertGeneratedBase(past,'io','synthetic','indicative','past','haiek',null,nork,105,'Module:eu-verb, esan / nor-nork: io erroa eta NOR plurala');
+}
+const ioDativeBases:[Person,[Person,string][]][]=[
+  ['ni',[['hura','diost'],['haiek','diostate']]],
+  ['hura',[['ni','diotsot'],['ni','diotsat'],['hura','diotso'],['hura','diotsa'],
+    ['gu','diotsogu'],['gu','diotsagu'],['haiek','diotsote'],['haiek','diotsate']]],
+  ['gu',[['hura','diosku'],['haiek','dioskute']]],
+  ['haiek',[['ni','diotset'],['hura','diotse'],['gu','diotsegu'],['haiek','diotsete']]],
+];
+for(const [nori,stems] of ioDativeBases) for(const [nork,present] of stems) {
+  const plural=nori==='ni' && present==='diost' ? present+'az' : nori==='hura' || nori==='haiek' ?
+    (nork==='ni' ? present.replace(/t$/,'daz') : present+'z') : present+'z';
+  const pastPrefix=nork==='ni'?'n':nork==='gu'?'gen':'z';
+  const pastStem=present.slice(1);
+  const past= pastPrefix+(nork==='ni'?pastStem.replace(/t$/,'n'):
+    nork==='gu'?pastStem.replace(/gu$/,'n'):
+    nori==='ni'&&nork==='hura'?pastStem+'an':pastStem+'n');
+  for(const [form,tense,nor] of [
+    [present,'present','hura'],[plural,'present','haiek'],
+    [past,'past','hura'],[past.replace(/n$/,'zen'),'past','haiek'],
+  ] as [string,Tense,Person][]) {
+    insertGeneratedBase(form,'io','synthetic','indicative',tense,nor,nori,nork,106,'Module:eu-verb, esan / nor-nori-nork: iots erroa eta pertsona-markak');
+  }
+}
+// Remaining finite bases in rule 14 that the Apertium lexicon omits. These
+// are composed by compact paradigm patterns and individually cross-checked
+// by the read-only audit; the PDF itself is never bundled.
+for (const [form,nori,tense] of [
+  ['ginderrazkion','hura','past'],['ginderrazkien','haiek','past'],
+  ['ginderrazkioke','hura','hypothetical'],
+] as [string,Person,Tense][]) insertGeneratedBase(form,'jarraiki','synthetic',tense==='past'?'indicative':'potential',tense,'gu',nori,null,78);
+for (const plural of [false,true]) for(const [nori,ending] of [
+  ['ni','dake'],['hura','oke'],['gu','guke'],['haiek','eke'],
+] as [Person,string][]) insertGeneratedBase('leri'+(plural?'zki':'')+ending,'jario','synthetic','potential','hypothetical',plural?'haiek':'hura',nori,null,80);
+for (const [prefix,nork,suffix] of [
+  ['neroa','ni',''],['leroa','hura',''],['generoa','gu',''],['leroa','haiek','te'],
+] as [string,Person,string][]) for(const [nor,plural] of [['hura',''],['haiek','z']] as [Person,string][]) {
+  const stem=plural?prefix.replace(/oa$/,'oa')+'z':prefix;
+  insertGeneratedBase(stem+'ke'+suffix,'eroan','synthetic','potential','hypothetical',nor,null,nork,97);
+}
+for(const [prefix,nork,suffix] of [
+  ['nihardukake','ni',''],['lihardukake','hura',''],['genihardukake','gu',''],['lihardukake','haiek','te'],
+] as [string,Person,string][]) insertGeneratedBase(prefix+suffix,'iharduki','synthetic','potential','hypothetical','hura',null,nork,99);
+for(const [nori,stem] of [['hura','lerauntso'],['haiek','lerauntse']] as [Person,string][]) for(const [nork,suffix] of [['hura',''],['haiek','te']] as [Person,string][]) {
+  insertGeneratedBase(stem+'ke'+suffix,'erauntsi','synthetic','potential','hypothetical','hura',nori,nork,100);
+}
+for(const [prefix,nork,suffix] of [
+  ['nerrake','ni',''],['lerrake','hura',''],['generrake','gu',''],['lerrake','haiek','te'],
+] as [string,Person,string][]) insertGeneratedBase(prefix+suffix,'erran','synthetic','potential','hypothetical','hura',null,nork,107);
+insertGeneratedBase('dakarzkiote','ekarri','synthetic','indicative','present','haiek','hura','haiek',84);
+for(const [form,nori,nork,tense,mood] of [
+  ['neritzan','hura','ni','past','indicative'],
+  ['generitzan','hura','gu','past','indicative'],
+  ['zeritzaten','hura','haiek','past','indicative'],
+  ['nerizten','haiek','ni','past','indicative'],
+  ['zerizten','haiek','hura','past','indicative'],
+  ['generizten','haiek','gu','past','indicative'],
+  ['zerizteten','haiek','haiek','past','indicative'],
+  ['nerizteke','haiek','ni','hypothetical','potential'],
+  ['lerizteke','haiek','hura','hypothetical','potential'],
+  ['generizteke','haiek','gu','hypothetical','potential'],
+  ['leriztekete','haiek','haiek','hypothetical','potential'],
+] as [string,Person,Person,Tense,Mood][]) insertGeneratedBase(form,'iritzi','synthetic',mood,tense,'hura',nori,nork,104);
+// Rule 14 also gives negien/genegien a NOR-NORI-NORK reading with NORI=haiek.
+// The imported lexicon carries only the equally spelled NOR-NORK reading.
+for(const [form,nork] of [['negien','ni'],['genegien','gu']] as [string,Person][])
+  insertGeneratedBase(form,'egin','synthetic','indicative','past','hura','haiek',nork,90,null,'reviewed');
+// A few non-allocutive auxiliary cells in rule 78 are absent upstream.
+// Copy their nearest attested cell's grammatical series, then set the exact
+// agreement features certified by the printed paradigm.
+for(const [form,model,nor,nori,nork,treatment] of [
+  ['didake','didakete','hura','ni','hura','neutral'],
+  ['dukezue','dukezu','hura',null,'zuek','neutral'],
+  ['zakizkigukete','zakizkiokete','zuek','gu',null,'neutral'],
+  ['bazaitzatet','bazaitzat','zuek',null,'ni','neutral'],
+  ['bazaitzategu','bazaitzagu','zuek',null,'gu','neutral'],
+  ['baditzat','bazaitzat','haiek',null,'ni','neutral'],
+  ['baditzak','bazaitzat','haiek',null,'hi','toka'],
+  ['baditzan','bazaitzat','haiek',null,'hi','noka'],
+  ['baditza','bazaitzat','haiek',null,'hura','neutral'],
+  ['baditzagu','bazaitzat','haiek',null,'gu','neutral'],
+  ['baditzazu','bazaitzat','haiek',null,'zu','neutral'],
+  ['baditzazue','bazaitzat','haiek',null,'zuek','neutral'],
+  ['baditzate','bazaitzat','haiek',null,'haiek','neutral'],
+] as [string,string,Person,Person|null,Person|null,Treatment][]) {
+  const row=db.prepare('SELECT payload FROM analyses WHERE form=? ORDER BY base DESC LIMIT 1').get(model) as {payload:string}|undefined;
+  if(!row)throw new Error(`78. arauko oinarria falta da: ${model}`);
+  const source=JSON.parse(row.payload) as Analysis;
+  const affixes=form.startsWith('ba')?['ba<cnjsub>']:[];
+  const analysis:Analysis={...source,id:createHash('sha256').update(JSON.stringify(['rule78',form,nor,nori,nork,treatment])).digest('hex').slice(0,24),
+    form,nor,nori,nork,treatment,allocutive:false,affixes,baseForm:affixes.length?form.slice(2):form,
+    rawTags:[...source.rawTags,'normative:78'],origin:'rule',validation:'reviewed',segmentation:null,history:[],
+    citations:[...source.citations,{sourceId:'euskaltzaindia78',locator:'78. araua, *edun/*edin/*ezan-en taula bateratuak; pertsona-gelaxka'}]};
+  insert.run(analysis.id,form,analysis.lemma,'batua',affixes.length?0:1,'euskaltzaindia78',JSON.stringify(analysis));
+}
+// Three isolated toka omissions in the licensed corpus: retain the source
+// analysis of their neutral base, and cite the Academy's hika table.
+for(const [form,base] of [
+  ['lekizkigukek','lekizkiguke'],
+  ['liezazkidaketek','liezazkidakete'],
+  ['liezazkiguketek','liezazkigukete'],
+] as [string,string][]) {
+  const row=db.prepare('SELECT payload FROM analyses WHERE form=? AND base=1 LIMIT 1').get(base) as {payload:string}|undefined;
+  if(!row)throw new Error(`Hikako oinarria falta da: ${base}`);
+  const source=JSON.parse(row.payload) as Analysis;
+  const analysis:Analysis={...source,id:createHash('sha256').update(JSON.stringify(['normative-toka',form,source.id])).digest('hex').slice(0,24),
+    form,baseForm:base,treatment:'toka',allocutive:true,origin:'rule',validation:'reviewed',
+    rawTags:[...source.rawTags,'normative:toka'],segmentation:null,history:[],
+    citations:[...source.citations,{sourceId:'euskaltzaindia14',locator:'14. araua, *edin/*ezan-en hikako NOR-NORI(-NORK) saila'}]};
+  insert.run(analysis.id,form,analysis.lemma,'batua',1,'euskaltzaindia14',JSON.stringify(analysis));
+}
+const baseAnalyses=(db.prepare('SELECT payload FROM analyses WHERE base=1').all() as {payload:string}[]).map(row=>JSON.parse(row.payload) as Analysis);
+const signature=(a:Analysis)=>JSON.stringify([a.form,a.lemma,a.mood,a.tense,a.nor,a.nori,a.nork,a.treatment,a.allocutive]);
+const existing=new Set(baseAnalyses.map(signature));
+let generatedAllocutives=0;
+for(const base of baseAnalyses) for(const candidate of allocutiveCandidates(base)) {
+  const derived:Analysis={...base,id:createHash('sha256').update(JSON.stringify(['allocutive',base.id,candidate])).digest('hex').slice(0,24),
+    form:candidate.form,treatment:candidate.treatment,allocutive:true,origin:'rule',validation:'generated',
+    baseForm:base.form,rawTags:[...base.rawTags,`allocutive:${candidate.treatment}`],segmentation:null,history:[],
+    citations:[...base.citations,{sourceId:'wiktionary-eu-verb',locator:'Module:eu-verb, m_all_from_bare / switch_hi_ending; TypeScript egokitzapena'}]};
+  const key=signature(derived);
+  if(existing.has(key))continue;
+  insert.run(derived.id,derived.form,derived.lemma,'batua',1,'wiktionary-eu-verb',JSON.stringify(derived));
+  existing.add(key);generatedAllocutives++;
+}
 db.exec('COMMIT;');
 const count = (sql: string) => Number((db.prepare(sql).get() as { n:number }).n);
 const lemmas = db.prepare('SELECT lemma, count(DISTINCT form) AS forms, count(*) AS analyses FROM analyses GROUP BY lemma ORDER BY lemma').all() as Coverage['lemmas'];
 const coverage: Coverage = {
-  version:'0.1.0-apertium-f2888cdc', forms:count('SELECT count(DISTINCT form) AS n FROM analyses'),
+  version:'0.1.0-apertium-f2888cdc-hika14', forms:count('SELECT count(DISTINCT form) AS n FROM analyses'),
   analyses:count('SELECT count(*) AS n FROM analyses'), baseForms:count('SELECT count(DISTINCT form) AS n FROM analyses WHERE base=1'),
-  lemmas, varieties:['batua'], source:'apertium', complete:false,
-  reviewedSegmentations:6, historicalNotes:2, missingLemmas:['atxeki','erion','io','irudi'],
+  lemmas, varieties:['batua'], source:'apertium+wiktionary+euskaltzaindia', complete:false,
+  reviewedSegmentations:6, historicalNotes:2, missingLemmas:[],
   limitations:[
-    {eu:'Apertiumeko 35 paradigma eta ba- saileko beste 5 lema. Ez da oraindik euskara batuko adizki guztien estaldura osoa egiaztatu. Erauntsi, eroan, iharduki, irakin eta jario lemen indikatiboko oinarriak ba- sailetik berreskuratu dira; haien gainerako sailen estaldura partziala da.'},
-    {eu:'EHUko adizkitegiko atxeki, erion, io eta irudi lemak ez daude corpus honetan izen horiekin. Atxiki, jario, erran eta iruditu lemekiko baliokidetasuna egiaztatzeko dago; ez dira automatikoki parekatu.'},
+    {eu:'Apertiumeko 35 paradigma, ba- saileko beste 5 lema eta *iro/*io osagarriak. Euskaltzaindiaren 14. arauko hikako taulak eta 78. arauko laguntzaile-gelaxka zabalak auditatu dira; horrek ez du euskara batuko inbentario eta analisi guztien estaldura osoa frogatzen. Erauntsi, eroan, iharduki, irakin eta jario lemen gainerako sailak partzialak izan daitezke.'},
+    {eu:'Atxeki → atxiki, irudi/iruditu eta erion → jario loturak Hiztegi Batuaren arabera ebatzi dira; erion bizkaierazko forma urria da, eta ez da euskara batuko lema bereizi gisa inportatu. *io aparteko lema gisa dago.'},
+    {eu:'Arau bidez sortutako hitano-formak «sortua» gisa markatzen dira; banakako arautasun-ziurtagiria ez da. 14. arauaren PDFa emanda, audit:alokutibo komandoak hiru zutabeko formak alderatzen ditu.'},
     {eu:'Lexikoak forma literarioak eta arraroak ere baditu; banakako arautasun-auditoria amaitu gabe dago.'},
     {eu:'Morfema-zatiketa partziala da; analisi historikoa iturri zehatzak dituzten kasuetan soilik eskaintzen da.'},
     {eu:'Hitano batzuen generoa ez du iturriak esplizituki bereizten; kasu horietan «hika (zehaztu gabe)» agertzen da.'},
@@ -126,5 +315,5 @@ const integrity = db.prepare('PRAGMA integrity_check').get();
 if (!integrity || Object.values(integrity)[0] !== 'ok' || db.prepare('PRAGMA foreign_key_check').all().length) throw new Error('Invalid database');
 db.exec('ANALYZE;'); db.close();
 renameSync(temporary, new URL('aditzak.sqlite', output));
-writeFileSync(new URL('coverage.json',output),JSON.stringify({ ...coverage, attempted, skipped },null,2)+'\n');
+writeFileSync(new URL('coverage.json',output),JSON.stringify({ ...coverage, attempted, generatedAllocutives, skipped },null,2)+'\n');
 console.log(JSON.stringify({ forms:coverage.forms, analyses:coverage.analyses, lemmas:lemmas.length, skipped },null,2));

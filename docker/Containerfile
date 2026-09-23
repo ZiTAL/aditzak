@@ -7,14 +7,17 @@ COPY apps/web/package.json apps/web/package.json
 COPY packages/shared/package.json packages/shared/package.json
 RUN --mount=type=secret,id=build_ca,target=/etc/ssl/certs/ca-certificates.crt,required=false NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt npm ci
 COPY . .
-RUN --mount=type=secret,id=build_ca,target=/etc/ssl/certs/ca-certificates.crt,required=false npm run data:fetch && npm run data:build && npm run build
+RUN --mount=type=secret,id=build_ca,target=/etc/ssl/certs/ca-certificates.crt,required=false npm run data:fetch && npm run data:build && npm run build -w @aditzak/web
 
-FROM docker.io/library/node:24-alpine AS api
-ENV NODE_ENV=production HOST=0.0.0.0 PORT=3000 DATABASE_PATH=/app/data/aditzak.sqlite
+FROM docker.io/denoland/deno:2.9.0 AS api
+ENV NODE_ENV=production HOST=0.0.0.0 PORT=3000 DATABASE_PATH=/app/data/aditzak.sqlite DENO_DIR=/tmp/deno
 WORKDIR /app
 COPY --from=build /build/package.json ./package.json
 COPY --from=build /build/node_modules ./node_modules
-COPY --from=build /build/apps/api/dist ./dist
+COPY --from=build /build/apps/api/package.json ./apps/api/package.json
+COPY --from=build /build/apps/api/src ./apps/api/src
+COPY --from=build /build/packages/shared/package.json ./packages/shared/package.json
+COPY --from=build /build/packages/shared/src ./packages/shared/src
 COPY --from=build /build/data/generated/aditzak.sqlite ./data/aditzak.sqlite
 # Corpus, license and full corresponding project source accompany the binary DB.
 COPY --from=build /build/data/vendor/apertium-eus /usr/share/aditzak-source/data/vendor/apertium-eus
@@ -23,14 +26,14 @@ COPY --from=build /build/data/sources.json /usr/share/aditzak-source/data/source
 COPY --from=build /build/apps /usr/share/aditzak-source/apps
 COPY --from=build /build/packages /usr/share/aditzak-source/packages
 COPY --from=build /build/package.json /build/package-lock.json /build/tsconfig.json /build/LICENSE /build/NOTICE.md /usr/share/aditzak-source/
-USER node
+USER deno
 EXPOSE 3000
-CMD ["node","dist/apps/api/src/server.js"]
+CMD ["deno","run","--cached-only","--node-modules-dir=manual","--allow-read=/app","--allow-env","--allow-net","--allow-sys=networkInterfaces","apps/api/src/server.ts"]
 
-FROM docker.io/library/nginx:stable-alpine AS web
-COPY docker/nginx.conf /etc/nginx/nginx.conf
-COPY --from=build /build/apps/web/dist /usr/share/nginx/html
-USER nginx
+FROM docker.io/library/caddy:2.11.4-alpine AS web
+ENV XDG_DATA_HOME=/tmp/caddy-data XDG_CONFIG_HOME=/tmp/caddy-config
+COPY docker/Caddyfile /etc/caddy/Caddyfile
+COPY --from=build /build/apps/web/dist /usr/share/caddy
+USER 10001:10001
 EXPOSE 8080
-ENTRYPOINT ["nginx"]
-CMD ["-g","daemon off;"]
+CMD ["run","--config","/etc/caddy/Caddyfile","--adapter","caddyfile"]

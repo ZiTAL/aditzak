@@ -1,5 +1,5 @@
 import Fastify from 'fastify';
-import { openRepository } from './database.js';
+import { openRepository } from './database.ts';
 export function createApp(databasePath?:string) {
   const app=Fastify({logger:false,bodyLimit:4096});
   const repository=openRepository(databasePath);

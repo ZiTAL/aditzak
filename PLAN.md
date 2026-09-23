@@ -2,10 +2,14 @@
 
 ## Egungo egoera (2026-09-23)
 
-Plana idatzi ondoren prototipo funtzionala eraiki da. Uneko datu-baseak 40 lema,
-9.094 oinarrizko forma desberdin, 410.445 azaleko forma eta 661.718 analisi
-inportatu ditu. Zenbaki horiek Apertium corpusaren commit finkoari dagozkio;
-ez dira euskara batuko forma guztien kopuru egiaztatua. `complete: false` da.
+Plana idatzi ondoren prototipo funtzionala eraiki da. Uneko datu-baseak 42 lema,
+10.473 oinarrizko forma desberdin, 412.626 azaleko forma eta 664.461 analisi
+inportatu, sortu eta berrikusi ditu. Apertium corpusaren commit finkoari
+Euskaltzaindiaren 14. arauko 5.252 sarrera parekaturen eta 78. arauko 2.779
+gelaxka argiren auditak, eta Wiktionaryren hitano-algoritmoaren GPLv3
+egokitzapena gehitu zaizkio. Audit horietan ez da hutsunerik atzeman; hala ere,
+zenbaki horiek ez dira euskara batuko forma guztien kopuru egiaztatua.
+`complete: false` da.
 
 Vue interfazea, Fastify APIa, SQLite inportatzailea, iturri-erregistroa eta
 Podman edukiontziak martxan daude. `hatzait` kasua, hitanoa, anbiguotasuna,
@@ -15,8 +19,7 @@ sei zatiketa egiaztatu eta bi gai historiko dokumentatu probatuta daude.
 bereizita daude. Kodearen eta Apertium datuen lizentziak `NOTICE.md` eta
 `LICENSE` fitxategietan dokumentatuta daude.
 
-Amaitu gabe: 3. ataleko inbentario arauemaile osoa, lau lema-izenen
-baliokidetasunaren egiaztapena (`atxeki`, `erion`, `io`, `irudi`), batuko
+Amaitu gabe: 3. ataleko inbentario arauemaile osoa, batuko
 arautasun-auditoria forma guztientzat, morfema eta historia azalpen osoak,
 eta iturriek hitanoko generoa bereizten ez duten kasuen banakako egiaztapena.
 Beraz, 15. ataleko 3., 6., 9. eta 12. irizpideak partzialki betetzen dira;
@@ -236,7 +239,7 @@ Monorepo sinple bat erabiliko da:
 aditzak-deseraiki/
 ├── apps/
 │   ├── web/                 # Vue 3 + Vite + TypeScript
-│   └── api/                 # Node.js + Fastify + TypeScript
+│   └── api/                 # Deno edukiontzian / Node lokalean + Fastify + TypeScript
 ├── packages/
 │   └── shared/              # API kontratuak, kode partekatuak eta motak
 ├── data/
@@ -245,7 +248,7 @@ aditzak-deseraiki/
 │   └── generated/           # Sortutako SQLite; ez da egia-iturri bakarra
 ├── scripts/                 # Ingestioa, balidazioa eta estaldura-txostenak
 ├── docs/                    # Iturriak, erabakiak eta estaldura
-├── docker/                  # Compose, Containerfile eta Nginx
+├── docker/                  # Compose, Containerfile eta Caddy
 ├── .dockerignore            # docker/.dockerignore fitxategirako lotura
 └── PLAN.md
 ```
@@ -261,7 +264,8 @@ aditzak-deseraiki/
 
 ### 8.2. Backenda
 
-- Node.js-en LTS bertsio egonkorra.
+- Deno 2.9 APIaren produkzio-edukiontzian; Node.js 24 datuen/frontendaren
+  eraikuntzan eta garapen lokaleko npm fluxuan.
 - Fastify.
 - TypeScript modu zorrotzean.
 - SQLite driver sinkroniko fidagarria, API irakurketa-lanerako egokia.
@@ -380,7 +384,7 @@ ortografiko bat.
 
 ## 13. Lizentziak
 
-- Proiektuaren kodea: GNU GPL, `GPL-3.0-or-later` identifikatzailearekin.
+- Proiektuaren banaketa bateratua: GNU GPL, `GPL-3.0-only` identifikatzailearekin.
 - Mendekotasunak: GPLrekin bateragarriak direla egiaztatuko da.
 - Datuak: kodearen lizentziatik bereizita dokumentatuko dira.
 - `LICENSE` fitxategia kodearentzat.
@@ -474,7 +478,7 @@ Prototipoa amaitutzat joko da baldintza hauek betetzean:
 13. Interfazeko testu guztiak nazioartekotze-geruzatik datoz.
 14. Datu-ereduak etorkizuneko euskalkiak gehitzea ahalbidetzen du.
 15. Ez da Aditzak.eus-eko datu edo aktibo jabedunik kopiatu.
-16. Kodeak GPL-3.0-or-later lizentzia dauka eta datu-lizentziak aparte daude.
+16. Banaketa bateratuak GPL-3.0-only lizentzia dauka eta datu-lizentziak aparte daude.
 17. Test automatiko guztiak pasatzen dira.
 
 ## 16. Arrisku nagusiak eta neurriak

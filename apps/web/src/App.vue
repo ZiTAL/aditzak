@@ -27,12 +27,12 @@ async function analyze(word?:string){
     const data=await response.json();
     if(!response.ok){result.value=null;error.value=te(data.error)?data.error:'server_error';return;}
     result.value=data;selected.value=0;tab.value='grammar';
-    const url=new URL(location.href);url.searchParams.set('adizkia',data.normalized);history.replaceState(null,'',url);
+    const url=new URL(location.href);url.searchParams.set('q',data.normalized);history.replaceState(null,'',url);
   }catch(e){if(!request.signal.aborted){result.value=null;error.value='network_error';}}
   finally{if(!request.signal.aborted)pending.value=false;}
 }
 onMounted(async()=>{
-  const word=new URLSearchParams(location.search).get('adizkia');if(word)input.value=word;
+  const word=new URLSearchParams(location.search).get('q');if(word)input.value=word;
   void analyze();
   try{const response=await fetch('/api/v1/meta');if(response.ok)meta.value=await response.json();}catch{/* search still reports connection errors */}
 });
@@ -82,6 +82,7 @@ onMounted(async()=>{
                   <dl class="grammar-grid"><div><dt>{{ t('kind') }}</dt><dd>{{ t(active.kind) }}</dd></div><div><dt>{{ t('lemma') }}</dt><dd>{{ lemma(active) }}</dd></div><div><dt>{{ t('mood') }}</dt><dd>{{ t(active.mood) }}</dd></div><div><dt>{{ t('tense') }}</dt><dd>{{ t(active.tense) }}</dd></div></dl>
                   <div class="persons"><div v-for="role in (['nor','nori','nork'] as const)" :key="role" :class="['person',role,{inactive:!active[role]}]"><span>{{ t(role) }}</span><strong>{{ active[role]?t(`${role==='nor'?'person':role==='nori'?'dative':'ergative'}.${active[role]}`):t('none') }}</strong></div></div>
                   <p class="treatment"><span class="dot"></span>{{ t(active.treatment) }}<span v-if="active.allocutive" class="tag">{{ t('allocutive') }}</span></p>
+                  <p v-if="active.validation==='generated'" class="muted small">{{ t('generatedWarning') }}</p>
                   <p v-if="active.allocutive" class="muted small">{{ t('allocutiveHelp') }}</p><p v-else-if="[active.nor,active.nori,active.nork].includes('hi')" class="muted small">{{ t('argumentHi') }}</p>
                 </template>
                 <template v-else-if="tab==='morphemes'">
