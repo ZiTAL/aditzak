@@ -13,7 +13,10 @@ export function defaultDatabasePath():string {
 export function openRepository(path=defaultDatabasePath()) {
   const db=new DatabaseSync(path,{readOnly:true});
   db.exec('PRAGMA foreign_keys=ON; PRAGMA query_only=ON;');
-  const lookup=db.prepare('SELECT payload FROM analyses WHERE form=? AND variety=? ORDER BY base DESC,lemma,id');
+  const lookup=db.prepare(`SELECT payload FROM analyses WHERE form=? AND variety=?
+    ORDER BY base DESC,
+      CASE json_extract(payload,'$.validation') WHEN 'reviewed' THEN 0 WHEN 'imported' THEN 1 ELSE 2 END,
+      lemma,id`);
   const sources=(db.prepare('SELECT payload FROM sources ORDER BY id').all() as {payload:string}[]).map(r=>JSON.parse(r.payload) as Source);
   const coverage=JSON.parse((db.prepare("SELECT value FROM metadata WHERE key='coverage'").get() as {value:string}).value) as Coverage;
   const commonForms=(db.prepare('SELECT DISTINCT form FROM analyses WHERE base=1 ORDER BY length(form),form').all() as {form:string}[]).map(r=>r.form);

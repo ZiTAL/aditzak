@@ -115,7 +115,20 @@ deskargatu eta hau exekutatu:
 ```sh
 npm run audit:alokutibo -- /bidea/Araua_0014.pdf
 npm run audit:laguntzaile -- /bidea/Araua_0078.pdf
+npm run audit:laguntzaile:semantika -- /bidea/Araua_0078.pdf
 ```
+
+78. arauko bigarren auditak adizki osoko taulak dituzten 54 orrialdeak
+irakurtzen ditu: 2.831 forma-agerpenen NOR/NORI/NORK, lema, mota, modua eta
+aldia egiaztatzen ditu, indikatiboa, ahalerazkoa, subjuntiboa eta agintera
+barne. Aurkitutako 23 irakurketa falta ziren eta arauko aipamenarekin gehitu
+dira. PDFko lerro hautsiak banaka transkribatu dira; bi gelaxka ez daude
+inprimatutako adizki osoko taulan. Tratamendua eta morfema-zatiketa ez ditu
+egiaztatzen, eta aditz trinkoak beste iturri batzuen mende daude;
+`complete: false` mantentzen da.
+Arauaren bidez berrikusitako irakurketak inportatu gabekoen aurretik erakusten
+dira; Apertiumeko beste irakurketak ez dira automatikoki ezabatzen, banakako
+arautasun-egiaztapena falta baitzaie.
 
 Mugak garrantzitsuak dira:
 

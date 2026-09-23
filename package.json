@@ -9,6 +9,7 @@
     "data:build": "tsx scripts/build-data.ts",
     "audit:alokutibo": "tsx scripts/audit-alokutibo.ts",
     "audit:laguntzaile": "tsx scripts/audit-laguntzaile.ts",
+    "audit:laguntzaile:semantika": "tsx scripts/audit-laguntzaile-semantika.ts",
     "build": "npm run build -w @aditzak/api && npm run build -w @aditzak/web",
     "typecheck": "tsc --noEmit && vue-tsc --noEmit -p apps/web/tsconfig.json",
     "test": "tsx --test tests/*.test.ts",

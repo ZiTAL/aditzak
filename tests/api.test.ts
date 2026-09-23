@@ -59,6 +59,52 @@ test('normative auxiliary omissions and dukezu agreement are corrected',async()=
   for(const form of ['lekizkigukek','liezazkidaketek','liezazkiguketek'])
     assert.ok((await analyze(form)).analyses.some(a=>a.treatment==='toka'&&a.allocutive),form);
 });
+test('rule 78 aligned tables retain all attested homograph readings',async()=>{
+  for(const [form,mood,tense,nor,nori,nork] of [
+    ['dukete','probability','present','hura',null,'haiek'],
+    ['zaituzte','indicative','present','zuek',null,'haiek'],
+    ['zintuzten','indicative','past','zuek',null,'haiek'],
+    ['bazintuzte','conditional','hypothetical','zuek',null,'haiek'],
+    ['zaituzkete','probability','present','zuek',null,'haiek'],
+    ['zintuzketen','probability','past','zuek',null,'haiek'],
+    ['zintuzkete','consequence','present','zuek',null,'haiek'],
+    ['dizkieket','probability','present','haiek','haiek','ni'],
+    ['diake','probability','present','hura','hi','hura'],
+    ['dinake','probability','present','hura','hi','hura'],
+    ['diakete','probability','present','hura','hi','haiek'],
+  ] as const){
+    assert.ok((await analyze(form)).analyses.some(a=>a.lemma==='ukan'&&a.mood===mood&&a.tense===tense&&a.nor===nor&&a.nori===nori&&a.nork===nork&&a.citations.some(c=>c.sourceId==='euskaltzaindia78')),form);
+  }
+  const dukete=(await analyze('dukete')).analyses;
+  assert.equal(dukete[0].nor,'hura');
+  assert.equal(dukete[0].validation,'reviewed');
+  assert.ok(dukete.some(a=>a.validation==='imported'));
+});
+test('rule 78 potential tables retain optional plural agreement',async()=>{
+  for(const [form,tense] of [
+    ['zaitzakete','present'],['zintzaketen','past'],['zintzakete','hypothetical'],
+  ] as const){
+    const analyses=(await analyze(form)).analyses;
+    assert.ok(analyses.some(a=>a.lemma==='ezan'&&a.mood==='potential'&&a.tense===tense&&a.nor==='zuek'&&a.nork==='haiek'&&a.validation==='reviewed'),form);
+    assert.ok(analyses.some(a=>a.lemma==='ezan'&&a.nor==='zu'&&a.nork==='haiek'),form);
+  }
+});
+test('rule 78 subjunctive tables retain plural and homograph readings',async()=>{
+  for(const [form,tense,nork] of [
+    ['bazaitzate','present','hura'],
+    ['zaitzaten','present','haiek'],
+    ['bazaitzate','present','haiek'],
+    ['bazaitzatete','present','haiek'],
+    ['zaitzatela','present','haiek'],
+    ['zintzaten','past','haiek'],
+    ['zintzatela','past','haiek'],
+    ['zintzaten','hypothetical','haiek'],
+    ['bazintzate','hypothetical','haiek'],
+  ] as const){
+    assert.ok((await analyze(form)).analyses.some(a=>a.lemma==='ezan'&&a.mood==='subjunctive'&&a.tense===tense&&
+      a.nor==='zuek'&&a.nork===nork&&a.validation==='reviewed'&&a.citations.some(c=>c.sourceId==='euskaltzaindia78')),form+' '+tense+' '+nork);
+  }
+});
 test('rule 14 rows preserve agreement across neutral, toka and noka',async()=>{
   for(const [form,lemma,nor,nori,nork,treatment] of [
     ['zitzaizkigun','izan','haiek','gu',null,'neutral'],

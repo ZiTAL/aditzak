@@ -262,6 +262,73 @@ for(const [form,model,nor,nori,nork,treatment] of [
     citations:[...source.citations,{sourceId:'euskaltzaindia78',locator:'78. araua, *edun/*edin/*ezan-en taula bateratuak; pertsona-gelaxka'}]};
   insert.run(analysis.id,form,analysis.lemma,'batua',affixes.length?0:1,'euskaltzaindia78',JSON.stringify(analysis));
 }
+// Rule 78's aligned tables also certify these readings of *existing* surface
+// forms. Keep the upstream analysis when it may be a homograph; add the
+// independently attested reading instead of silently rewriting its tags.
+for(const [form,nor,nori,nork,page,treatment] of [
+  ['dukete','hura',null,'haiek',29,'neutral'],
+  ['zaituzte','zuek',null,'haiek',32,'neutral'],
+  ['zintuzten','zuek',null,'haiek',32,'neutral'],
+  ['bazintuzte','zuek',null,'haiek',32,'neutral'],
+  ['zaituzkete','zuek',null,'haiek',32,'neutral'],
+  ['zintuzketen','zuek',null,'haiek',32,'neutral'],
+  ['zintuzkete','zuek',null,'haiek',32,'neutral'],
+  ['dizkieket','haiek','haiek','ni',44,'neutral'],
+  ['diake','hura','hi','hura',46,'hika'],
+  ['dinake','hura','hi','hura',46,'hika'],
+  ['diakete','hura','hi','haiek',50,'hika'],
+] as [string,Person,Person|null,Person|null,number,Treatment][]) {
+  const row=db.prepare('SELECT payload,base FROM analyses WHERE form=? AND lemma=? ORDER BY base DESC LIMIT 1').get(form,'ukan') as {payload:string;base:number}|undefined;
+  if(!row)throw new Error(`78. arauko homografoaren oinarria falta da: ${form}`);
+  const source=JSON.parse(row.payload) as Analysis;
+  const analysis:Analysis={...source,
+    id:createHash('sha256').update(JSON.stringify(['rule78-reading',form,nor,nori,nork,treatment])).digest('hex').slice(0,24),
+    nor,nori,nork,treatment,allocutive:false,rawTags:['normative:78'],origin:'rule',validation:'reviewed',
+    segmentation:null,history:[],
+    citations:[{sourceId:'euskaltzaindia78',locator:`78. araua, PDFko ${page}. orrialdea; *edun-en pertsona-taula`}],
+  };
+  analysis.type=nori?'nor-nori-nork':'nor-nork';
+  insert.run(analysis.id,form,'ukan','batua',row.base,'euskaltzaindia78',JSON.stringify(analysis));
+}
+// In the *ezan NOR-NORK potential table, the optional -(te) of the HAIEK
+// subject yields three additional homographs with NOR=ZUEK (PDF page 40).
+for(const form of ['zaitzakete','zintzaketen','zintzakete']) {
+  const row=db.prepare('SELECT payload FROM analyses WHERE form=? AND lemma=? AND base=1 LIMIT 1').get(form,'ezan') as {payload:string}|undefined;
+  if(!row)throw new Error(`78. arauko *ezan homografoaren oinarria falta da: ${form}`);
+  const source=JSON.parse(row.payload) as Analysis;
+  const analysis:Analysis={...source,
+    id:createHash('sha256').update(JSON.stringify(['rule78-ezan-potential',form,'zuek','haiek'])).digest('hex').slice(0,24),
+    nor:'zuek',nori:null,nork:'haiek',treatment:'neutral',allocutive:false,
+    affixes:[],baseForm:form,rawTags:['normative:78'],origin:'rule',validation:'reviewed',segmentation:null,history:[],
+    citations:[{sourceId:'euskaltzaindia78',locator:'78. araua, PDFko 40. orrialdea; *ezan NOR-NORK, NOR=ZUEK, NORK=HAIEK'}],
+  };
+  insert.run(analysis.id,form,'ezan','batua',1,'euskaltzaindia78',JSON.stringify(analysis));
+}
+// Page 40 also gives the NOR=ZUEK subjunctive rows, including -(te)
+// alternatives. Several share a surface with the singular NOR row.
+for(const [form,model,tense,nork] of [
+  ['bazaitzate','bazaitzate','present','hura'],
+  ['zaitzaten','zaitzaten','present','haiek'],
+  ['bazaitzate','bazaitzate','present','haiek'],
+  ['bazaitzatete','bazintzatete','present','haiek'],
+  ['zaitzatela','zaitzatela','present','haiek'],
+  ['zintzaten','zintzaten','past','haiek'],
+  ['zintzatela','zintzatela','past','haiek'],
+  ['zintzaten','zintzaten','hypothetical','haiek'],
+  ['bazintzate','bazintzate','hypothetical','haiek'],
+] as [string,string,Tense,Person][]) {
+  const row=db.prepare('SELECT payload FROM analyses WHERE form=? AND lemma=? LIMIT 1').get(model,'ezan') as {payload:string}|undefined;
+  if(!row)throw new Error(`78. arauko *ezan subjuntiboaren oinarria falta da: ${model}`);
+  const source=JSON.parse(row.payload) as Analysis;
+  const analysis:Analysis={...source,
+    id:createHash('sha256').update(JSON.stringify(['rule78-ezan-subjunctive',form,tense,'zuek',nork])).digest('hex').slice(0,24),
+    form,mood:'subjunctive',tense,nor:'zuek',nori:null,nork,treatment:'neutral',allocutive:false,
+    baseForm:form===model?source.baseForm:form.slice(2),rawTags:['normative:78'],origin:'rule',validation:'reviewed',
+    segmentation:null,history:[],
+    citations:[{sourceId:'euskaltzaindia78',locator:'78. araua, PDFko 40. orrialdea; *ezan NOR-NORK, NOR=ZUEK'}],
+  };
+  insert.run(analysis.id,form,'ezan','batua',0,'euskaltzaindia78',JSON.stringify(analysis));
+}
 // Three isolated toka omissions in the licensed corpus: retain the source
 // analysis of their neutral base, and cite the Academy's hika table.
 for(const [form,base] of [

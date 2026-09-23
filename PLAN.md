@@ -3,13 +3,20 @@
 ## Egungo egoera (2026-09-23)
 
 Plana idatzi ondoren prototipo funtzionala eraiki da. Uneko datu-baseak 42 lema,
-10.473 oinarrizko forma desberdin, 412.626 azaleko forma eta 664.461 analisi
+10.473 oinarrizko forma desberdin, 412.627 azaleko forma eta 664.484 analisi
 inportatu, sortu eta berrikusi ditu. Apertium corpusaren commit finkoari
 Euskaltzaindiaren 14. arauko 5.252 sarrera parekaturen eta 78. arauko 2.779
 gelaxka argiren auditak, eta Wiktionaryren hitano-algoritmoaren GPLv3
 egokitzapena gehitu zaizkio. Audit horietan ez da hutsunerik atzeman; hala ere,
 zenbaki horiek ez dira euskara batuko forma guztien kopuru egiaztatua.
 `complete: false` da.
+
+78. arauko adizki osoko taulak dituzten 54 orrialdeak bigarren auditak
+parekatzen ditu: 2.831 forma-agerpenetan NOR/NORI/NORK, lema, mota, modua eta
+aldia. Hogeita hiru irakurketa falta arauaren aipamenarekin gehitu dira.
+PDFko lerro hautsi batzuk eskuz transkribatu dira; bi gelaxka ez daude
+inprimatutako adizki osoko taulan. Tratamendua eta morfema-zatiketa ez ditu
+audit honek egiaztatzen, eta sintetikoei ez die 78. arauak estaldura ematen.
 
 Vue interfazea, Fastify APIa, SQLite inportatzailea, iturri-erregistroa eta
 Podman edukiontziak martxan daude. `hatzait` kasua, hitanoa, anbiguotasuna,
