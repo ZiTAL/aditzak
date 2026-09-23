@@ -21,6 +21,9 @@ services:
       context: ..
       dockerfile: docker/Containerfile
       target: web
+    environment:
+      NO_PROXY: api,localhost,127.0.0.1
+      no_proxy: api,localhost,127.0.0.1
     ports:
       - "127.0.0.1:${WEB_PORT:-8080}:8080"
     depends_on:

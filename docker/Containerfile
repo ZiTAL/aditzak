@@ -32,8 +32,11 @@ CMD ["deno","run","--cached-only","--node-modules-dir=manual","--allow-read=/app
 
 FROM docker.io/library/caddy:2.11.4-alpine AS web
 ENV XDG_DATA_HOME=/tmp/caddy-data XDG_CONFIG_HOME=/tmp/caddy-config
+# Port 8080 needs no privileged bind capability; retaining the image's
+# file capability conflicts with cap_drop: ALL in rootless Podman.
+RUN setcap -r /usr/bin/caddy
 COPY docker/Caddyfile /etc/caddy/Caddyfile
 COPY --from=build /build/apps/web/dist /usr/share/caddy
 USER 10001:10001
 EXPOSE 8080
-CMD ["run","--config","/etc/caddy/Caddyfile","--adapter","caddyfile"]
+CMD ["caddy","run","--config","/etc/caddy/Caddyfile","--adapter","caddyfile"]
