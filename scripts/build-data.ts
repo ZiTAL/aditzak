@@ -174,6 +174,83 @@ for (const [nor, recipients] of [
     };
     insert.run(analysis.id,form,'irakatsi','batua',1,'euskaltzaindia-eab1979',JSON.stringify(analysis));
   }
+// JARIO/JARIN/JARIATU's printed NN4/NN9 tables (p. 110¹/PDF 242)
+// contain recipient rows missing from the upstream lexicon. The NN4 mood
+// follows its existing potential/hypothetical reading; the Academy table
+// independently confirms the surface and agreement, not that mood label.
+for(const plural of [false,true]) {
+  const nor:Person=plural?'haiek':'hura';
+  const potentialStem=plural?'lerizki':'leri';
+  const imperativeStem=plural?'berizki':'beri';
+  for(const [nori,suffix,treatment] of [
+    ['hi','ake','toka'],['hi','nake','noka'],['zu','zuke','neutral'],['zuek','zueke','neutral'],
+  ] as [Person,string,Treatment][]) {
+    const form=potentialStem+suffix;
+    const analysis:Analysis={
+      id:createHash('sha256').update(JSON.stringify(['eab1979-jario-nn4',form,nor,nori])).digest('hex').slice(0,24),
+      form,lemma:'jario',kind:'synthetic',variety:'batua',mood:'potential',tense:'hypothetical',type:'nor-nori',
+      nor,nori,nork:null,treatment,allocutive:false,affixes:[],rawTags:['eab1979','NN4'],baseForm:form,
+      origin:'rule',validation:'generated',segmentation:null,history:[],
+      citations:[{sourceId:'euskaltzaindia-eab1979',locator:'110¹. or. (PDF 242), JARIO/JARIN/JARIATU NN4'}],
+    };
+    lemmaInsert.run('jario','synthetic');
+    insert.run(analysis.id,form,'jario','batua',1,'euskaltzaindia-eab1979',JSON.stringify(analysis));
+  }
+  for(const [nori,suffix,treatment] of [
+    ['ni','t','neutral'],['hi','k','toka'],['hi','n','noka'],['hura','o','neutral'],
+    ['gu','gu','neutral'],['zu','zu','neutral'],['zuek','zue','neutral'],['haiek','e','neutral'],
+  ] as [Person,string,Treatment][]) {
+    const form=imperativeStem+suffix;
+    const analysis:Analysis={
+      id:createHash('sha256').update(JSON.stringify(['eab1979-jario-nn9',form,nor,nori])).digest('hex').slice(0,24),
+      form,lemma:'jario',kind:'synthetic',variety:'batua',mood:'imperative',tense:'present',type:'nor-nori',
+      nor,nori,nork:null,treatment,allocutive:false,affixes:[],rawTags:['eab1979','NN9'],baseForm:form,
+      origin:'rule',validation:'reviewed',segmentation:null,history:[],
+      citations:[{sourceId:'euskaltzaindia-eab1979',locator:'110¹. or. (PDF 242), JARIO/JARIN/JARIATU NN9'}],
+    };
+    lemmaInsert.run('jario','synthetic');
+    insert.run(analysis.id,form,'jario','batua',1,'euskaltzaindia-eab1979',JSON.stringify(analysis));
+  }
+}
+// EROAN NN4/NN9 (printed p. 153¹/PDF 328) has no upstream imperative
+// and omits the hi/zu/zuek NN4 subjects. The 1977 original (p. 840) also
+// prints the imperative, including both hi endings and plural-NOR variants.
+for(const plural of [false,true]) {
+  const nor:Person=plural?'haiek':'hura';
+  const n4Stem=plural?'azke':'ake';
+  for(const [prefix,nork,treatment] of [
+    ['hero','hi','hika'],['zenero','zu','neutral'],['zenero','zuek','neutral'],
+  ] as [string,Person,Treatment][]) {
+    const form=prefix+n4Stem+(nork==='zuek'?'te':'');
+    const analysis:Analysis={
+      id:createHash('sha256').update(JSON.stringify(['eab1979-eroan-nn4',form,nor,nork])).digest('hex').slice(0,24),
+      form,lemma:'eroan',kind:'synthetic',variety:'batua',mood:'potential',tense:'hypothetical',type:'nor-nork',
+      nor,nori:null,nork,treatment,allocutive:false,affixes:[],rawTags:['eab1979','NN4'],baseForm:form,
+      origin:'rule',validation:'generated',segmentation:null,history:[],
+      citations:[{sourceId:'euskaltzaindia-eab1979',locator:'153¹. or. (PDF 328), EROAN NN4'}],
+    };
+    lemmaInsert.run('eroan','synthetic');
+    insert.run(analysis.id,form,'eroan','batua',1,'euskaltzaindia-eab1979',JSON.stringify(analysis));
+  }
+  for(const [nork,form,treatment] of (plural?[
+    ['hi','eroaitzak','toka'],['hi','eroaitzan','noka'],['hura','beroatza','neutral'],
+    ['zu','eroaitzazu','neutral'],['zuek','eroaitzazue','neutral'],['haiek','beroatzate','neutral'],
+  ]:[
+    ['hi','eroak','toka'],['hi','eroan','noka'],['hura','beroa','neutral'],
+    ['zu','eroazu','neutral'],['zuek','eroazue','neutral'],['haiek','beroate','neutral'],
+  ]) as [Person,string,Treatment][]) {
+    const analysis:Analysis={
+      id:createHash('sha256').update(JSON.stringify(['eab1979-eroan-nn9',form,nor,nork])).digest('hex').slice(0,24),
+      form,lemma:'eroan',kind:'synthetic',variety:'batua',mood:'imperative',tense:'present',type:'nor-nork',
+      nor,nori:null,nork,treatment,allocutive:false,affixes:[],rawTags:['eab1979','NN9'],baseForm:form,
+      origin:'rule',validation:'reviewed',segmentation:null,history:[],
+      citations:[{sourceId:'euskaltzaindia-eab1979',locator:'153¹. or. (PDF 328), EROAN NN9'},
+        {sourceId:'euskaltzaindia-sintetikoa1977',locator:'840. or., EROAN agintera'}],
+    };
+    lemmaInsert.run('eroan','synthetic');
+    insert.run(analysis.id,form,'eroan','batua',1,'euskaltzaindia-eab1979',JSON.stringify(analysis));
+  }
+}
 // IHARDUKI is another compact paradigm in the same book. Upstream omits its
 // entire imperative, one present agreement and three N4 forms. The N4 mood
 // follows the source lexicon's existing potential/hypothetical reading; the
@@ -457,7 +534,7 @@ const coverage: Coverage = {
   lemmas, varieties:['batua'], source:'apertium+wiktionary+euskaltzaindia', complete:false,
   reviewedSegmentations:6, historicalNotes:2, missingLemmas:[],
   limitations:[
-    {eu:'Apertiumeko 35 paradigma, ba- saileko beste 5 lema, *iro/*io osagarriak eta *irakatsi*ren agintera. 14. arauko hikako taulak, 78. arauko laguntzaile-gelaxkak eta 1979ko Euskal Aditz Batuaren 26 paradigma-orri auditatu dira; horrek ez du euskara batuko inbentario eta analisi guztien estaldura osoa frogatzen. Erauntsi, eroan, iharduki, irakin eta jario lemen gainerako sailak partzialak izan daitezke.'},
+    {eu:'Apertiumeko 35 paradigma, ba- saileko beste 5 lema, *iro/*io osagarriak eta *irakatsi*ren agintera. 14. arauko hikako taulak, 78. arauko laguntzaile-gelaxkak eta 1979ko Euskal Aditz Batuaren 28 paradigma-orri auditatu dira; horrek ez du euskara batuko inbentario eta analisi guztien estaldura osoa frogatzen. Erauntsi, eroan, iharduki, irakin eta jario lemen gainerako sailak partzialak izan daitezke.'},
     {eu:'Atxeki → atxiki, irudi/iruditu eta erion → jario loturak Hiztegi Batuaren arabera ebatzi dira; erion bizkaierazko forma urria da, eta ez da euskara batuko lema bereizi gisa inportatu. *io aparteko lema gisa dago.'},
     {eu:'Arau bidez sortutako hitano-formak «sortua» gisa markatzen dira; banakako arautasun-ziurtagiria ez da. 14. arauaren PDFa emanda, audit:alokutibo komandoak hiru zutabeko formak alderatzen ditu.'},
     {eu:'Lexikoak forma literarioak eta arraroak ere baditu; banakako arautasun-auditoria amaitu gabe dago.'},

@@ -128,6 +128,73 @@ for (const page of pageSpecs) {
     }
   }
 }
+// Printed p. 110¹/PDF 242 has parallel NOR singular/plural columns. Four
+// hi cells abbreviate the noka counterpart as /n or /nake; expand only
+// those explicit alternations, preserving NORI=hi and treatment.
+const jarioPage=pages[241];
+if(!jarioPage?.includes('JARIO/JARIN/JARIATU')||!/110\s+1/.test(jarioPage))
+  failures.push('PDF 242: JARIO/JARIN/JARIATU paradigma-aingurak falta dira');
+for(const plural of [false,true]) {
+  const nor:Person=plural?'haiek':'hura';
+  const potentialStem=plural?'lerizki':'leri';
+  const imperativeStem=plural?'berizki':'beri';
+  for(const [series,stem,recipients] of [
+    ['NN4',potentialStem,[['ni','dake'],['hi','ake'],['hi','nake'],['hura','oke'],['gu','guke'],['zu','zuke'],['zuek','zueke'],['haiek','eke']]],
+    ['NN9',imperativeStem,[['ni','t'],['hi','k'],['hi','n'],['hura','o'],['gu','gu'],['zu','zu'],['zuek','zue'],['haiek','e']]],
+  ] as [string,string,[Person,string][]][]) for(const [nori,suffix] of recipients) {
+    const form=stem+suffix;
+    checked++;
+    const abbreviated=nori==='hi'&&suffix==='nake'?new RegExp(`${stem}ake\\s*/nake`).test(jarioPage):
+      nori==='hi'&&suffix==='n'?new RegExp(`${stem}k/n`).test(jarioPage):false;
+    if(!abbreviated&&!new RegExp(`(?<![a-z])${form}(?![a-z])`).test(jarioPage))
+      failures.push(`PDF 242: ${form} jatorrizko gelaxkan ez da aurkitu`);
+    const analyses=(lookup.all(form,'batua') as {payload:string}[]).map(r=>JSON.parse(r.payload) as Analysis);
+    if(!analyses.some(a=>a.lemma==='jario'&&a.kind==='synthetic'&&a.type==='nor-nori'&&
+      a.nor===nor&&a.nori===nori&&a.nork===null&&a.mood===(series==='NN4'?'potential':'imperative')&&
+      a.tense===(series==='NN4'?'hypothetical':'present')&&a.treatment===(nori==='hi'?(suffix==='n'||suffix==='nake'?'noka':'toka'):'neutral')&&
+      !a.allocutive)) failures.push(`PDF 242: ${form} analisia falta edo desegokia da (${nor}, ${nori}, ${series})`);
+  }
+}
+const eroanPage=pages[327]; // printed 153¹
+if(!eroanPage?.includes('EROAN')||!/153\s+1/.test(eroanPage))
+  failures.push('PDF 328: EROAN paradigma-aingurak falta dira');
+for(const plural of [false,true]) {
+  const nor:Person=plural?'haiek':'hura';
+  for(const [prefix,nork,treatment] of [
+    ['nero','ni','neutral'],['hero','hi','hika'],['lero','hura','neutral'],
+    ['genero','gu','neutral'],['zenero','zu','neutral'],['zenero','zuek','neutral'],
+    ['lero','haiek','neutral'],
+  ] as [string,Person,Analysis['treatment']][]) {
+    const form=prefix+(plural?'azke':'ake')+(nork==='zuek'||nork==='haiek'?'te':'');
+    checked++;
+    if(!new RegExp(`(?<![a-z])${form}(?![a-z])`).test(eroanPage))
+      failures.push(`PDF 328: ${form} NN4 gelaxkan ez da aurkitu`);
+    const analyses=(lookup.all(form,'batua') as {payload:string}[]).map(r=>JSON.parse(r.payload) as Analysis);
+    if(!analyses.some(a=>a.lemma==='eroan'&&a.kind==='synthetic'&&a.type==='nor-nork'&&
+      a.nor===nor&&a.nori===null&&a.nork===nork&&a.mood==='potential'&&a.tense==='hypothetical'&&
+      a.treatment===treatment&&!a.allocutive))
+      failures.push(`PDF 328: ${form} NN4 analisia falta edo desegokia da (${nor}, ${nork})`);
+  }
+  for(const [nork,form,treatment] of (plural?[
+    ['hi','eroaitzak','toka'],['hi','eroaitzan','noka'],['hura','beroatza','neutral'],
+    ['zu','eroaitzazu','neutral'],['zuek','eroaitzazue','neutral'],['haiek','beroatzate','neutral'],
+  ]:[
+    ['hi','eroak','toka'],['hi','eroan','noka'],['hura','beroa','neutral'],
+    ['zu','eroazu','neutral'],['zuek','eroazue','neutral'],['haiek','beroate','neutral'],
+  ]) as [Person,string,Analysis['treatment']][]) {
+    checked++;
+    const shorthand=nork==='hi'&&(treatment==='noka'||treatment==='toka')?
+      (plural?/eroaitzak\s+Ill/.test(eroanPage):/eroaklll/.test(eroanPage)):false;
+    if(!shorthand&&!new RegExp(`(?<![a-z])${form}(?![a-z])`).test(eroanPage))
+      failures.push(`PDF 328: ${form} NN9 gelaxkan ez da aurkitu`);
+    const analyses=(lookup.all(form,'batua') as {payload:string}[]).map(r=>JSON.parse(r.payload) as Analysis);
+    if(!analyses.some(a=>a.lemma==='eroan'&&a.kind==='synthetic'&&a.type==='nor-nork'&&
+      a.nor===nor&&a.nori===null&&a.nork===nork&&a.mood==='imperative'&&a.tense==='present'&&
+      a.treatment===treatment&&!a.allocutive&&a.validation==='reviewed'&&
+      a.citations.some(c=>c.sourceId==='euskaltzaindia-sintetikoa1977')))
+      failures.push(`PDF 328: ${form} NN9 analisia falta edo desegokia da (${nor}, ${nork})`);
+  }
+}
 // The physical PDF has a blank facing page here: p. 338 is printed 158¹,
 // an Academy paradigm, not an editor-only construction chart. Only its
 // single-word NN9/NNN9 cells belong to the one-word reverse analyzer.
@@ -312,7 +379,18 @@ if(originalPdf) {
     if(!new RegExp(`(?<![a-z])${form}(?![a-z])`).test(erauntsiOriginal))
       failures.push(`1977ko PDF 56: ERAUNTSI ${form} falta da`);
   }
+  const eroanOriginal=originalPages[56]; // printed p. 840
+  if(!eroanOriginal?.includes('EROAN')||!/\b840\b/.test(eroanOriginal))
+    failures.push('1977ko PDF 57: EROAN/840 aingurak falta dira');
+  for(const form of ['eroak','eroan','beroa','eroazu','eroazue','beroate',
+    'eroaitzak','eroaitzan','beroatza','eroaitzazu','eroaitzazue','beroatzate']) {
+    originalChecked++;
+    const visible=form==='eroan'?eroanOriginal.includes('eroak/-n'):
+      form==='eroaitzan'?eroanOriginal.includes('eroaitzak/-n'):
+      new RegExp(`(?<![a-z])${form}(?![a-z])`).test(eroanOriginal);
+    if(!visible)failures.push(`1977ko PDF 57: EROAN ${form} falta da`);
+  }
 }
 db.close();
-console.log(`${pageSpecs.length + 1 + norkPages.length + 2} paradigma-orri ofizial, ${checked} adizki-agerpen; 1977ko jatorrizkoan ${originalPdf?originalChecked+' agerpen eta EUTSI gatazka egiaztatuak':'ez da auditatu'}; ${failures.length} hutsune/desadostasun`);
+console.log(`${pageSpecs.length + 3 + norkPages.length + 2} paradigma-orri ofizial, ${checked} adizki-agerpen; 1977ko jatorrizkoan ${originalPdf?originalChecked+' agerpen eta EUTSI gatazka egiaztatuak':'ez da auditatu'}; ${failures.length} hutsune/desadostasun`);
 if (failures.length) { for (const failure of failures.slice(0, 100)) console.error(failure); process.exitCode = 1; }

@@ -45,3 +45,15 @@ test('generated hika is usable and clearly marked as unreviewed',async({page})=>
   await expect(page.locator('.treatment')).toContainText('Toka');
   await expect(page.locator('#analysis-panel')).toContainText('ez da banaka arautasunaren arabera egiaztatu');
 });
+test('new JARIO and EROAN imperative readings appear in the UI',async({page})=>{
+  await page.goto('/?q=berizkin');
+  await expect(page.locator('.board-summary')).toContainText('Agintera');
+  await expect(page.locator('.person.nor strong')).toHaveText('haiek');
+  await expect(page.locator('.person.nori strong')).toHaveText('hiri');
+  await expect(page.locator('.treatment')).toContainText('Noka');
+  await page.goto('/?q=eroaitzan');
+  await expect(page.locator('.board-summary')).toContainText('Agintera');
+  await expect(page.locator('.person.nor strong')).toHaveText('haiek');
+  await expect(page.locator('.person.nork strong')).toHaveText('hik');
+  await expect(page.locator('.treatment')).toContainText('Noka');
+});

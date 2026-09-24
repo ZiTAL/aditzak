@@ -151,6 +151,44 @@ test('irakatsi imperative follows the Academy paradigm and keeps gender distinct
   assert.ok(upstream.some(a=>a.lemma==='irakatsi'&&a.validation==='imported'));
   assert.ok(!upstream.some(a=>a.lemma==='erakutsi'));
 });
+test('jario NN4 and NN9 keep NOR/NORI and hi gender distinct',async()=>{
+  for(const [form,nor,nori,mood,tense,treatment,validation] of [
+    ['leriake','hura','hi','potential','hypothetical','toka','generated'],
+    ['lerinake','hura','hi','potential','hypothetical','noka','generated'],
+    ['lerizkizuke','haiek','zu','potential','hypothetical','neutral','generated'],
+    ['lerizkizueke','haiek','zuek','potential','hypothetical','neutral','generated'],
+    ['berit','hura','ni','imperative','present','neutral','reviewed'],
+    ['berik','hura','hi','imperative','present','toka','reviewed'],
+    ['berin','hura','hi','imperative','present','noka','reviewed'],
+    ['berizkin','haiek','hi','imperative','present','noka','reviewed'],
+    ['berizkizue','haiek','zuek','imperative','present','neutral','reviewed'],
+  ] as const) {
+    assert.ok((await analyze(form)).analyses.some(a=>a.lemma==='jario'&&a.kind==='synthetic'&&
+      a.type==='nor-nori'&&a.nor===nor&&a.nori===nori&&a.nork===null&&
+      a.mood===mood&&a.tense===tense&&a.treatment===treatment&&!a.allocutive&&
+      a.validation===validation&&a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')),form);
+  }
+});
+test('eroan NN4 and NN9 keep missing NORK persons and singular/plural NOR',async()=>{
+  for(const [form,nor,nork,mood,tense,treatment,validation] of [
+    ['heroake','hura','hi','potential','hypothetical','hika','generated'],
+    ['zeneroakete','hura','zuek','potential','hypothetical','neutral','generated'],
+    ['heroazke','haiek','hi','potential','hypothetical','hika','generated'],
+    ['zeneroazkete','haiek','zuek','potential','hypothetical','neutral','generated'],
+    ['eroak','hura','hi','imperative','present','toka','reviewed'],
+    ['eroan','hura','hi','imperative','present','noka','reviewed'],
+    ['beroa','hura','hura','imperative','present','neutral','reviewed'],
+    ['eroaitzak','haiek','hi','imperative','present','toka','reviewed'],
+    ['eroaitzan','haiek','hi','imperative','present','noka','reviewed'],
+    ['beroatzate','haiek','haiek','imperative','present','neutral','reviewed'],
+  ] as const) {
+    assert.ok((await analyze(form)).analyses.some(a=>a.lemma==='eroan'&&a.kind==='synthetic'&&
+      a.type==='nor-nork'&&a.nor===nor&&a.nori===null&&a.nork===nork&&
+      a.mood===mood&&a.tense===tense&&a.treatment===treatment&&!a.allocutive&&
+      a.validation===validation&&a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')&&
+      (mood!=='imperative'||a.citations.some(c=>c.sourceId==='euskaltzaindia-sintetikoa1977'))),form);
+  }
+});
 test('iharduki missing present, N4 and imperative rows retain exact agreement',async()=>{
   for(const [form,nork,mood,treatment,validation] of [
     ['dihardukazue','zuek','indicative','neutral','reviewed'],

@@ -130,11 +130,11 @@ egiaztatzen, eta aditz trinkoak beste iturri batzuen mende daude;
 `complete: false` mantentzen da.
 
 Euskaltzaindiaren [*Euskal Aditz Batua* (1979)](https://www.euskaltzaindia.eus/dok/iker_jagon_tegiak/6833.pdf)
-liburuko ezkerreko paradigma ofizialen 26 orrialdetan, EGON, JOAN, ETORRI,
-IBILI, ETZAN, IRAKATSI, IHARDUN, IHARDUKI, ERAUNTSI eta EUTSI aditzen
-409 adizki-agerpen
+liburuko ezkerreko paradigma ofizialen 28 orrialdetan, EGON, JOAN, ETORRI,
+IBILI, ETZAN, JARIO, EROAN, IRAKATSI, IHARDUN, IHARDUKI, ERAUNTSI eta EUTSI aditzen
+467 adizki-agerpen
 alderatu dira: azaleko forma,
-lema, NOR pertsona eta NOR saileko analisiak ez dute desadostasunik. N1/N2,
+lema eta dagokien NOR/NORI/NORK pertsonak ez dute desadostasunik. N1/N2,
 N3, N4, N5 eta N9 sailen modu/aldia ere egiaztatzen dira; N4', N7 eta N10
 sailen interpretazio anitzak ez dira etiketa bakarrera behartzen. Liburuaren
 hitzaurreak zehazten du eskuineko eraikuntza-taulak eta sailen izen
@@ -151,6 +151,14 @@ bilaketa honen hitz bakarreko sarrerak. Apertiumek `erakutsi` azpian zuen
 `irakatsiguzu` forma *irakatsi* leman zuzendu da, baina «inportatua» izaten
 jarraitzen du. Beste aldi/moduen paradigmarik ez da asmatu.
 
+JARIO/JARIN/JARIATUren 110¹. orrialdeko (PDFko 242.a) NN4 eta NN9
+tauletan falta ziren 24 analisi gehitu dira: NN4ko zortzi eta aginterako
+hamasei. NN4ren ahalerazko etiketa lehendik zegoen lexikoiaren irakurketa da;
+1979ko taulak forma eta pertsona egiaztatzen ditu. EROANen 153¹. orrialdeko
+(PDFko 328.a) NN4ko sei eta aginterako hamabi analisi gehitu dira.
+Aginterako hika-aldaerak 1977ko *Aditz sintetikoa* laneko 840. orrialdean
+ere ageri dira. Bi sailetako zatiketa morfologikoa ez da berrikusi.
+
 IHARDUKIren orrialde ofizialetan falta ziren aginterako sei formak, orainaldiko
 forma bat eta N4 saileko hiru forma gehitu dira. N4ren ahalerazko
 interpretazioa Apertiumeko dagoen analisiaren araberakoa da; 1979ko taulak
@@ -164,7 +172,7 @@ horregatik, `daut-` irakurketak «sortua» gisa markatu dira, ez
 «berrikusia» gisa, eta ez da haiengandik alokutiborik sortzen. Apertiumeko
 `deut-` lau irakurketa jatorrizko zerrendaren bidez berrikusi dira.
 Bigarren PDFa audit-komandoan hautazkoa da, baina emanez gero iturri-gatazka
-eta IRAUN/IRUDIren 70, IHARDUKIren 10 eta ERAUNTSIren lau jatorrizko
+eta IRAUN/IRUDIren 70, IHARDUKIren 10, ERAUNTSIren lau eta EROANen hamabi jatorrizko
 adizki-agerpenak ere egiaztatzen dira; multzo horretan ez da hutsunerik aurkitu.
 
 Arauaren bidez berrikusitako irakurketak inportatu gabekoen aurretik erakusten
