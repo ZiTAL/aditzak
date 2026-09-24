@@ -56,7 +56,9 @@ function importEntry(entry: Entry, paradigm: string, lemma: string | null, prefi
   // *io and erran as separate synthetic paradigms; retain erran imperatives.
   const correctedIzan=lemma==='ukan' && (tags.includes('TO') || tags.includes('NO')) &&
     !tags.some(t=>t.startsWith('NI_') || t.startsWith('NK_'));
-  const verb = correctedIzan ? 'izan' : lemma === 'erran' && (tags.includes('pri') || tags.includes('pii')) ? 'io' : lemma ?? bare.replace(/<[^>]*>/g, '');
+  // A single irakatsi imperative is stored under erakutsi's upstream paradigm.
+  const correctedIrakatsi=lemma==='erakutsi' && entry.left==='irakatsiguzu' && tags.includes('imp');
+  const verb = correctedIrakatsi ? 'irakatsi' : correctedIzan ? 'izan' : lemma === 'erran' && (tags.includes('pri') || tags.includes('pii')) ? 'io' : lemma ?? bare.replace(/<[^>]*>/g, '');
   const temporal = tags.find(tag => moods[tag]);
   const nor = people[tags.find(t => t.startsWith('NR_'))?.slice(3) ?? ''];
   if (!verb || !nor || !temporal || !(tags.includes('vbsint') || (verb === 'iro' && tags.includes('ADL')))) {
@@ -149,6 +151,29 @@ function insertGeneratedBase(form:string,lemma:string,kind:'auxiliary'|'syntheti
       {sourceId:'euskaltzaindia14',locator:`${rulePage}. or., ${lemma} paradigma; oinarrizko forma`}]};
   insert.run(analysis.id,form,lemma,'batua',1,sourceLocator?'wiktionary-eu-verb':'euskaltzaindia14',JSON.stringify(analysis));
 }
+// The 1979 Academy book prints only IRAKATSI's imperative (p. 158¹/PDF 338).
+// Generate its one-word cells from the four NORI stems and three NORK endings;
+// the spaced plural NOR-NORK alternatives are outside this single-word app.
+// This does not license or invent any non-imperative irakatsi series.
+for (const [nor, recipients] of [
+  ['hura', [[null, 'irakatsa'], ['ni', 'irakasta'], ['gu', 'irakasku'], ['hura', 'irakatsio'], ['haiek', 'irakatsie']]],
+  ['haiek', [['ni', 'irakatsazkida'], ['gu', 'irakatsazkigu'], ['hura', 'irakatsazkio'], ['haiek', 'irakatsazkie']]],
+] as [Person, [Person | null, string][]][]) for (const [nori, stem] of recipients)
+  for (const [nork, suffix, treatment] of [
+    ['hi', 'k', 'toka'], ['hi', 'n', 'noka'], ['zu', 'zu', 'neutral'], ['zuek', 'zue', 'neutral'],
+  ] as [Person, string, Treatment][]) {
+    const form=stem+suffix;
+    lemmaInsert.run('irakatsi','synthetic');
+    const analysis:Analysis={
+      id:createHash('sha256').update(JSON.stringify(['eab1979-irakatsi',form,nor,nori,nork])).digest('hex').slice(0,24),
+      form,lemma:'irakatsi',kind:'synthetic',variety:'batua',mood:'imperative',tense:'present',
+      type:nori?'nor-nori-nork':'nor-nork',nor,nori,nork,treatment,allocutive:false,
+      affixes:[],rawTags:['eab1979','NN9/NNN9'],baseForm:form,origin:'rule',validation:'reviewed',
+      citations:[{sourceId:'euskaltzaindia-eab1979',locator:'158¹. or. (PDF 338), IRAKATSI NN9/NNN9'}],
+      segmentation:null,history:[],
+    };
+    insert.run(analysis.id,form,'irakatsi','batua',1,'euskaltzaindia-eab1979',JSON.stringify(analysis));
+  }
 // The Apertium ADL entries are continuation stems and often lack the free
 // finite form (e.g. dirot, niroen). Reconstruct the small *iro paradigm from
 // its licensed stem/affix specification, then audit it against rule 14.
@@ -363,12 +388,12 @@ db.exec('COMMIT;');
 const count = (sql: string) => Number((db.prepare(sql).get() as { n:number }).n);
 const lemmas = db.prepare('SELECT lemma, count(DISTINCT form) AS forms, count(*) AS analyses FROM analyses GROUP BY lemma ORDER BY lemma').all() as Coverage['lemmas'];
 const coverage: Coverage = {
-  version:'0.1.0-apertium-f2888cdc-hika14', forms:count('SELECT count(DISTINCT form) AS n FROM analyses'),
+  version:'0.1.0-apertium-f2888cdc-hika14-eab1979', forms:count('SELECT count(DISTINCT form) AS n FROM analyses'),
   analyses:count('SELECT count(*) AS n FROM analyses'), baseForms:count('SELECT count(DISTINCT form) AS n FROM analyses WHERE base=1'),
   lemmas, varieties:['batua'], source:'apertium+wiktionary+euskaltzaindia', complete:false,
   reviewedSegmentations:6, historicalNotes:2, missingLemmas:[],
   limitations:[
-    {eu:'Apertiumeko 35 paradigma, ba- saileko beste 5 lema eta *iro/*io osagarriak. Euskaltzaindiaren 14. arauko hikako taulak eta 78. arauko laguntzaile-gelaxka zabalak auditatu dira; horrek ez du euskara batuko inbentario eta analisi guztien estaldura osoa frogatzen. Erauntsi, eroan, iharduki, irakin eta jario lemen gainerako sailak partzialak izan daitezke.'},
+    {eu:'Apertiumeko 35 paradigma, ba- saileko beste 5 lema, *iro/*io osagarriak eta *irakatsi*ren agintera. 14. arauko hikako taulak, 78. arauko laguntzaile-gelaxkak eta 1979ko Euskal Aditz Batuaren 20 paradigma-orri auditatu dira; horrek ez du euskara batuko inbentario eta analisi guztien estaldura osoa frogatzen. Erauntsi, eroan, iharduki, irakin eta jario lemen gainerako sailak partzialak izan daitezke.'},
     {eu:'Atxeki → atxiki, irudi/iruditu eta erion → jario loturak Hiztegi Batuaren arabera ebatzi dira; erion bizkaierazko forma urria da, eta ez da euskara batuko lema bereizi gisa inportatu. *io aparteko lema gisa dago.'},
     {eu:'Arau bidez sortutako hitano-formak «sortua» gisa markatzen dira; banakako arautasun-ziurtagiria ez da. 14. arauaren PDFa emanda, audit:alokutibo komandoak hiru zutabeko formak alderatzen ditu.'},
     {eu:'Lexikoak forma literarioak eta arraroak ere baditu; banakako arautasun-auditoria amaitu gabe dago.'},

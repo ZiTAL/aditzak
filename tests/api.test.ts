@@ -133,6 +133,24 @@ test('iro, io and missing synthetic hika keep exact roles and provenance',async(
     assert.ok((await analyze(form)).analyses.some(a=>a.lemma===lemma),form);
   assert.equal((await analyze('zaramakidak')).analyses.find(a=>a.lemma==='eraman')?.validation,'generated');
 });
+test('irakatsi imperative follows the Academy paradigm and keeps gender distinct',async()=>{
+  for(const [form,nor,nori,nork,treatment] of [
+    ['irakatsak','hura',null,'hi','toka'],
+    ['irakatsan','hura',null,'hi','noka'],
+    ['irakastak','hura','ni','hi','toka'],
+    ['irakaskuzu','hura','gu','zu','neutral'],
+    ['irakatsiozue','hura','hura','zuek','neutral'],
+    ['irakatsazkiguzu','haiek','gu','zu','neutral'],
+  ] as const) {
+    const analyses=(await analyze(form)).analyses;
+    assert.ok(analyses.some(a=>a.lemma==='irakatsi'&&a.kind==='synthetic'&&a.mood==='imperative'&&a.type===(nori?'nor-nori-nork':'nor-nork')&&
+      a.nor===nor&&a.nori===nori&&a.nork===nork&&a.treatment===treatment&&!a.allocutive&&a.validation==='reviewed'&&
+      a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')),form);
+  }
+  const upstream=(await analyze('irakatsiguzu')).analyses;
+  assert.ok(upstream.some(a=>a.lemma==='irakatsi'&&a.validation==='imported'));
+  assert.ok(!upstream.some(a=>a.lemma==='erakutsi'));
+});
 test('all segmentation offsets reconstruct their surface and unknown history stays absent',async()=>{
   for(const form of ['hatzait','dut','du','haiz','naiz','didazue','dator','dakit','zarete']){
     for(const a of (await analyze(form)).analyses){
@@ -156,6 +174,6 @@ test('typo suggestions and absence are not fabricated analyses',async()=>{
   const unknown=await analyze('qqqqqqqq');assert.deepEqual(unknown.analyses,[]);assert.deepEqual(unknown.suggestions,[]);
 });
 test('coverage counts and provenance remain explicit',async()=>{
-  const meta=(await app.inject({url:'/api/v1/meta'})).json();assert.ok(meta.forms>412000);assert.ok(meta.analyses>664000);assert.equal(meta.lemmas.length,42);assert.equal(meta.complete,false);assert.equal(meta.reviewedSegmentations,6);
+  const meta=(await app.inject({url:'/api/v1/meta'})).json();assert.ok(meta.forms>412000);assert.ok(meta.analyses>664000);assert.equal(meta.lemmas.length,43);assert.equal(meta.complete,false);assert.equal(meta.reviewedSegmentations,6);
   const a=(await analyze('hatzait')).analyses[0];const byId=(await app.inject({url:'/api/v1/forms/'+a.id})).json<Analysis>();assert.equal(byId.id,a.id);
 });

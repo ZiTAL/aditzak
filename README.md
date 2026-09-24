@@ -93,8 +93,9 @@ E2E probek `/usr/bin/chromium` erabiltzen dute. Beste kokaleku bat:
 
 ## Estaldura: taula nagusiak auditatuak, baina ez oraindik osoa
 
-Uneko datu-baseak **42 lema** hartzen ditu: Apertiumeko 35 paradigma, `ba-`
-sailetik ateratako beste bost, eta *iro/*io osagarriak. Zenbaketa zehatza webeko estaldura-panelean,
+Uneko datu-baseak **43 lema** hartzen ditu: Apertiumeko 35 paradigma, `ba-`
+sailetik ateratako beste bost, *iro/*io osagarriak eta *irakatsi*ren agintera.
+Zenbaketa zehatza webeko estaldura-panelean,
 `GET /api/v1/meta` erantzunean eta `data/generated/coverage.json` fitxategian dago.
 Forma atzizkidunak eta nominalizazioak ere zenbatzen dira: ez nahasi azaleko
 forma-kopurua oinarrizko adizki-kopuruarekin.
@@ -129,8 +130,8 @@ egiaztatzen, eta aditz trinkoak beste iturri batzuen mende daude;
 `complete: false` mantentzen da.
 
 Euskaltzaindiaren [*Euskal Aditz Batua* (1979)](https://www.euskaltzaindia.eus/dok/iker_jagon_tegiak/6833.pdf)
-liburuko ezkerreko paradigma ofizialen 19 orrialdetan, EGON, JOAN, ETORRI,
-IBILI eta ETZAN aditzen 263 adizki-agerpen alderatu dira: azaleko forma,
+liburuko ezkerreko paradigma ofizialen 20 orrialdetan, EGON, JOAN, ETORRI,
+IBILI, ETZAN eta IRAKATSI aditzen 299 adizki-agerpen alderatu dira: azaleko forma,
 lema, NOR pertsona eta NOR saileko analisiak ez dute desadostasunik. N1/N2,
 N3, N4, N5 eta N9 sailen modu/aldia ere egiaztatzen dira; N4', N7 eta N10
 sailen interpretazio anitzak ez dira etiketa bakarrera behartzen. Liburuaren
@@ -139,6 +140,14 @@ gramatikalak editorearenak direla, ez Euskaltzaindiaren onespen berekoak.
 Horregatik, auditak ez ditu horiek paradigma ofizial gisa hartzen. Gainerako
 aditz trinkoen paradigma osoak, alokutiboen semantika eta zatiketa
 morfologikoa egiaztatu gabe daude.
+
+IRAKATSIren 158¹. orrialdea (PDFko 338.a) paradigma ofiziala da, ez
+eraikuntza-taula: PDFan aurrez aurreko orri zuria dago. Orrialde horretako
+hitz bakarreko 36 aginterazko adizki gehitu dira, NOR/NORI/NORK eta
+hitanoaren generoarekin; tartearekin idatzitako aukera analitikoak ez dira
+bilaketa honen hitz bakarreko sarrerak. Apertiumek `erakutsi` azpian zuen
+`irakatsiguzu` forma *irakatsi* leman zuzendu da, baina «inportatua» izaten
+jarraitzen du. Beste aldi/moduen paradigmarik ez da asmatu.
 
 Arauaren bidez berrikusitako irakurketak inportatu gabekoen aurretik erakusten
 dira; Apertiumeko beste irakurketak ez dira automatikoki ezabatzen, banakako

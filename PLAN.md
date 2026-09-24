@@ -2,8 +2,8 @@
 
 ## Egungo egoera (2026-09-24)
 
-Plana idatzi ondoren prototipo funtzionala eraiki da. Uneko datu-baseak 42 lema,
-10.473 oinarrizko forma desberdin, 412.627 azaleko forma eta 664.484 analisi
+Plana idatzi ondoren prototipo funtzionala eraiki da. Uneko datu-baseak 43 lema,
+10.509 oinarrizko forma desberdin, 412.663 azaleko forma eta 664.520 analisi
 inportatu, sortu eta berrikusi ditu. Apertium corpusaren commit finkoari
 Euskaltzaindiaren 14. arauko 5.252 sarrera parekaturen eta 78. arauko 2.779
 gelaxka argiren auditak, eta Wiktionaryren hitano-algoritmoaren GPLv3
@@ -18,10 +18,12 @@ PDFko lerro hautsi batzuk eskuz transkribatu dira; bi gelaxka ez daude
 inprimatutako adizki osoko taulan. Tratamendua eta morfema-zatiketa ez ditu
 audit honek egiaztatzen, eta sintetikoei ez die 78. arauak estaldura ematen.
 
-*Euskal Aditz Batua* (1979) liburuko paradigma ofizialen 19 orrialdeetan,
-EGON, JOAN, ETORRI, IBILI eta ETZANen NOR saileko 263 adizki-agerpen
-auditatu dira. Oraingoz ez da desadostasunik; beste paradigma trinkoak
-eta tratamenduen egiaztapena falta dira. Aurrez aurreko eraikuntza-taulak
+*Euskal Aditz Batua* (1979) liburuko paradigma ofizialen 20 orrialdeetan,
+EGON, JOAN, ETORRI, IBILI eta ETZANen NOR saileko 263 agerpen eta
+IRAKATSIren aginterako 36 forma auditatu dira. *Irakatsi*ren 158¹. orrialdea
+(PDF 338) ofiziala dela berretsi da; horren hitz bakarreko paradigmak eta
+Apertiumeko lema-zuzenketa gehitu dira. Oraingoz ez da desadostasunik; beste
+paradigma trinkoak eta tratamenduen egiaztapena falta dira. Aurrez aurreko eraikuntza-taulak
 editorearenak dira, ez Akademiaren paradigma ofizialak.
 
 Vue interfazea, Fastify APIa, SQLite inportatzailea, iturri-erregistroa eta

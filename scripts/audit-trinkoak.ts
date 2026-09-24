@@ -126,6 +126,32 @@ for (const page of pageSpecs) {
     }
   }
 }
+// The physical PDF has a blank facing page here: p. 338 is printed 158¹,
+// an Academy paradigm, not an editor-only construction chart. Only its
+// single-word NN9/NNN9 cells belong to the one-word reverse analyzer.
+const irakatsiPage = pages[337];
+if (!irakatsiPage?.includes('IRAKATSI') || !/158\s+1/.test(irakatsiPage))
+  failures.push('PDF 338: IRAKATSI paradigma ofizialaren aingurak falta dira');
+for (const [nor, recipients] of [
+  ['hura', [[null, 'irakatsa'], ['ni', 'irakasta'], ['gu', 'irakasku'], ['hura', 'irakatsio'], ['haiek', 'irakatsie']]],
+  ['haiek', [['ni', 'irakatsazkida'], ['gu', 'irakatsazkigu'], ['hura', 'irakatsazkio'], ['haiek', 'irakatsazkie']]],
+] as [Person, [Person | null, string][]][]) for (const [nori, stem] of recipients)
+  for (const [nork, suffix, treatment] of [
+    ['hi', 'k', 'toka'], ['hi', 'n', 'noka'], ['zu', 'zu', 'neutral'], ['zuek', 'zue', 'neutral'],
+  ] as [Person, string, Analysis['treatment']][]) {
+    const form=stem+suffix;
+    checked++;
+    // The PDF text extractor renders the printed "k/n" alternation as
+    // "k In", "kln", or "k/n". Anchor both gender forms to that cell.
+    const visible=nork==='hi' ? new RegExp(`${stem}k(?:\\s+In|ln|/n)`).test(irakatsiPage) :
+      new RegExp(`(?<![a-z])${form}(?![a-z])`).test(irakatsiPage);
+    if (!visible) failures.push(`PDF 338: ${form} jatorrizko gelaxkan ez da aurkitu`);
+    const analyses=(lookup.all(form,'batua') as {payload:string}[]).map(r=>JSON.parse(r.payload) as Analysis);
+    if (!analyses.some(a=>a.lemma==='irakatsi'&&a.kind==='synthetic'&&a.mood==='imperative'&&a.tense==='present'&&
+      a.type===(nori?'nor-nori-nork':'nor-nork')&&a.nor===nor&&a.nori===nori&&a.nork===nork&&
+      a.treatment===treatment&&!a.allocutive&&a.validation==='reviewed'))
+      failures.push(`PDF 338: ${form} analisia falta edo desegokia da (${nor}, ${nori}, ${nork})`);
+  }
 db.close();
-console.log(`${pageSpecs.length} paradigma-orri ofizial, ${checked} adizki-agerpen, ${failures.length} hutsune/desadostasun`);
+console.log(`${pageSpecs.length + 1} paradigma-orri ofizial, ${checked} adizki-agerpen, ${failures.length} hutsune/desadostasun`);
 if (failures.length) { for (const failure of failures.slice(0, 100)) console.error(failure); process.exitCode = 1; }
