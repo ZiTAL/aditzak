@@ -57,3 +57,13 @@ test('new JARIO and EROAN imperative readings appear in the UI',async({page})=>{
   await expect(page.locator('.person.nork strong')).toHaveText('hik');
   await expect(page.locator('.treatment')).toContainText('Noka');
 });
+test('ERAKUTSI gender and conditional readings appear in the UI',async({page})=>{
+  await page.goto('/?q=erakutsazkidan');
+  await expect(page.locator('.board-summary')).toContainText('Agintera');
+  await expect(page.locator('.person.nor strong')).toHaveText('haiek');
+  await expect(page.locator('.person.nori strong')).toHaveText('niri');
+  await expect(page.locator('.treatment')).toContainText('Noka');
+  await page.goto('/?q=banerakutsa');
+  await expect(page.locator('.board-summary')).toContainText('Baldintza');
+  await expect(page.locator('.person.nork strong')).toHaveText('nik');
+});

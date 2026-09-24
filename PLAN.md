@@ -3,7 +3,7 @@
 ## Egungo egoera (2026-09-24)
 
 Plana idatzi ondoren prototipo funtzionala eraiki da. Uneko datu-baseak 43 lema,
-10.568 oinarrizko forma desberdin, 412.722 azaleko forma eta 664.580 analisi
+10.571 oinarrizko forma desberdin, 412.738 azaleko forma eta 664.597 analisi
 inportatu, sortu eta berrikusi ditu. Apertium corpusaren commit finkoari
 Euskaltzaindiaren 14. arauko 5.252 sarrera parekaturen eta 78. arauko 2.779
 gelaxka argiren auditak, eta Wiktionaryren hitano-algoritmoaren GPLv3
@@ -18,10 +18,10 @@ PDFko lerro hautsi batzuk eskuz transkribatu dira; bi gelaxka ez daude
 inprimatutako adizki osoko taulan. Tratamendua eta morfema-zatiketa ez ditu
 audit honek egiaztatzen, eta sintetikoei ez die 78. arauak estaldura ematen.
 
-*Euskal Aditz Batua* (1979) liburuko paradigma ofizialen 28 orrialdeetan,
+*Euskal Aditz Batua* (1979) liburuko paradigma ofizialen 31 orrialdeetan,
 EGON, JOAN, ETORRI, IBILI eta ETZANen NOR saileko 263 agerpen,
 IRAKATSIren aginterako 36, IHARDUN/IHARDUKIren 70 eta
-ERAUNTSI/EUTSIren 40, JARIOren 32 eta EROANen 26 auditatu dira.
+ERAUNTSI/EUTSIren 40, JARIOren 32, EROANen 26 eta ERAKUTSIren 98 auditatu dira.
 *Irakatsi*ren 158¹. orrialdea
 (PDF 338) ofiziala dela berretsi da; horren hitz bakarreko paradigmak eta
 Apertiumeko lema-zuzenketa gehitu dira. Oraingoz ez da desadostasunik; beste
@@ -37,12 +37,20 @@ egiaztatu da. NN4ren modu/aldia Apertiumeko lehendik zegoen sailari jarraituz
 eman da; iturri ofizialak forma eta pertsona bermatzen ditu. Bi taula horien
 zatiketa morfologikoa oraindik ez dago egiaztatuta.
 
+ERAKUTSIren 149¹–151¹. orrialdeetako hiru taula osoak auditatu dira.
+Lehenaldiko bi adizki, baldintzako 13 irakurketa eta `herakuske`ren bi
+modu-irakurketa gehitu dira. Aginterako `-k/-n` bikoteetan lehen «hika
+(zehaztu gabe)» ziren 18 irakurketak toka/noka gisa zuzendu dira, 1979ko
+taula eta 1977ko jatorrizkoa erabiliz. NN3/NN4ko modu-interpretazio berriak
+«sortua» dira; inprimatutako gelaxkak forma eta pertsona egiaztatzen ditu,
+ez nahitaez etiketa gramatikal hori.
+
 EUTSIren `daut-` formak 1979ko liburuan ageri dira, baina 1977ko jatorrizko
 *Aditz sintetikoa* zerrendak `deut-` ematen du. Gatazka ebatzi gabe dago;
 `daut-` sarrerak «sortua» gisa agertzen dira eta ez dute alokutiborik sortzen.
 `deut-` saileko lau oinarrizko irakurketak 1977ko zerrendarekin berrikusi dira.
 1977ko dokumentuko IRAUN/IRUDI sailen 70, IHARDUKIren 10 eta
-ERAUNTSIren lau eta EROANen hamabi agerpen ere egiaztatu dira,
+ERAUNTSIren lau, EROANen hamabi eta ERAKUTSIren hamasei agerpen ere egiaztatu dira,
 hutsegiterik gabe; honek ez du gainerako aditz trinkoen estaldura frogatzen.
 
 Vue interfazea, Fastify APIa, SQLite inportatzailea, iturri-erregistroa eta

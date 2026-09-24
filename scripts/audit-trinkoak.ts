@@ -195,6 +195,97 @@ for(const plural of [false,true]) {
       failures.push(`PDF 328: ${form} NN9 analisia falta edo desegokia da (${nor}, ${nork})`);
   }
 }
+// ERAKUTSI's NOR-NORK pages (printed pp. 149¹–150¹/PDF 320, 322).
+// The plural-NOR imperative alternatives with a space are intentionally
+// outside this single-word analyzer; the two short be- cells are included.
+const erakutsiNorNorkPages=[
+  {page:320,series:[
+    {label:'NN1',mood:'indicative',tense:'present',rows:[
+      ['hura',['darakutsat','darakutsak','darakutsa','darakutsagu','darakutsazu','darakutsazue','darakutsate']],
+      ['haiek',['darakuskit','darakuskik','darakuski','darakuskigu','darakuskizu','darakuskizue','darakuskite']],
+    ]},
+    {label:'NN2',mood:'indicative',tense:'past',rows:[
+      ['hura',['nerakutsan','herakutsan','zerakutsan','generakutsan','zenerakutsan','zenerakutsaten','zerakutsaten']],
+      ['haiek',['nerakuskien','herakuskien','zerakuskien','generakuskien','zenerakuskien','zenerakuskiten','zerakuskiten']],
+    ]},
+  ]},
+  {page:322,series:[
+    {label:'NN3',mood:'conditional',tense:'hypothetical',rows:[
+      ['hura',['banerakutsa','baherakutsa','balerakutsa','bagenerakutsa','bazenerakutsa','bazenerakutsate','balerakutsate']],
+      ['haiek',['banerakuski','baherakuski','balerakuski','bagenerakuski','bazenerakuski','bazenerakuskite','balerakuskite']],
+    ]},
+    {label:'NN4',mood:'consequence',tense:'present',rows:[
+      ['hura',['nerakuske','herakuske','lerakuske','generakuske','zenerakuske','zenerakuskete','lerakuskete']],
+      ['haiek',['nerakutsazke','herakutsazke','lerakutsazke','generakutsazke','zenerakutsazke','zenerakutsazkete','lerakutsazkete']],
+    ]},
+  ]},
+] as const;
+const erakutsiSubjects:Person[]=['ni','hi','hura','gu','zu','zuek','haiek'];
+for(const spec of erakutsiNorNorkPages) {
+  const source=pages[spec.page-1];
+  if(!source?.includes('ERAKUTSI')||!new RegExp(`${spec.page===320?'149':'150'}\\s*1`).test(source))
+    failures.push(`PDF ${spec.page}: ERAKUTSI paradigma-aingurak falta dira`);
+  for(const series of spec.series) for(const [nor,forms] of series.rows) for(let i=0;i<forms.length;i++) {
+    const form=forms[i]; const nork=erakutsiSubjects[i]; checked++;
+    if(!new RegExp(`(?<![a-z])${form}(?![a-z])`).test(source))
+      failures.push(`PDF ${spec.page}: ERAKUTSI ${series.label} ${form} falta da`);
+    const analyses=(lookup.all(form,'batua') as {payload:string}[]).map(r=>JSON.parse(r.payload) as Analysis);
+    if(!analyses.some(a=>a.lemma==='erakutsi'&&a.kind==='synthetic'&&a.type==='nor-nork'&&
+      a.nor===nor&&a.nori===null&&a.nork===nork&&a.mood===series.mood&&a.tense===series.tense&&
+      !a.allocutive)) failures.push(`PDF ${spec.page}: ERAKUTSI ${series.label} ${form} analisia falta edo desegokia da`);
+    // The indicative present prints -k/-n in one cell for NORK=hi.
+    if(spec.page===320&&series.label==='NN1'&&nork==='hi') {
+      const noka=form.slice(0,-1)+'n'; checked++;
+      if(!new RegExp(`${form}\\s+III`).test(source))failures.push(`PDF 320: ${noka} genero-bikotea falta da`);
+      const gender=(lookup.all(noka,'batua') as {payload:string}[]).map(r=>JSON.parse(r.payload) as Analysis);
+      if(!gender.some(a=>a.lemma==='erakutsi'&&a.nor===nor&&a.nork==='hi'&&a.mood==='indicative'&&
+        a.tense==='present'&&a.treatment==='noka'))failures.push(`PDF 320: ${noka} noka irakurketa falta da`);
+    }
+  }
+}
+const erakutsiN9=pages[321];
+for(const [nor,nork,form,treatment] of [
+  ['hura','hi','erakutsak','toka'],['hura','hi','erakutsan','noka'],
+  ['hura','hura','berakutsa','neutral'],['hura','zu','erakutsazu','neutral'],
+  ['hura','zuek','erakutsazue','neutral'],['hura','haiek','berakutsate','neutral'],
+  ['haiek','hura','berakuski','neutral'],['haiek','haiek','berakuskite','neutral'],
+] as [Person,Person,string,Analysis['treatment']][]) {
+  checked++;
+  const visible=form==='erakutsan'?/erakutsak\s+m/.test(erakutsiN9):
+    new RegExp(`(?<![a-z])${form}(?![a-z])`).test(erakutsiN9);
+  if(!visible)failures.push(`PDF 322: ERAKUTSI NN9 ${form} falta da`);
+  const analyses=(lookup.all(form,'batua') as {payload:string}[]).map(r=>JSON.parse(r.payload) as Analysis);
+  if(!analyses.some(a=>a.lemma==='erakutsi'&&a.kind==='synthetic'&&a.type==='nor-nork'&&
+    a.nor===nor&&a.nori===null&&a.nork===nork&&a.mood==='imperative'&&a.tense==='present'&&
+    a.treatment===treatment&&!a.allocutive&&
+    (nork!=='hi'||(a.validation==='reviewed'&&a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')))))
+    failures.push(`PDF 322: ERAKUTSI NN9 ${form} analisia falta edo desegokia da`);
+}
+// ERAKUTSI NNN9 (printed p. 151¹/PDF 324): all four NORI recipients
+// for both NOR numbers. The OCR renders the printed -k/-n pair as III/lll;
+// the original 1977 table corroborates those sixteen gendered readings.
+const erakutsiPage=pages[323];
+if(!erakutsiPage?.includes('ERAKUTSI')||!/151\s+1/.test(erakutsiPage))
+  failures.push('PDF 324: ERAKUTSI NNN9 paradigma-aingurak falta dira');
+for(const [nor,recipients] of [
+  ['hura',[['ni','erakusta'],['gu','erakusku'],['hura','erakutsio'],['haiek','erakutsie']]],
+  ['haiek',[['ni','erakutsazkida'],['gu','erakutsazkigu'],['hura','erakutsazkio'],['haiek','erakutsazkie']]],
+] as [Person,[Person,string][]][]) for(const [nori,stem] of recipients)
+  for(const [nork,suffix,treatment] of [
+    ['hi','k','toka'],['hi','n','noka'],['zu','zu','neutral'],['zuek','zue','neutral'],
+  ] as [Person,string,Analysis['treatment']][]) {
+    const form=stem+suffix;
+    checked++;
+    const visible=nork==='hi'?new RegExp(`${stem}k\\s*(?:III|lll)`).test(erakutsiPage):
+      new RegExp(`(?<![a-z])${form}(?![a-z])`).test(erakutsiPage);
+    if(!visible)failures.push(`PDF 324: ${form} jatorrizko gelaxkan ez da aurkitu`);
+    const analyses=(lookup.all(form,'batua') as {payload:string}[]).map(r=>JSON.parse(r.payload) as Analysis);
+    if(!analyses.some(a=>a.lemma==='erakutsi'&&a.kind==='synthetic'&&a.mood==='imperative'&&
+      a.tense==='present'&&a.type==='nor-nori-nork'&&a.nor===nor&&a.nori===nori&&a.nork===nork&&
+      a.treatment===treatment&&!a.allocutive&&
+      (nork!=='hi'||(a.validation==='reviewed'&&a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')))))
+      failures.push(`PDF 324: ${form} analisia falta edo desegokia da (${nor}, ${nori}, ${nork})`);
+  }
 // The physical PDF has a blank facing page here: p. 338 is printed 158¹,
 // an Academy paradigm, not an editor-only construction chart. Only its
 // single-word NN9/NNN9 cells belong to the one-word reverse analyzer.
@@ -390,7 +481,18 @@ if(originalPdf) {
       new RegExp(`(?<![a-z])${form}(?![a-z])`).test(eroanOriginal);
     if(!visible)failures.push(`1977ko PDF 57: EROAN ${form} falta da`);
   }
+  const erakutsiOriginal=originalPages[54]; // printed p. 838
+  if(!erakutsiOriginal||!/\b838\b/.test(erakutsiOriginal))
+    failures.push('1977ko PDF 55: ERAKUTSI/838 aingurak falta dira');
+  for(const stem of ['erakusta','erakusku','erakutsio','erakutsie',
+    'erakutsazkida','erakutsazkigu','erakutsazkio','erakutsazkie']) {
+    for(const suffix of ['k','n']) {
+      originalChecked++;
+      const visible=new RegExp(`(?<![a-z])${stem}k(?:/|Z)-n`).test(erakutsiOriginal);
+      if(!visible)failures.push(`1977ko PDF 55: ERAKUTSI ${stem+suffix} genero-bikotea falta da`);
+    }
+  }
 }
 db.close();
-console.log(`${pageSpecs.length + 3 + norkPages.length + 2} paradigma-orri ofizial, ${checked} adizki-agerpen; 1977ko jatorrizkoan ${originalPdf?originalChecked+' agerpen eta EUTSI gatazka egiaztatuak':'ez da auditatu'}; ${failures.length} hutsune/desadostasun`);
+console.log(`${pageSpecs.length + 6 + norkPages.length + 2} paradigma-orri ofizial, ${checked} adizki-agerpen; 1977ko jatorrizkoan ${originalPdf?originalChecked+' agerpen eta EUTSI gatazka egiaztatuak':'ez da auditatu'}; ${failures.length} hutsune/desadostasun`);
 if (failures.length) { for (const failure of failures.slice(0, 100)) console.error(failure); process.exitCode = 1; }

@@ -189,6 +189,34 @@ test('eroan NN4 and NN9 keep missing NORK persons and singular/plural NOR',async
       (mood!=='imperative'||a.citations.some(c=>c.sourceId==='euskaltzaindia-sintetikoa1977'))),form);
   }
 });
+test('erakutsi imperative HI endings are source-reviewed toka/noka, not unspecified hika',async()=>{
+  for(const [nor,recipients] of [
+    ['hura',[['ni','erakusta'],['gu','erakusku'],['hura','erakutsio'],['haiek','erakutsie']]],
+    ['haiek',[['ni','erakutsazkida'],['gu','erakutsazkigu'],['hura','erakutsazkio'],['haiek','erakutsazkie']]],
+  ] as const) for(const [nori,stem] of recipients) for(const [suffix,treatment] of [['k','toka'],['n','noka']] as const) {
+    const form=stem+suffix;
+    assert.ok((await analyze(form)).analyses.some(a=>a.lemma==='erakutsi'&&a.mood==='imperative'&&
+      a.nor===nor&&a.nori===nori&&a.nork==='hi'&&a.treatment===treatment&&
+      a.validation==='reviewed'&&a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')&&
+      a.citations.some(c=>c.sourceId==='euskaltzaindia-sintetikoa1977')),form);
+  }
+  for(const [mood,tense] of [['consequence','present'],['potential','hypothetical']] as const)
+    assert.ok((await analyze('herakuske')).analyses.some(a=>a.lemma==='erakutsi'&&a.mood===mood&&
+      a.tense===tense&&a.nor==='hura'&&a.nork==='hi'&&a.treatment==='hika'&&a.validation==='generated'));
+  for(const [form,treatment] of [['erakutsak','toka'],['erakutsan','noka']] as const)
+    assert.ok((await analyze(form)).analyses.some(a=>a.lemma==='erakutsi'&&a.mood==='imperative'&&
+      a.nor==='hura'&&a.nori===null&&a.nork==='hi'&&a.treatment===treatment&&a.validation==='reviewed'));
+  for(const [form,nork] of [['herakuskien','hi'],['zenerakuskiten','zuek']] as const)
+    assert.ok((await analyze(form)).analyses.some(a=>a.lemma==='erakutsi'&&a.mood==='indicative'&&
+      a.tense==='past'&&a.nor==='haiek'&&a.nork===nork&&a.validation==='reviewed'));
+  for(const [form,nor,nork] of [
+    ['banerakutsa','hura','ni'],['balerakutsa','hura','hura'],
+    ['bazenerakutsate','hura','zuek'],['banerakuski','haiek','ni'],
+    ['bazenerakuskite','haiek','zuek'],['balerakuskite','haiek','haiek'],
+  ] as const) assert.ok((await analyze(form)).analyses.some(a=>a.lemma==='erakutsi'&&
+    a.mood==='conditional'&&a.tense==='hypothetical'&&a.nor===nor&&a.nork===nork&&
+    a.affixes.includes('ba<cnjsub>')&&a.validation==='generated'),form);
+});
 test('iharduki missing present, N4 and imperative rows retain exact agreement',async()=>{
   for(const [form,nork,mood,treatment,validation] of [
     ['dihardukazue','zuek','indicative','neutral','reviewed'],

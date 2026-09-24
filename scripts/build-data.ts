@@ -45,6 +45,11 @@ const moods: Record<string, [Mood,Tense]> = {
 };
 const people: Record<string,Person> = { NI:'ni', HI:'hi', HU:'hura', GU:'gu', ZU:'zu', ZK:'zuek', HK:'haiek' };
 const auxiliaries = new Set(['izan','ukan','edin','ezan','iro']);
+const erakutsiImperativeStems = new Set([
+  'erakutsa',
+  'erakusta','erakusku','erakutsio','erakutsie',
+  'erakutsazkida','erakutsazkigu','erakutsazkio','erakutsazkie',
+]);
 const insert = db.prepare('INSERT OR IGNORE INTO analyses VALUES (?,?,?,?,?,?,?)');
 const lemmaInsert = db.prepare('INSERT OR IGNORE INTO lemmas VALUES (?,?)');
 const skipped: Record<string,number> = {};
@@ -100,15 +105,27 @@ function importEntry(entry: Entry, paradigm: string, lemma: string | null, prefi
     if (standardizedNoka) treatment='noka';
     const standardizedToka=verb === 'ezan' && form==='geniezaiekean';
     if (standardizedToka)treatment='toka';
+    // The 1979 Academy NN9 table and the 1977 original give explicit k/n
+    // alternatives for these imperative stems. Upstream only tags HI,
+    // leaving both readings as unspecified hika.
+    const reviewedErakutsiGender=verb==='erakutsi'&&mood==='imperative'&&actualNork==='hi'&&
+      affixes.length===0&&erakutsiImperativeStems.has(form.slice(0,-1))&&
+      (form.endsWith('k')||form.endsWith('n'));
+    if(reviewedErakutsiGender)treatment=form.endsWith('k')?'toka':'noka';
     const payload: Analysis = {
       id: '', form, lemma: verb, kind, variety:'batua', mood, tense,
       type: nori ? (actualNork ? 'nor-nori-nork' : 'nor-nori') : (actualNork ? 'nor-nork' : 'nor'),
       nor:actualNor, nori, nork:actualNork, treatment, allocutive: tags.includes('TO') || tags.includes('NO') || standardizedNoka || standardizedToka,
       affixes, rawTags: [...tags, ...suffixes], baseForm: affixes.length ? baseForm : form,
-      origin: extracted ? 'rule' : 'lexicon', validation: 'imported',
+      origin: extracted ? 'rule' : 'lexicon', validation: reviewedErakutsiGender?'reviewed':'imported',
       citations: [{ sourceId:'apertium', locator:`apertium-eus.eus.dix:${entry.line} (${paradigm}${entry.refs.length ? ' → '+entry.refs.join(', ') : ''}${extracted ? '; ba- gabe berreskuratutako indikatiboko oinarria' : ''})` },
         ...(standardizedNoka?[{sourceId:'euskaltzaindia14',locator:'14. araua, *ezan-en NOR-NORI-NORK alokutiboak; noka zutabea'}]:[]),
         ...(standardizedToka?[{sourceId:'euskaltzaindia14',locator:'14. araua, *ezan-en NOR-NORI-NORK alokutiboak; toka zutabea'}]:[]),
+        ...(reviewedErakutsiGender?[{sourceId:'euskaltzaindia-eab1979',locator:nori===null?
+          '150¹. or. (PDF 322), ERAKUTSI NN9, k/n alternantzia':'151¹. or. (PDF 324), ERAKUTSI NNN9, k/n alternantzia'},
+          {sourceId:'euskaltzaindia-sintetikoa1977',locator:nori===null?
+            '837. or., ERAKUTSIren NOR-NORK agintera, -k/-n bikotea':
+            '838. or., ERAKUTSIren NOR-NORI-NORK agintera, -k/-n bikoteak'}]:[]),
         ...(correctedIzan?[{sourceId:'euskaltzaindia14',locator:'14. araua, izan-en NOR bakarreko alokutiboak; *edun etiketaren zuzenketa'}]:[]),
         ...(correctedNor?[{sourceId:'euskaltzaindia14',locator:'14. araua, izan-en NOR-NORI: zitzaizkigun / zitzaizkiguan / zitzaizkigunan'}]:[]),
         ...(correctedNork?[{sourceId:'euskaltzaindia14',locator:'14. araua, *edun-en NOR-NORI-NORK: didake / zidakek / zidaken'}]:[]),
@@ -250,6 +267,62 @@ for(const plural of [false,true]) {
     lemmaInsert.run('eroan','synthetic');
     insert.run(analysis.id,form,'eroan','batua',1,'euskaltzaindia-eab1979',JSON.stringify(analysis));
   }
+}
+// ERAKUTSI NN2 and NN3 (printed pp. 149¹–150¹/PDF 320–322) expose two
+// missing past cells and almost the entire conditional premise. The source
+// lexicon already gives baherakutsa its conditional reading; do not add a
+// duplicate. The NN3 mood comes from that neighboring reading and the
+// editor's label, so the added conditional readings remain generated.
+for(const [form,nork,treatment] of [
+  ['herakuskien','hi','hika'],['zenerakuskiten','zuek','neutral'],
+] as [string,Person,Treatment][]) {
+  const analysis:Analysis={
+    id:createHash('sha256').update(JSON.stringify(['eab1979-erakutsi-nn2',form,nork])).digest('hex').slice(0,24),
+    form,lemma:'erakutsi',kind:'synthetic',variety:'batua',mood:'indicative',tense:'past',type:'nor-nork',
+    nor:'haiek',nori:null,nork,treatment,allocutive:false,affixes:[],rawTags:['eab1979','NN2'],
+    baseForm:form,origin:'rule',validation:'reviewed',segmentation:null,history:[],
+    citations:[{sourceId:'euskaltzaindia-eab1979',locator:'149¹. or. (PDF 320), ERAKUTSI NN2'},
+      {sourceId:'euskaltzaindia-sintetikoa1977',locator:'838. or., ERAKUTSI lehenaldia'}],
+  };
+  lemmaInsert.run('erakutsi','synthetic');
+  insert.run(analysis.id,form,'erakutsi','batua',1,'euskaltzaindia-eab1979',JSON.stringify(analysis));
+}
+for(const [nor,forms] of [
+  ['hura',['banerakutsa','baherakutsa','balerakutsa','bagenerakutsa','bazenerakutsa','bazenerakutsate','balerakutsate']],
+  ['haiek',['banerakuski','baherakuski','balerakuski','bagenerakuski','bazenerakuski','bazenerakuskite','balerakuskite']],
+] as [Person,string[]][]) for(let i=0;i<forms.length;i++) {
+  const form=forms[i];
+  const nork:Person=['ni','hi','hura','gu','zu','zuek','haiek'][i] as Person;
+  const existingRows=db.prepare('SELECT payload FROM analyses WHERE form=? AND lemma=?').all(form,'erakutsi') as {payload:string}[];
+  if(existingRows.some(r=>{const a=JSON.parse(r.payload) as Analysis;
+    return a.mood==='conditional'&&a.tense==='hypothetical'&&a.nor===nor&&a.nori===null&&a.nork===nork;}))continue;
+  const analysis:Analysis={
+    id:createHash('sha256').update(JSON.stringify(['eab1979-erakutsi-nn3',form,nor,nork])).digest('hex').slice(0,24),
+    form,lemma:'erakutsi',kind:'synthetic',variety:'batua',mood:'conditional',tense:'hypothetical',type:'nor-nork',
+    nor,nori:null,nork,treatment:nork==='hi'?'hika':'neutral',allocutive:false,affixes:['ba<cnjsub>'],
+    rawTags:['eab1979','NN3'],baseForm:form.slice(2),origin:'rule',validation:'generated',segmentation:null,history:[],
+    citations:[{sourceId:'euskaltzaindia-eab1979',locator:'150¹. or. (PDF 322), ERAKUTSI NN3; forma eta pertsona'},
+      {sourceId:'euskaltzaindia-sintetikoa1977',locator:'837–838. or., ERAKUTSI baldin-saileko adizkiak'}],
+  };
+  lemmaInsert.run('erakutsi','synthetic');
+  insert.run(analysis.id,form,'erakutsi','batua',0,'euskaltzaindia-eab1979',JSON.stringify(analysis));
+}
+// ERAKUTSI NN4 has a singular-NOR HI row absent upstream. The neighboring
+// upstream rows carry both consequence and potential readings; retain that
+// ambiguity, while marking both as inferred interpretations of an attested
+// surface/agreement cell (printed p. 150¹/PDF 322; original p. 837).
+for(const [mood,tense] of [['consequence','present'],['potential','hypothetical']] as [Mood,Tense][]) {
+  const form='herakuske';
+  const analysis:Analysis={
+    id:createHash('sha256').update(JSON.stringify(['eab1979-erakutsi-nn4',form,mood,tense])).digest('hex').slice(0,24),
+    form,lemma:'erakutsi',kind:'synthetic',variety:'batua',mood,tense,type:'nor-nork',
+    nor:'hura',nori:null,nork:'hi',treatment:'hika',allocutive:false,affixes:[],rawTags:['eab1979','NN4'],
+    baseForm:form,origin:'rule',validation:'generated',segmentation:null,history:[],
+    citations:[{sourceId:'euskaltzaindia-eab1979',locator:'150¹. or. (PDF 322), ERAKUTSI NN4; forma eta pertsona'},
+      {sourceId:'euskaltzaindia-sintetikoa1977',locator:'837. or., ERAKUTSI herakuske'}],
+  };
+  lemmaInsert.run('erakutsi','synthetic');
+  insert.run(analysis.id,form,'erakutsi','batua',1,'euskaltzaindia-eab1979',JSON.stringify(analysis));
 }
 // IHARDUKI is another compact paradigm in the same book. Upstream omits its
 // entire imperative, one present agreement and three N4 forms. The N4 mood
@@ -534,7 +607,7 @@ const coverage: Coverage = {
   lemmas, varieties:['batua'], source:'apertium+wiktionary+euskaltzaindia', complete:false,
   reviewedSegmentations:6, historicalNotes:2, missingLemmas:[],
   limitations:[
-    {eu:'Apertiumeko 35 paradigma, ba- saileko beste 5 lema, *iro/*io osagarriak eta *irakatsi*ren agintera. 14. arauko hikako taulak, 78. arauko laguntzaile-gelaxkak eta 1979ko Euskal Aditz Batuaren 28 paradigma-orri auditatu dira; horrek ez du euskara batuko inbentario eta analisi guztien estaldura osoa frogatzen. Erauntsi, eroan, iharduki, irakin eta jario lemen gainerako sailak partzialak izan daitezke.'},
+    {eu:'Apertiumeko 35 paradigma, ba- saileko beste 5 lema, *iro/*io osagarriak eta *irakatsi*ren agintera. 14. arauko hikako taulak, 78. arauko laguntzaile-gelaxkak eta 1979ko Euskal Aditz Batuaren 31 paradigma-orri auditatu dira; horrek ez du euskara batuko inbentario eta analisi guztien estaldura osoa frogatzen. Erauntsi, eroan, iharduki, irakin eta jario lemen gainerako sailak partzialak izan daitezke.'},
     {eu:'Atxeki → atxiki, irudi/iruditu eta erion → jario loturak Hiztegi Batuaren arabera ebatzi dira; erion bizkaierazko forma urria da, eta ez da euskara batuko lema bereizi gisa inportatu. *io aparteko lema gisa dago.'},
     {eu:'Arau bidez sortutako hitano-formak «sortua» gisa markatzen dira; banakako arautasun-ziurtagiria ez da. 14. arauaren PDFa emanda, audit:alokutibo komandoak hiru zutabeko formak alderatzen ditu.'},
     {eu:'Lexikoak forma literarioak eta arraroak ere baditu; banakako arautasun-auditoria amaitu gabe dago.'},
