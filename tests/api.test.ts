@@ -151,6 +151,45 @@ test('irakatsi imperative follows the Academy paradigm and keeps gender distinct
   assert.ok(upstream.some(a=>a.lemma==='irakatsi'&&a.validation==='imported'));
   assert.ok(!upstream.some(a=>a.lemma==='erakutsi'));
 });
+test('iharduki missing present, N4 and imperative rows retain exact agreement',async()=>{
+  for(const [form,nork,mood,treatment,validation] of [
+    ['dihardukazue','zuek','indicative','neutral','reviewed'],
+    ['hihardukake','hi','potential','hika','generated'],
+    ['zenihardukake','zu','potential','neutral','generated'],
+    ['zenihardukakete','zuek','potential','neutral','generated'],
+    ['ihardukak','hi','imperative','toka','reviewed'],
+    ['ihardukan','hi','imperative','noka','reviewed'],
+    ['biharduka','hura','imperative','neutral','reviewed'],
+    ['ihardukazu','zu','imperative','neutral','reviewed'],
+    ['ihardukazue','zuek','imperative','neutral','reviewed'],
+    ['bihardukate','haiek','imperative','neutral','reviewed'],
+  ] as const) {
+    assert.ok((await analyze(form)).analyses.some(a=>a.lemma==='iharduki'&&a.type==='nor-nork'&&
+      a.nor==='hura'&&a.nork===nork&&a.mood===mood&&a.treatment===treatment&&
+      a.validation===validation&&a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')),form);
+  }
+});
+test('erauntsi imperatives and eutsi daut- readings match printed NORI/NORK cells',async()=>{
+  for(const [form,lemma,mood,nori,nork] of [
+    ['berauntso','erauntsi','imperative','hura','hura'],
+    ['berauntsote','erauntsi','imperative','hura','haiek'],
+    ['berauntse','erauntsi','imperative','haiek','hura'],
+    ['berauntsete','erauntsi','imperative','haiek','haiek'],
+    ['dautso','eutsi','indicative','hura','hura'],
+    ['dautsote','eutsi','indicative','hura','haiek'],
+    ['dautse','eutsi','indicative','haiek','hura'],
+    ['dautsete','eutsi','indicative','haiek','haiek'],
+  ] as const) {
+    assert.ok((await analyze(form)).analyses.some(a=>a.lemma===lemma&&a.mood===mood&&a.nor==='hura'&&
+      a.nori===nori&&a.nork===nork&&a.validation===(lemma==='eutsi'?'generated':'reviewed')&&
+      a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')&&
+      (lemma!=='eutsi'||a.citations.some(c=>c.sourceId==='euskaltzaindia-sintetikoa1977'))),form);
+  }
+  assert.ok((await analyze('deutso')).analyses.some(a=>a.lemma==='eutsi'&&a.validation==='reviewed'&&
+    a.citations.some(c=>c.sourceId==='euskaltzaindia-sintetikoa1977')));
+  assert.ok(!(await analyze('dautso')).analyses.some(a=>a.allocutive));
+  assert.ok(!(await analyze('zautsok')).analyses.some(a=>a.baseForm==='dautso'));
+});
 test('all segmentation offsets reconstruct their surface and unknown history stays absent',async()=>{
   for(const form of ['hatzait','dut','du','haiz','naiz','didazue','dator','dakit','zarete']){
     for(const a of (await analyze(form)).analyses){

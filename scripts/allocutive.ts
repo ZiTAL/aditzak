@@ -89,6 +89,9 @@ function toka(form: string, a: Analysis): string[] {
 }
 
 export function allocutiveCandidates(a: Analysis): {form:string;treatment:'toka'|'noka'}[] {
+  // The 1977 and 1979 Academy publications disagree on the EUTSI daut-
+  // present. Do not propagate an unresolved base into unattested hika forms.
+  if (a.rawTags.includes('eab1979-daut-disputed')) return [];
   if (!(a.kind === 'synthetic' && syntheticLemmas.has(a.lemma) || a.kind === 'auxiliary' && a.lemma === 'iro') || a.allocutive || a.treatment !== 'neutral' || a.affixes.length) return [];
   if ([a.nor,a.nori,a.nork].some(p=>p === 'hi' || p === 'zu' || p === 'zuek')) return [];
   const standardizedSeries=a.lemma==='iro'

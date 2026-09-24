@@ -3,7 +3,7 @@
 ## Egungo egoera (2026-09-24)
 
 Plana idatzi ondoren prototipo funtzionala eraiki da. Uneko datu-baseak 43 lema,
-10.509 oinarrizko forma desberdin, 412.663 azaleko forma eta 664.520 analisi
+10.526 oinarrizko forma desberdin, 412.680 azaleko forma eta 664.538 analisi
 inportatu, sortu eta berrikusi ditu. Apertium corpusaren commit finkoari
 Euskaltzaindiaren 14. arauko 5.252 sarrera parekaturen eta 78. arauko 2.779
 gelaxka argiren auditak, eta Wiktionaryren hitano-algoritmoaren GPLv3
@@ -18,13 +18,21 @@ PDFko lerro hautsi batzuk eskuz transkribatu dira; bi gelaxka ez daude
 inprimatutako adizki osoko taulan. Tratamendua eta morfema-zatiketa ez ditu
 audit honek egiaztatzen, eta sintetikoei ez die 78. arauak estaldura ematen.
 
-*Euskal Aditz Batua* (1979) liburuko paradigma ofizialen 20 orrialdeetan,
-EGON, JOAN, ETORRI, IBILI eta ETZANen NOR saileko 263 agerpen eta
-IRAKATSIren aginterako 36 forma auditatu dira. *Irakatsi*ren 158¹. orrialdea
+*Euskal Aditz Batua* (1979) liburuko paradigma ofizialen 26 orrialdeetan,
+EGON, JOAN, ETORRI, IBILI eta ETZANen NOR saileko 263 agerpen,
+IRAKATSIren aginterako 36, IHARDUN/IHARDUKIren 70 eta
+ERAUNTSI/EUTSIren 40 auditatu dira. *Irakatsi*ren 158¹. orrialdea
 (PDF 338) ofiziala dela berretsi da; horren hitz bakarreko paradigmak eta
 Apertiumeko lema-zuzenketa gehitu dira. Oraingoz ez da desadostasunik; beste
-paradigma trinkoak eta tratamenduen egiaztapena falta dira. Aurrez aurreko eraikuntza-taulak
+paradigma trinkoak eta tratamenduen egiaztapena falta dira. IHARDUKIren
+aginterako sei forma eta beste lau forma osatu dira. ERAUNTSIren lau agintera
+eta EUTSIren 1979ko lau `daut-` aldaera ere gehitu dira. Aurrez aurreko eraikuntza-taulak
 editorearenak dira, ez Akademiaren paradigma ofizialak.
+
+EUTSIren `daut-` formak 1979ko liburuan ageri dira, baina 1977ko jatorrizko
+*Aditz sintetikoa* zerrendak `deut-` ematen du. Gatazka ebatzi gabe dago;
+`daut-` sarrerak «sortua» gisa agertzen dira eta ez dute alokutiborik sortzen.
+`deut-` saileko lau oinarrizko irakurketak 1977ko zerrendarekin berrikusi dira.
 
 Vue interfazea, Fastify APIa, SQLite inportatzailea, iturri-erregistroa eta
 Podman edukiontziak martxan daude. `hatzait` kasua, hitanoa, anbiguotasuna,

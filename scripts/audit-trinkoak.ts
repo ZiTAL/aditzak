@@ -8,6 +8,7 @@ import { defaultDatabasePath } from '../apps/api/src/database.js';
 // so this audit does not infer a mood from the book's N1/N2/... labels.
 const pdf = process.argv[2];
 if (!pdf) throw new Error('Erabilera: npm run audit:trinkoak -- /bidea/euskal-aditz-batua.pdf');
+const originalPdf = process.argv[3]; // 1977ko Aditz sintetikoa: hautazkoa baina gomendatua
 const pages = execFileSync('pdftotext', ['-layout', pdf, '-'], {
   encoding: 'utf8', maxBuffer: 20 * 1024 * 1024,
 }).split('\f');
@@ -152,6 +153,114 @@ for (const [nor, recipients] of [
       a.treatment===treatment&&!a.allocutive&&a.validation==='reviewed'))
       failures.push(`PDF 338: ${form} analisia falta edo desegokia da (${nor}, ${nori}, ${nork})`);
   }
+// Printed pp. 154¹–157¹: IHARDUN and IHARDUKI have compact NOR-NORK
+// tables. The OCR turns one h into b and several printed k/n cells into
+// "kln"; only those observed glyph errors are normalized here.
+const norkPages = [
+  { page:330, lemma:'jardun', layout:'n1n2n3' },
+  { page:332, lemma:'jardun', layout:'n4n9' },
+  { page:334, lemma:'iharduki', layout:'n1n2n3' },
+  { page:336, lemma:'iharduki', layout:'n4n9' },
+] as const;
+for (const spec of norkPages) {
+  const source=pages[spec.page-1];
+  if(!source?.includes(spec.lemma==='jardun'?'IHARDUN':'IHARDUKI')) {
+    failures.push(`PDF ${spec.page}: paradigma-izenburua falta da`);continue;
+  }
+  const rows=[...source.replace(/^\s*\.2(?=\s)/gm,'2')
+    .matchAll(/^\s*'?([123](?:')?)\s+([a-z][a-z/]+)(?=\s|$)/gm)]
+    .map(match=>({label:match[1],raw:match[2]}));
+  const expectedRows=spec.layout==='n1n2n3'?21:12;
+  if(rows.length!==expectedRows){failures.push(`PDF ${spec.page}: ${rows.length} lerro (espero ziren ${expectedRows})`);continue;}
+  const series=spec.layout==='n1n2n3'?['N1','N2','N3'] as const:['N4','N9'] as const;
+  for(let s=0;s<series.length;s++) {
+    const label=series[s];
+    const subjects=label==='N9'?imperative:seven;
+    for(let i=0;i<subjects.length;i++) {
+      const row=rows[s*7+i];
+      const printedLabel=label==='N9'?['2','3','2',"2'",'3'][i]:['1','2','3','1','2',"2'",'3'][i];
+      if(row.label!==printedLabel) failures.push(`PDF ${spec.page}, ${label}: ${i+1}. pertsona-etiketa ${row.label}`);
+      const raw=row.raw;
+      const forms=/k\/n$/.test(raw)?[raw.replace(/\/n$/,''),raw.replace(/k\/n$/,'n')]:
+        /kln$/.test(raw)?[raw.replace(/ln$/,''),raw.replace(/kln$/,'n')]:[raw==='zibarduten'?'ziharduten':raw];
+      for(const form of forms) {
+        checked++;
+        const analyses=(lookup.all(form,'batua') as {payload:string}[]).map(r=>JSON.parse(r.payload) as Analysis);
+        const expected=label==='N4'&&spec.lemma==='iharduki'?
+          {mood:'potential',tense:'hypothetical'} as const:label==='N4'?
+          {mood:'consequence',tense:'present'} as const:moods[label];
+        if(!analyses.some(a=>a.lemma===spec.lemma&&a.kind==='synthetic'&&a.type==='nor-nork'&&
+          a.nor==='hura'&&a.nori===null&&a.nork===subjects[i]&&a.mood===expected?.mood&&a.tense===expected.tense))
+          failures.push(`PDF ${spec.page}, ${spec.lemma} ${label}, ${subjects[i]}: ${form}`);
+      }
+    }
+  }
+}
+// The short official ERAUNTSI/EUTSI matrices (printed 163¹/164¹). Their
+// nori/nork columns are unambiguous; ambiguous -on/-an shorthand is not
+// expanded into a second recipient without independent confirmation.
+for(const spec of [
+  {page:348,lemma:'erauntsi',rows:[
+    ['derauntso','zerauntson','balerauntso','lerauntsoke'],
+    ['derauntsote','zerauntsoten','balerauntsote','lerauntsokete'],
+    ['derauntse','zerauntsen','balerauntse','lerauntseke'],
+    ['derauntsete','zerauntseten','balerauntsete','lerauntsekete'],
+  ],imperative:['berauntso','berauntsote','berauntse','berauntsete']},
+  {page:350,lemma:'eutsi',rows:[
+    ['dautso','zeutson','baleutso','leutsoke'],
+    ['dautsote','zeutsoten','baleutsote','leutsokete'],
+    ['dautse','zeutsen','baleutse','leutseke'],
+    ['dautsete','zeutseten','baleutsete','leutsekete'],
+  ],imperative:['beutso','beutsote','beutse','beutse']},
+] as const) {
+  const source=pages[spec.page-1];
+  if(!source?.includes(spec.lemma.toUpperCase())||!source.includes(spec.page===348?'163 1':'164 1'))
+    failures.push(`PDF ${spec.page}: ${spec.lemma} paradigma-aingurak falta dira`);
+  for(let row=0;row<4;row++) {
+    const nori:Person=row<2?'hura':'haiek';
+    const nork:Person=row%2?'haiek':'hura';
+    for(let col=0;col<4;col++) {
+      const form=spec.rows[row][col];checked++;
+      if(!new RegExp(`(?<![a-z])${form}(?![a-z])`).test(source))
+        failures.push(`PDF ${spec.page}: ${form} ezin da jatorrizko taulan aurkitu`);
+      const analyses=(lookup.all(form,'batua') as {payload:string}[]).map(r=>JSON.parse(r.payload) as Analysis);
+      const expected=[
+        {mood:'indicative',tense:'present'}, {mood:'indicative',tense:'past'},
+        {mood:'conditional',tense:'hypothetical'}, {mood:'potential',tense:'hypothetical'},
+      ][col];
+      if(!analyses.some(a=>a.lemma===spec.lemma&&a.type==='nor-nori-nork'&&a.nor==='hura'&&
+        a.nori===nori&&a.nork===nork&&a.mood===expected.mood&&a.tense===expected.tense))
+        failures.push(`PDF ${spec.page}: ${form} -> NORI ${nori}, NORK ${nork}, ${expected.mood}`);
+    }
+    const imperativeForm=spec.imperative[row];checked++;
+    if(!new RegExp(`(?<![a-z])${imperativeForm}(?![a-z])`).test(source))
+      failures.push(`PDF ${spec.page}: ${imperativeForm} agintera ezin da aurkitu`);
+    const imperativeAnalyses=(lookup.all(imperativeForm,'batua') as {payload:string}[]).map(r=>JSON.parse(r.payload) as Analysis);
+    if(!imperativeAnalyses.some(a=>a.lemma===spec.lemma&&a.type==='nor-nori-nork'&&a.nor==='hura'&&
+      a.nori===nori&&a.nork===nork&&a.mood==='imperative'&&a.tense==='present'))
+      failures.push(`PDF ${spec.page}: ${imperativeForm} agintera -> NORI ${nori}, NORK ${nork}`);
+  }
+}
+if(originalPdf) {
+  const originalPages=execFileSync('pdftotext',['-layout',originalPdf,'-'],{
+    encoding:'utf8',maxBuffer:20*1024*1024,
+  }).split('\f');
+  const original=originalPages[42]; // printed p. 826, EUTSI
+  if(!original?.includes('EUTSI')||!/\b826\b/.test(original))
+    failures.push('1977ko PDF 43: EUTSI/826 orrialde-aingurak falta dira');
+  for(const [form,nori,nork] of [
+    ['deutso','hura','hura'],['deutsote','hura','haiek'],
+    ['deutse','haiek','hura'],['deutsete','haiek','haiek'],
+  ] as [string,Person,Person][]) {
+    if(!new RegExp(`^\\s*${form}\\b`,'m').test(original))
+      failures.push(`1977ko PDF 43: ${form} jatorrizko zutabean falta da`);
+    const analyses=(lookup.all(form,'batua') as {payload:string}[]).map(r=>JSON.parse(r.payload) as Analysis);
+    if(!analyses.some(a=>a.lemma==='eutsi'&&a.nor==='hura'&&a.nori===nori&&a.nork===nork&&
+      a.mood==='indicative'&&a.tense==='present'&&a.validation==='reviewed'&&
+      a.citations.some(c=>c.sourceId==='euskaltzaindia-sintetikoa1977')))
+      failures.push(`1977ko PDF 43: ${form} irakurketaren aipamena/egiaztapena falta da`);
+  }
+}
 db.close();
-console.log(`${pageSpecs.length + 1} paradigma-orri ofizial, ${checked} adizki-agerpen, ${failures.length} hutsune/desadostasun`);
+console.log(`${pageSpecs.length + 1 + norkPages.length + 2} paradigma-orri ofizial, ${checked} adizki-agerpen, 1977ko gatazka ${originalPdf?'egiaztatua':'egiaztatu gabe'}, ${failures.length} hutsune/desadostasun`);
 if (failures.length) { for (const failure of failures.slice(0, 100)) console.error(failure); process.exitCode = 1; }

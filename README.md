@@ -117,7 +117,7 @@ deskargatu eta hau exekutatu:
 npm run audit:alokutibo -- /bidea/Araua_0014.pdf
 npm run audit:laguntzaile -- /bidea/Araua_0078.pdf
 npm run audit:laguntzaile:semantika -- /bidea/Araua_0078.pdf
-npm run audit:trinkoak -- /bidea/euskal-aditz-batua.pdf
+npm run audit:trinkoak -- /bidea/euskal-aditz-batua.pdf /bidea/aditz-sintetikoa-1977.pdf
 ```
 
 78. arauko bigarren auditak adizki osoko taulak dituzten 54 orrialdeak
@@ -130,8 +130,10 @@ egiaztatzen, eta aditz trinkoak beste iturri batzuen mende daude;
 `complete: false` mantentzen da.
 
 Euskaltzaindiaren [*Euskal Aditz Batua* (1979)](https://www.euskaltzaindia.eus/dok/iker_jagon_tegiak/6833.pdf)
-liburuko ezkerreko paradigma ofizialen 20 orrialdetan, EGON, JOAN, ETORRI,
-IBILI, ETZAN eta IRAKATSI aditzen 299 adizki-agerpen alderatu dira: azaleko forma,
+liburuko ezkerreko paradigma ofizialen 26 orrialdetan, EGON, JOAN, ETORRI,
+IBILI, ETZAN, IRAKATSI, IHARDUN, IHARDUKI, ERAUNTSI eta EUTSI aditzen
+409 adizki-agerpen
+alderatu dira: azaleko forma,
 lema, NOR pertsona eta NOR saileko analisiak ez dute desadostasunik. N1/N2,
 N3, N4, N5 eta N9 sailen modu/aldia ere egiaztatzen dira; N4', N7 eta N10
 sailen interpretazio anitzak ez dira etiketa bakarrera behartzen. Liburuaren
@@ -148,6 +150,21 @@ hitanoaren generoarekin; tartearekin idatzitako aukera analitikoak ez dira
 bilaketa honen hitz bakarreko sarrerak. Apertiumek `erakutsi` azpian zuen
 `irakatsiguzu` forma *irakatsi* leman zuzendu da, baina «inportatua» izaten
 jarraitzen du. Beste aldi/moduen paradigmarik ez da asmatu.
+
+IHARDUKIren orrialde ofizialetan falta ziren aginterako sei formak, orainaldiko
+forma bat eta N4 saileko hiru forma gehitu dira. N4ren ahalerazko
+interpretazioa Apertiumeko dagoen analisiaren araberakoa da; 1979ko taulak
+forma eta pertsonak bermatzen ditu, ez modu-etiketa bera.
+
+ERAUNTSIren lau agintera-formak eta EUTSIren `daut-` orainaldiko lau
+formak ere gehitu dira, NORI/NORK pertsona zehatzekin. Alabaina,
+[1977ko *Aditz sintetikoa* jatorrizko zerrendak](https://www.euskaltzaindia.eus/dok/euskera/7623.pdf)
+`deut-` formak inprimatzen ditu eta 1979ko liburuak `daut-` formak: gatazka
+horregatik, `daut-` irakurketak «sortua» gisa markatu dira, ez
+«berrikusia» gisa, eta ez da haiengandik alokutiborik sortzen. Apertiumeko
+`deut-` lau irakurketa jatorrizko zerrendaren bidez berrikusi dira.
+Bigarren PDFa audit-komandoan hautazkoa da, baina emanez gero iturri-gatazka
+ere egiaztatzen da.
 
 Arauaren bidez berrikusitako irakurketak inportatu gabekoen aurretik erakusten
 dira; Apertiumeko beste irakurketak ez dira automatikoki ezabatzen, banakako

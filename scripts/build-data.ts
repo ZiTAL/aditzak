@@ -174,6 +174,70 @@ for (const [nor, recipients] of [
     };
     insert.run(analysis.id,form,'irakatsi','batua',1,'euskaltzaindia-eab1979',JSON.stringify(analysis));
   }
+// IHARDUKI is another compact paradigm in the same book. Upstream omits its
+// entire imperative, one present agreement and three N4 forms. The N4 mood
+// follows the source lexicon's existing potential/hypothetical reading; the
+// 1979 page itself verifies the form and agreement, not that interpretation.
+for(const [form,nork,mood,tense,treatment,page,series,validation] of [
+  ['dihardukazue','zuek','indicative','present','neutral',334,'NN1','reviewed'],
+  ['hihardukake','hi','potential','hypothetical','hika',336,'NN4','generated'],
+  ['zenihardukake','zu','potential','hypothetical','neutral',336,'NN4','generated'],
+  ['zenihardukakete','zuek','potential','hypothetical','neutral',336,'NN4','generated'],
+  ['ihardukak','hi','imperative','present','toka',336,'NN9','reviewed'],
+  ['ihardukan','hi','imperative','present','noka',336,'NN9','reviewed'],
+  ['biharduka','hura','imperative','present','neutral',336,'NN9','reviewed'],
+  ['ihardukazu','zu','imperative','present','neutral',336,'NN9','reviewed'],
+  ['ihardukazue','zuek','imperative','present','neutral',336,'NN9','reviewed'],
+  ['bihardukate','haiek','imperative','present','neutral',336,'NN9','reviewed'],
+] as [string,Person,Mood,Tense,Treatment,number,string,Analysis['validation']][]) {
+  const analysis:Analysis={
+    id:createHash('sha256').update(JSON.stringify(['eab1979-iharduki',form,nork,mood,tense])).digest('hex').slice(0,24),
+    form,lemma:'iharduki',kind:'synthetic',variety:'batua',mood,tense,type:'nor-nork',
+    nor:'hura',nori:null,nork,treatment,allocutive:false,affixes:[],
+    rawTags:['eab1979',series],baseForm:form,origin:'rule',validation,
+    citations:[{sourceId:'euskaltzaindia-eab1979',locator:`${page===334?'156':'157'}¹. or. (PDF ${page}), IHARDUKI ${series}`}],
+    segmentation:null,history:[],
+  };
+  insert.run(analysis.id,form,'iharduki','batua',1,'euskaltzaindia-eab1979',JSON.stringify(analysis));
+}
+// Printed pp. 163¹ and 164¹ preserve these otherwise absent ERAUNTSI
+// imperatives and EUTSI indicative daut- alternatives. The 1977 original
+// instead prints deut-, so daut- remains disputed and cannot seed hika.
+for(const [lemma,mood,page,prefixes] of [
+  ['erauntsi','imperative',348,['berauntso','berauntse']],
+  ['eutsi','indicative',350,['dautso','dautse']],
+] as ['erauntsi'|'eutsi',Mood,number,string[]][]) for(let recipient=0;recipient<2;recipient++)
+  for(const [nork,suffix] of [['hura',''],['haiek','te']] as [Person,string][]) {
+    const form=prefixes[recipient]+suffix;
+    const nori:Person=recipient===0?'hura':'haiek';
+    const analysis:Analysis={
+      id:createHash('sha256').update(JSON.stringify(['eab1979-compact',form,lemma,nori,nork])).digest('hex').slice(0,24),
+      form,lemma,kind:'synthetic',variety:'batua',mood,tense:'present',type:'nor-nori-nork',
+      nor:'hura',nori,nork,treatment:'neutral',allocutive:false,affixes:[],
+      rawTags:[lemma==='eutsi'?'eab1979-daut-disputed':'eab1979',mood==='imperative'?'NNN9':'NNN1'],baseForm:form,
+      origin:'rule',validation:lemma==='eutsi'?'generated':'reviewed',
+      citations:[{sourceId:'euskaltzaindia-eab1979',locator:`${page===348?'163':'164'}¹. or. (PDF ${page}), ${lemma.toUpperCase()} NNN${mood==='imperative'?'9':'1'}`},
+        ...(lemma==='eutsi'?[{sourceId:'euskaltzaindia-sintetikoa1977',locator:'826. or., EUTSI: deutso/deutsote/deutse/deutsete; 1979ko daut- sailarekin desadostasuna'}]:[])],
+      segmentation:null,history:[],
+    };
+    insert.run(analysis.id,form,lemma,'batua',1,'euskaltzaindia-eab1979',JSON.stringify(analysis));
+  }
+// The 1977 original unequivocally prints the deut- EUTSI quartet. Upgrade
+// the matching lexicon readings without suppressing the 1979 daut- dispute.
+const reviewedDeut=db.prepare('UPDATE analyses SET payload=?, source=? WHERE id=?');
+for(const [form,nori,nork] of [
+  ['deutso','hura','hura'],['deutsote','hura','haiek'],
+  ['deutse','haiek','hura'],['deutsete','haiek','haiek'],
+] as [string,Person,Person][]) {
+  const rows=db.prepare('SELECT id,payload FROM analyses WHERE form=? AND lemma=? AND base=1').all(form,'eutsi') as {id:string;payload:string}[];
+  const row=rows.find(r=>{const a=JSON.parse(r.payload) as Analysis;
+    return a.mood==='indicative'&&a.tense==='present'&&a.nor==='hura'&&a.nori===nori&&a.nork===nork;});
+  if(!row)throw new Error(`1977ko EUTSI oinarria falta da: ${form}`);
+  const analysis=JSON.parse(row.payload) as Analysis;
+  analysis.validation='reviewed';
+  analysis.citations.push({sourceId:'euskaltzaindia-sintetikoa1977',locator:'826. or., EUTSI: orainaldiko deut- saila'});
+  reviewedDeut.run(JSON.stringify(analysis),'euskaltzaindia-sintetikoa1977',row.id);
+}
 // The Apertium ADL entries are continuation stems and often lack the free
 // finite form (e.g. dirot, niroen). Reconstruct the small *iro paradigm from
 // its licensed stem/affix specification, then audit it against rule 14.
@@ -393,12 +457,13 @@ const coverage: Coverage = {
   lemmas, varieties:['batua'], source:'apertium+wiktionary+euskaltzaindia', complete:false,
   reviewedSegmentations:6, historicalNotes:2, missingLemmas:[],
   limitations:[
-    {eu:'Apertiumeko 35 paradigma, ba- saileko beste 5 lema, *iro/*io osagarriak eta *irakatsi*ren agintera. 14. arauko hikako taulak, 78. arauko laguntzaile-gelaxkak eta 1979ko Euskal Aditz Batuaren 20 paradigma-orri auditatu dira; horrek ez du euskara batuko inbentario eta analisi guztien estaldura osoa frogatzen. Erauntsi, eroan, iharduki, irakin eta jario lemen gainerako sailak partzialak izan daitezke.'},
+    {eu:'Apertiumeko 35 paradigma, ba- saileko beste 5 lema, *iro/*io osagarriak eta *irakatsi*ren agintera. 14. arauko hikako taulak, 78. arauko laguntzaile-gelaxkak eta 1979ko Euskal Aditz Batuaren 26 paradigma-orri auditatu dira; horrek ez du euskara batuko inbentario eta analisi guztien estaldura osoa frogatzen. Erauntsi, eroan, iharduki, irakin eta jario lemen gainerako sailak partzialak izan daitezke.'},
     {eu:'Atxeki → atxiki, irudi/iruditu eta erion → jario loturak Hiztegi Batuaren arabera ebatzi dira; erion bizkaierazko forma urria da, eta ez da euskara batuko lema bereizi gisa inportatu. *io aparteko lema gisa dago.'},
     {eu:'Arau bidez sortutako hitano-formak «sortua» gisa markatzen dira; banakako arautasun-ziurtagiria ez da. 14. arauaren PDFa emanda, audit:alokutibo komandoak hiru zutabeko formak alderatzen ditu.'},
     {eu:'Lexikoak forma literarioak eta arraroak ere baditu; banakako arautasun-auditoria amaitu gabe dago.'},
     {eu:'Morfema-zatiketa partziala da; analisi historikoa iturri zehatzak dituzten kasuetan soilik eskaintzen da.'},
     {eu:'Hitano batzuen generoa ez du iturriak esplizituki bereizten; kasu horietan «hika (zehaztu gabe)» agertzen da.'},
+    {eu:'EUTSIren deut- saileko lau orainaldiko irakurketa 1977ko Aditz sintetikoa zerrendarekin berrikusi dira. 1979ko Euskal Aditz Batuak daut- ematen du; lau aldaera horiek gatazkatsu/«sortua» gisa agertzen dira eta ez dute alokutiborik sortzen.'},
   ],
 };
 db.prepare('INSERT INTO metadata VALUES (?,?)').run('coverage',JSON.stringify(coverage));
