@@ -130,9 +130,10 @@ egiaztatzen, eta aditz trinkoak beste iturri batzuen mende daude;
 `complete: false` mantentzen da.
 
 Euskaltzaindiaren [*Euskal Aditz Batua* (1979)](https://www.euskaltzaindia.eus/dok/iker_jagon_tegiak/6833.pdf)
-liburuko ezkerreko paradigma ofizialen 31 orrialdetan, EGON, JOAN, ETORRI,
-IBILI, ETZAN, JARIO, EROAN, ERAKUTSI, IRAKATSI, IHARDUN, IHARDUKI, ERAUNTSI eta EUTSI aditzen
-565 adizki-agerpen
+liburuko ezkerreko paradigma ofizialen 43 orrialdetan, EGON, JOAN, ETORRI,
+IBILI, ETZAN, JARIO, EROAN, ERAKUTSI, IRAKATSI, UTZI, IGORRI, EROSI,
+IHARDETSI, IHARDUN, IHARDUKI, ERAUNTSI, EUTSI, IRAUN, IRUDI/IRUDITU,
+EMAN eta ESAN/ERRAN aditzen 868 adizki-agerpen
 alderatu dira: azaleko forma,
 lema eta dagokien NOR/NORI/NORK pertsonak ez dute desadostasunik. N1/N2,
 N3, N4, N5 eta N9 sailen modu/aldia ere egiaztatzen dira; N4', N7 eta N10
@@ -168,6 +169,14 @@ zehaztugabea zutenak, toka/noka gisa berrikusi dira. NOR plurala duten
 agintera analitikoak bi hitzez idatzita daudenez, ez dira sartu. Zatiketa
 morfologikoa ez da osorik egiaztatu.
 
+IRAUN eta IRUDI/IRUDITUren lau paradigma-orriak, EMANen biak, UTZI,
+IGORRI, EROSI eta IHARDETSIren agintera-orriak eta ESAN/ERRANen lehen bi
+orriak ere auditatu dira. EMANen bost forma falta eta ESAN/ERRANen hamar
+irakurketa falta gehitu dira. Iturriek esplizituki emandako `-k/-n` bikoteen
+generoa toka/noka gisa berrikusi da. NN3/NN4ko modu-interpretazio berriek
+«sortua» izaten jarraitzen dute, iturri ofizialak forma eta pertsona
+egiaztatzen baititu, baina sailen izen gramatikalak editorearenak baitira.
+
 IHARDUKIren orrialde ofizialetan falta ziren aginterako sei formak, orainaldiko
 forma bat eta N4 saileko hiru forma gehitu dira. N4ren ahalerazko
 interpretazioa Apertiumeko dagoen analisiaren araberakoa da; 1979ko taulak
@@ -181,7 +190,7 @@ horregatik, `daut-` irakurketak «sortua» gisa markatu dira, ez
 «berrikusia» gisa, eta ez da haiengandik alokutiborik sortzen. Apertiumeko
 `deut-` lau irakurketa jatorrizko zerrendaren bidez berrikusi dira.
 Bigarren PDFa audit-komandoan hautazkoa da, baina emanez gero iturri-gatazka
-eta IRAUN/IRUDIren 70, IHARDUKIren 10, ERAUNTSIren lau, EROANen hamabi eta
+eta IRAUN/IRUDIren 70, EMANen 80, IHARDUKIren 10, ERAUNTSIren lau, EROANen hamabi eta
 ERAKUTSIren hamasei jatorrizko
 adizki-agerpenak ere egiaztatzen dira; multzo horretan ez da hutsunerik aurkitu.
 

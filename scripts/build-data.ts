@@ -50,6 +50,18 @@ const erakutsiImperativeStems = new Set([
   'erakusta','erakusku','erakutsio','erakutsie',
   'erakutsazkida','erakutsazkigu','erakutsazkio','erakutsazkie',
 ]);
+const reviewedImperativeGender = new Map<string,Treatment>([
+  ...[
+    'dirauk','dirudik','irauk','irudik','emak','emadak','emaguk','emaiok','emaiek',
+    'emazkidak','emazkiguk','emazkiok','emazkiek','bemakik','bemakiate',
+    'bemazkik','bemazkiate',
+  ].map(form=>[form,'toka'] as [string,Treatment]),
+  ...[
+    'diraun','dirudin','iraun','irudin','emadan','emagun','emaion','emaien',
+    'emazkidan','emazkigun','emazkion','emazkien','bemakin','bemakinate',
+    'bemazkin','bemazkinate',
+  ].map(form=>[form,'noka'] as [string,Treatment]),
+]);
 const insert = db.prepare('INSERT OR IGNORE INTO analyses VALUES (?,?,?,?,?,?,?)');
 const lemmaInsert = db.prepare('INSERT OR IGNORE INTO lemmas VALUES (?,?)');
 const skipped: Record<string,number> = {};
@@ -112,12 +124,16 @@ function importEntry(entry: Entry, paradigm: string, lemma: string | null, prefi
       affixes.length===0&&erakutsiImperativeStems.has(form.slice(0,-1))&&
       (form.endsWith('k')||form.endsWith('n'));
     if(reviewedErakutsiGender)treatment=form.endsWith('k')?'toka':'noka';
+    const compactImperativeGender=(actualNork==='hi'||nori==='hi')&&affixes.length===0&&
+      reviewedImperativeGender.get(form);
+    if(compactImperativeGender)treatment=compactImperativeGender;
+    const reviewedEmanImperative=verb==='eman'&&mood==='imperative'&&affixes.length===0;
     const payload: Analysis = {
       id: '', form, lemma: verb, kind, variety:'batua', mood, tense,
       type: nori ? (actualNork ? 'nor-nori-nork' : 'nor-nori') : (actualNork ? 'nor-nork' : 'nor'),
       nor:actualNor, nori, nork:actualNork, treatment, allocutive: tags.includes('TO') || tags.includes('NO') || standardizedNoka || standardizedToka,
       affixes, rawTags: [...tags, ...suffixes], baseForm: affixes.length ? baseForm : form,
-      origin: extracted ? 'rule' : 'lexicon', validation: reviewedErakutsiGender?'reviewed':'imported',
+      origin: extracted ? 'rule' : 'lexicon', validation: reviewedErakutsiGender||compactImperativeGender||reviewedEmanImperative?'reviewed':'imported',
       citations: [{ sourceId:'apertium', locator:`apertium-eus.eus.dix:${entry.line} (${paradigm}${entry.refs.length ? ' → '+entry.refs.join(', ') : ''}${extracted ? '; ba- gabe berreskuratutako indikatiboko oinarria' : ''})` },
         ...(standardizedNoka?[{sourceId:'euskaltzaindia14',locator:'14. araua, *ezan-en NOR-NORI-NORK alokutiboak; noka zutabea'}]:[]),
         ...(standardizedToka?[{sourceId:'euskaltzaindia14',locator:'14. araua, *ezan-en NOR-NORI-NORK alokutiboak; toka zutabea'}]:[]),
@@ -126,6 +142,12 @@ function importEntry(entry: Entry, paradigm: string, lemma: string | null, prefi
           {sourceId:'euskaltzaindia-sintetikoa1977',locator:nori===null?
             '837. or., ERAKUTSIren NOR-NORK agintera, -k/-n bikotea':
             '838. or., ERAKUTSIren NOR-NORI-NORK agintera, -k/-n bikoteak'}]:[]),
+        ...(compactImperativeGender&&verb!=='eman'?[{sourceId:'euskaltzaindia-eab1979',locator:
+          `${verb==='iraun'?(mood==='imperative'?'166':'165'):(mood==='imperative'?'168':'167')}¹. or. (PDF ${verb==='iraun'?(mood==='imperative'?'354':'352'):(mood==='imperative'?'358':'356')}), ${verb.toUpperCase()} ${mood==='imperative'?'NN9':'NN1'}, k/n alternantzia`},
+          {sourceId:'euskaltzaindia-sintetikoa1977',locator:'841. or., IRAUN/IRUDI aginterako -k/-n bikotea'}]:[]),
+        ...(reviewedEmanImperative?[{sourceId:'euskaltzaindia-eab1979',locator:
+          `${nori===null?'169':'170'}¹. or. (PDF ${nori===null?'360':'362'}), EMAN agintera`},
+          {sourceId:'euskaltzaindia-sintetikoa1977',locator:'842–843. or., EMAN agintera'}]:[]),
         ...(correctedIzan?[{sourceId:'euskaltzaindia14',locator:'14. araua, izan-en NOR bakarreko alokutiboak; *edun etiketaren zuzenketa'}]:[]),
         ...(correctedNor?[{sourceId:'euskaltzaindia14',locator:'14. araua, izan-en NOR-NORI: zitzaizkigun / zitzaizkiguan / zitzaizkigunan'}]:[]),
         ...(correctedNork?[{sourceId:'euskaltzaindia14',locator:'14. araua, *edun-en NOR-NORI-NORK: didake / zidakek / zidaken'}]:[]),
@@ -267,6 +289,127 @@ for(const plural of [false,true]) {
     lemmaInsert.run('eroan','synthetic');
     insert.run(analysis.id,form,'eroan','batua',1,'euskaltzaindia-eab1979',JSON.stringify(analysis));
   }
+}
+// EMAN's official NN9 page prints five one-word alternatives absent from
+// upstream. Internal typographic spacing marks morphemes, not word breaks.
+for(const [form,nor,nork,treatment] of [
+  ['eman','hura','hi','noka'],
+  ['emaitzak','haiek','hi','toka'],['emaitzan','haiek','hi','noka'],
+  ['emaitzazu','haiek','zu','neutral'],['emaitzazue','haiek','zuek','neutral'],
+] as [string,Person,Person,Treatment][]) {
+  const analysis:Analysis={
+    id:createHash('sha256').update(JSON.stringify(['eab1979-eman-nn9',form,nor,nork])).digest('hex').slice(0,24),
+    form,lemma:'eman',kind:'synthetic',variety:'batua',mood:'imperative',tense:'present',type:'nor-nork',
+    nor,nori:null,nork,treatment,allocutive:false,affixes:[],rawTags:['eab1979','NN9'],baseForm:form,
+    origin:'rule',validation:'reviewed',segmentation:null,history:[],
+    citations:[{sourceId:'euskaltzaindia-eab1979',locator:'169¹. or. (PDF 360), EMAN NN9'},
+      {sourceId:'euskaltzaindia-sintetikoa1977',locator:'842. or., EMAN NOR-NORK agintera'}],
+  };
+  lemmaInsert.run('eman','synthetic');
+  insert.run(analysis.id,form,'eman','batua',1,'euskaltzaindia-eab1979',JSON.stringify(analysis));
+}
+// Four compact imperative-only paradigms follow the same printed agreement
+// layout. Upgrade exactly their one-word cells; parenthesized analytic
+// alternatives such as "utz itzazu" remain outside this one-word analyzer.
+const imperativePageSpecs=[
+  {lemma:'utzi',page:340,printed:'159',nn9:[['utzak','toka'],['utzan','noka'],['utzazu','neutral'],['utzazue','neutral']],
+    stems:[['ni','uzta','utzazkida'],['gu','uzku','utzazkigu'],['hura','utzio','utzazkio'],['haiek','utzie','utzazkie']]},
+  {lemma:'igorri',page:342,printed:'160',nn9:[['igork','toka'],['igorna','noka'],['igorzu','neutral'],['igorzue','neutral']],
+    stems:[['ni','igorda','igorzkida'],['gu','igorgu','igorzkigu'],['hura','igorrio','igorzkio'],['haiek','igorrie','igorzkie']]},
+  {lemma:'erosi',page:344,printed:'161',nn9:[['erosak','toka'],['erosan','noka'],['erosazu','neutral'],['erosazue','neutral']],
+    stems:[['ni','erosta','erosazkida'],['gu','erosku','erosazkigu'],['hura','erosio','erosazkio'],['haiek','erosie','erosazkie']]},
+  {lemma:'ihardetsi',page:346,printed:'162',nn9:[['ihardetsak','toka'],['ihardetsan','noka'],['ihardetsazu','neutral'],['ihardetsazue','neutral']],
+    stems:[['ni','ihardesta','ihardetsazkida'],['gu','ihardesku','ihardetsazkigu'],['hura','ihardetsio','ihardetsazkio'],['haiek','ihardetsie','ihardetsazkie']]},
+] as const;
+const reviewedImperative=db.prepare('UPDATE analyses SET payload=?,source=? WHERE id=?');
+for(const spec of imperativePageSpecs) {
+  const expected:[string,Person,Person|null,Person, Treatment][]=[];
+  for(let i=0;i<spec.nn9.length;i++) {
+    const [form,treatment]=spec.nn9[i];
+    expected.push([form,'hura',null,i<2?'hi':i===2?'zu':'zuek',treatment]);
+  }
+  for(const [nori,singular,plural] of spec.stems) for(const [nor,stem] of [['hura',singular],['haiek',plural]] as [Person,string][])
+    for(const [nork,suffix,treatment] of [['hi','k','toka'],['hi','n','noka'],['zu','zu','neutral'],['zuek','zue','neutral']] as [Person,string,Treatment][])
+      expected.push([stem+suffix,nor,nori,nork,treatment]);
+  for(const [form,nor,nori,nork,treatment] of expected) {
+    const row=db.prepare('SELECT id,payload FROM analyses WHERE form=? AND lemma=? AND base=1').get(form,spec.lemma) as {id:string;payload:string}|undefined;
+    if(!row)throw new Error(`1979ko ${spec.lemma.toUpperCase()} agintera falta da: ${form}`);
+    const analysis=JSON.parse(row.payload) as Analysis;
+    Object.assign(analysis,{mood:'imperative' as Mood,tense:'present' as Tense,type:nori?'nor-nori-nork':'nor-nork',
+      nor,nori,nork,treatment,allocutive:false,validation:'reviewed' as const});
+    analysis.citations.push({sourceId:'euskaltzaindia-eab1979',locator:`${spec.printed}¹. or. (PDF ${spec.page}), ${spec.lemma.toUpperCase()} NN9/NNN9`},
+      {sourceId:'euskaltzaindia-sintetikoa1977',locator:`${spec.printed==='159'?'835':spec.printed==='160'?'835–836':spec.printed==='161'?'836': '836. or.'}, ${spec.lemma.toUpperCase()} agintera`});
+    reviewedImperative.run(JSON.stringify(analysis),'euskaltzaindia-eab1979',row.id);
+  }
+}
+// ESAN/ERRAN pp. 176¹–177¹: the present/past io series, erran's
+// conditional/potential rows and the two accepted imperative columns.
+for(const [form,tense,nork,treatment] of [
+  ['diot','present','ni','neutral'],['diok','present','hi','toka'],['dion','present','hi','noka'],
+  ['dio','present','hura','neutral'],['diogu','present','gu','neutral'],['diozu','present','zu','neutral'],
+  ['diozue','present','zuek','neutral'],['diote','present','haiek','neutral'],
+  ['nioen','past','ni','neutral'],['hioen','past','hi','hika'],['zioen','past','hura','neutral'],
+  ['genioen','past','gu','neutral'],['zenioen','past','zu','neutral'],['zenioten','past','zuek','neutral'],['zioten','past','haiek','neutral'],
+] as [string,Tense,Person,Treatment][]) {
+  const row=db.prepare('SELECT id,payload FROM analyses WHERE form=? AND lemma=? AND base=1').get(form,'io') as {id:string;payload:string}|undefined;
+  if(!row)throw new Error(`1979ko ESAN/ERRAN io saila falta da: ${form}`);
+  const analysis=JSON.parse(row.payload) as Analysis;
+  Object.assign(analysis,{mood:'indicative' as Mood,tense,nor:'hura' as Person,nori:null,nork,treatment,allocutive:false,validation:'reviewed' as const});
+  analysis.type='nor-nork';
+  analysis.citations.push({sourceId:'euskaltzaindia-eab1979',locator:'176¹. or. (PDF 374), ESAN/ERRAN NN1/NN2'});
+  reviewedImperative.run(JSON.stringify(analysis),'euskaltzaindia-eab1979',row.id);
+}
+for(const [form,nork,treatment] of [
+  ['banerra','ni','neutral'],['baherra','hi','hika'],['balerra','hura','neutral'],['bagenerra','gu','neutral'],
+  ['bazenerra','zu','neutral'],['bazenerrate','zuek','neutral'],['balerrate','haiek','neutral'],
+] as [string,Person,Treatment][]) {
+  const analysis:Analysis={
+    id:createHash('sha256').update(JSON.stringify(['eab1979-erran-nn3',form,nork])).digest('hex').slice(0,24),
+    form,lemma:'erran',kind:'synthetic',variety:'batua',mood:'conditional',tense:'hypothetical',type:'nor-nork',
+    nor:'hura',nori:null,nork,treatment,allocutive:false,affixes:['ba<cnjsub>'],rawTags:['eab1979','NN3'],
+    baseForm:form.slice(2),origin:'rule',validation:'generated',segmentation:null,history:[],
+    citations:[{sourceId:'euskaltzaindia-eab1979',locator:'177¹. or. (PDF 376), ESAN/ERRAN NN3; forma eta pertsona'},
+      {sourceId:'euskaltzaindia-sintetikoa1977',locator:'824. or., ESAN/ERRAN baldin-saila'}],
+  };
+  lemmaInsert.run('erran','synthetic');
+  insert.run(analysis.id,form,'erran','batua',0,'euskaltzaindia-eab1979',JSON.stringify(analysis));
+}
+for(const [form,nork,treatment] of [
+  ['nerrake','ni','neutral'],['herrake','hi','hika'],['lerrake','hura','neutral'],['generrake','gu','neutral'],
+  ['zenerrake','zu','neutral'],['zenerrakete','zuek','neutral'],['lerrakete','haiek','neutral'],
+] as [string,Person,Treatment][]) {
+  const rows=db.prepare('SELECT id,payload FROM analyses WHERE form=? AND lemma=? AND base=1').all(form,'erran') as {id:string;payload:string}[];
+  const row=rows.find(r=>{const a=JSON.parse(r.payload) as Analysis;return a.mood==='potential'&&a.tense==='hypothetical'&&a.nork===nork;});
+  if(row) {
+    const analysis=JSON.parse(row.payload) as Analysis;
+    Object.assign(analysis,{nor:'hura' as Person,nori:null,treatment,allocutive:false});
+    analysis.citations.push({sourceId:'euskaltzaindia-eab1979',locator:'177¹. or. (PDF 376), ESAN/ERRAN NN4; forma eta pertsona'});
+    reviewedImperative.run(JSON.stringify(analysis),'euskaltzaindia-eab1979',row.id);
+  } else {
+    const analysis:Analysis={
+      id:createHash('sha256').update(JSON.stringify(['eab1979-erran-nn4',form,nork])).digest('hex').slice(0,24),
+      form,lemma:'erran',kind:'synthetic',variety:'batua',mood:'potential',tense:'hypothetical',type:'nor-nork',
+      nor:'hura',nori:null,nork,treatment,allocutive:false,affixes:[],rawTags:['eab1979','NN4'],baseForm:form,
+      origin:'rule',validation:'generated',segmentation:null,history:[],
+      citations:[{sourceId:'euskaltzaindia-eab1979',locator:'177¹. or. (PDF 376), ESAN/ERRAN NN4; forma eta pertsona'},
+        {sourceId:'euskaltzaindia-sintetikoa1977',locator:'824. or., ESAN/ERRAN NN4'}],
+    };
+    lemmaInsert.run('erran','synthetic');
+    insert.run(analysis.id,form,'erran','batua',1,'euskaltzaindia-eab1979',JSON.stringify(analysis));
+  }
+}
+for(const [lemma,forms] of [
+  ['erran',[['errak','hi','toka'],['erran','hi','noka'],['berra','hura','neutral'],['errazu','zu','neutral'],['errazue','zuek','neutral'],['berrate','haiek','neutral']]],
+  ['esan',[['esak','hi','toka'],['esan','hi','noka'],['bio','hura','neutral'],['esazu','zu','neutral'],['esazue','zuek','neutral'],['biote','haiek','neutral']]],
+] as [string,[string,Person,Treatment][]][]) for(const [form,nork,treatment] of forms) {
+  const row=db.prepare('SELECT id,payload FROM analyses WHERE form=? AND lemma=? AND base=1').get(form,lemma) as {id:string;payload:string}|undefined;
+  if(!row)throw new Error(`1979ko ${lemma.toUpperCase()} agintera falta da: ${form}`);
+  const analysis=JSON.parse(row.payload) as Analysis;
+  Object.assign(analysis,{mood:'imperative' as Mood,tense:'present' as Tense,type:'nor-nork',nor:'hura' as Person,
+    nori:null,nork,treatment,allocutive:false,validation:'reviewed' as const});
+  analysis.citations.push({sourceId:'euskaltzaindia-eab1979',locator:'177¹. or. (PDF 376), ESAN/ERRAN NN9'},
+    {sourceId:'euskaltzaindia-sintetikoa1977',locator:'824. or., ESAN/ERRAN agintera'});
+  reviewedImperative.run(JSON.stringify(analysis),'euskaltzaindia-eab1979',row.id);
 }
 // ERAKUTSI NN2 and NN3 (printed pp. 149¹–150¹/PDF 320–322) expose two
 // missing past cells and almost the entire conditional premise. The source
@@ -607,7 +750,7 @@ const coverage: Coverage = {
   lemmas, varieties:['batua'], source:'apertium+wiktionary+euskaltzaindia', complete:false,
   reviewedSegmentations:6, historicalNotes:2, missingLemmas:[],
   limitations:[
-    {eu:'Apertiumeko 35 paradigma, ba- saileko beste 5 lema, *iro/*io osagarriak eta *irakatsi*ren agintera. 14. arauko hikako taulak, 78. arauko laguntzaile-gelaxkak eta 1979ko Euskal Aditz Batuaren 31 paradigma-orri auditatu dira; horrek ez du euskara batuko inbentario eta analisi guztien estaldura osoa frogatzen. Erauntsi, eroan, iharduki, irakin eta jario lemen gainerako sailak partzialak izan daitezke.'},
+    {eu:'Apertiumeko 35 paradigma, ba- saileko beste 5 lema, *iro/*io osagarriak eta *irakatsi*ren agintera. 14. arauko hikako taulak, 78. arauko laguntzaile-gelaxkak eta 1979ko Euskal Aditz Batuaren 43 paradigma-orri auditatu dira; horrek ez du euskara batuko inbentario eta analisi guztien estaldura osoa frogatzen. Erauntsi, eroan, iharduki, irakin eta jario lemen gainerako sailak partzialak izan daitezke.'},
     {eu:'Atxeki → atxiki, irudi/iruditu eta erion → jario loturak Hiztegi Batuaren arabera ebatzi dira; erion bizkaierazko forma urria da, eta ez da euskara batuko lema bereizi gisa inportatu. *io aparteko lema gisa dago.'},
     {eu:'Arau bidez sortutako hitano-formak «sortua» gisa markatzen dira; banakako arautasun-ziurtagiria ez da. 14. arauaren PDFa emanda, audit:alokutibo komandoak hiru zutabeko formak alderatzen ditu.'},
     {eu:'Lexikoak forma literarioak eta arraroak ere baditu; banakako arautasun-auditoria amaitu gabe dago.'},

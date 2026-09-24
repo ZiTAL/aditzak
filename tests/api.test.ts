@@ -217,6 +217,24 @@ test('erakutsi imperative HI endings are source-reviewed toka/noka, not unspecif
     a.mood==='conditional'&&a.tense==='hypothetical'&&a.nor===nor&&a.nork===nork&&
     a.affixes.includes('ba<cnjsub>')&&a.validation==='generated'),form);
 });
+test('further official compact paradigms retain missing cells and exact hika gender',async()=>{
+  for(const [form,lemma,mood,nor,nori,nork,treatment,validation] of [
+    ['iraun','iraun','imperative','hura',null,'hi','noka','reviewed'],
+    ['irudin','iruditu','imperative','hura',null,'hi','noka','reviewed'],
+    ['emaitzan','eman','imperative','haiek',null,'hi','noka','reviewed'],
+    ['bemazkinate','eman','imperative','haiek','hi','haiek','noka','reviewed'],
+    ['utzazkidan','utzi','imperative','haiek','ni','hi','noka','reviewed'],
+    ['igorzkiguk','igorri','imperative','haiek','gu','hi','toka','reviewed'],
+    ['erosien','erosi','imperative','hura','haiek','hi','noka','reviewed'],
+    ['ihardetsion','ihardetsi','imperative','hura','hura','hi','noka','reviewed'],
+    ['banerra','erran','conditional','hura',null,'ni','neutral','generated'],
+    ['herrake','erran','potential','hura',null,'hi','hika','generated'],
+    ['erran','erran','imperative','hura',null,'hi','noka','reviewed'],
+    ['esan','esan','imperative','hura',null,'hi','noka','reviewed'],
+  ] as const) assert.ok((await analyze(form)).analyses.some(a=>a.lemma===lemma&&a.mood===mood&&
+    a.nor===nor&&a.nori===nori&&a.nork===nork&&a.treatment===treatment&&a.validation===validation&&
+    a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')),form);
+});
 test('iharduki missing present, N4 and imperative rows retain exact agreement',async()=>{
   for(const [form,nork,mood,treatment,validation] of [
     ['dihardukazue','zuek','indicative','neutral','reviewed'],

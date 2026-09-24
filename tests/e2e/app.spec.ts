@@ -67,3 +67,17 @@ test('ERAKUTSI gender and conditional readings appear in the UI',async({page})=>
   await expect(page.locator('.board-summary')).toContainText('Baldintza');
   await expect(page.locator('.person.nork strong')).toHaveText('nik');
 });
+test('EMAN and ERRAN newly audited readings appear in the UI',async({page})=>{
+  await page.goto('/?q=emaitzan');
+  await expect(page.locator('.board-summary')).toContainText('Agintera');
+  await expect(page.locator('.person.nor strong')).toHaveText('haiek');
+  await expect(page.locator('.person.nork strong')).toHaveText('hik');
+  await expect(page.locator('.treatment')).toContainText('Noka');
+  await page.goto('/?q=banerra');
+  const options=await page.locator('#analysis option').allTextContents();
+  const conditional=options.findIndex(text=>text.includes('Baldintza'));
+  expect(conditional).toBeGreaterThanOrEqual(0);
+  await page.locator('#analysis').selectOption(String(conditional));
+  await expect(page.locator('.board-summary')).toContainText('Baldintza');
+  await expect(page.locator('.person.nork strong')).toHaveText('nik');
+});

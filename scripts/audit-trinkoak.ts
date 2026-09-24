@@ -312,6 +312,195 @@ for (const [nor, recipients] of [
       a.treatment===treatment&&!a.allocutive&&a.validation==='reviewed'))
       failures.push(`PDF 338: ${form} analisia falta edo desegokia da (${nor}, ${nori}, ${nork})`);
   }
+// Four imperative-only paradigms. Parenthesized spaced alternatives in the
+// right column are analytic constructions and intentionally not counted.
+for(const spec of [
+  {page:340,lemma:'utzi',heading:'UTZI',nn9:[['utzak','toka'],['utzan','noka'],['utzazu','neutral'],['utzazue','neutral']],
+    stems:[['ni','uzta','utzazkida'],['gu','uzku','utzazkigu'],['hura','utzio','utzazkio'],['haiek','utzie','utzazkie']]},
+  {page:342,lemma:'igorri',heading:'IGORRI',nn9:[['igork','toka'],['igorna','noka'],['igorzu','neutral'],['igorzue','neutral']],
+    stems:[['ni','igorda','igorzkida'],['gu','igorgu','igorzkigu'],['hura','igorrio','igorzkio'],['haiek','igorrie','igorzkie']]},
+  {page:344,lemma:'erosi',heading:'EROSI',nn9:[['erosak','toka'],['erosan','noka'],['erosazu','neutral'],['erosazue','neutral']],
+    stems:[['ni','erosta','erosazkida'],['gu','erosku','erosazkigu'],['hura','erosio','erosazkio'],['haiek','erosie','erosazkie']]},
+  {page:346,lemma:'ihardetsi',heading:'IHARDETSI',nn9:[['ihardetsak','toka'],['ihardetsan','noka'],['ihardetsazu','neutral'],['ihardetsazue','neutral']],
+    stems:[['ni','ihardesta','ihardetsazkida'],['gu','ihardesku','ihardetsazkigu'],['hura','ihardetsio','ihardetsazkio'],['haiek','ihardetsie','ihardetsazkie']]},
+] as const) {
+  const raw=pages[spec.page-1]; const source=raw.toLowerCase().replace(/\s+/g,'');
+  if(!raw?.includes(spec.heading)&&!(spec.lemma==='ihardetsi'&&source.includes('ihardetsak/n')))
+    failures.push(`PDF ${spec.page}: ${spec.heading} paradigma-aingura falta da`);
+  const expected:[string,Person,Person|null,Person,Analysis['treatment']][]=[];
+  for(let i=0;i<spec.nn9.length;i++) {
+    const [form,treatment]=spec.nn9[i]; expected.push([form,'hura',null,i<2?'hi':i===2?'zu':'zuek',treatment]);
+  }
+  for(const [nori,singular,plural] of spec.stems) for(const [nor,stem] of [['hura',singular],['haiek',plural]] as [Person,string][])
+    for(const [nork,suffix,treatment] of [['hi','k','toka'],['hi','n','noka'],['zu','zu','neutral'],['zuek','zue','neutral']] as [Person,string,Analysis['treatment']][])
+      expected.push([stem+suffix,nor,nori,nork,treatment]);
+  const aliases:Record<string,string>={igorzu:'19orzu',igorzue:'19orzue',igorriezu:'19omezu',igorriezue:'19ornezue',
+    erosiozu:'eroslozu',erosiozue:'eroslozue',erosiezu:'eroslezu',erosiezue:'eroslezue'};
+  for(const [form,nor,nori,nork,treatment] of expected) {
+    checked++;
+    const toka=treatment==='noka'?expected.find(row=>row[1]===nor&&row[2]===nori&&row[3]===nork&&row[4]==='toka')?.[0]:null;
+    const paired=toka&&['/n','ln','in','lna'].some(marker=>source.includes(toka+marker));
+    if(!source.includes(form)&&!source.includes(aliases[form]??'\0')&&!paired)
+      failures.push(`PDF ${spec.page}: ${spec.heading} ${form} falta da`);
+    const analyses=(lookup.all(form,'batua') as {payload:string}[]).map(r=>JSON.parse(r.payload) as Analysis);
+    if(!analyses.some(a=>a.lemma===spec.lemma&&a.kind==='synthetic'&&a.mood==='imperative'&&a.tense==='present'&&
+      a.nor===nor&&a.nori===nori&&a.nork===nork&&a.treatment===treatment&&!a.allocutive&&
+      a.validation==='reviewed'&&a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')))
+      failures.push(`PDF ${spec.page}: ${spec.heading} ${form} analisia falta edo desegokia da`);
+  }
+}
+// ESAN/ERRAN's compact NOR-NORK pages (printed 176¹–177¹).
+for(const spec of [
+  {page:374,lemma:'io',series:[
+    ['NN1','indicative','present',[
+      ['diot','ni','neutral'],['diok','hi','toka'],['dion','hi','noka'],['dio','hura','neutral'],
+      ['diogu','gu','neutral'],['diozu','zu','neutral'],['diozue','zuek','neutral'],['diote','haiek','neutral']]],
+    ['NN2','indicative','past',[
+      ['nioen','ni','neutral'],['hioen','hi','hika'],['zioen','hura','neutral'],['genioen','gu','neutral'],
+      ['zenioen','zu','neutral'],['zenioten','zuek','neutral'],['zioten','haiek','neutral']]],
+  ]},
+  {page:376,lemma:'erran',series:[
+    ['NN3','conditional','hypothetical',[
+      ['banerra','ni','neutral'],['baherra','hi','hika'],['balerra','hura','neutral'],['bagenerra','gu','neutral'],
+      ['bazenerra','zu','neutral'],['bazenerrate','zuek','neutral'],['balerrate','haiek','neutral']]],
+    ['NN4','potential','hypothetical',[
+      ['nerrake','ni','neutral'],['herrake','hi','hika'],['lerrake','hura','neutral'],['generrake','gu','neutral'],
+      ['zenerrake','zu','neutral'],['zenerrakete','zuek','neutral'],['lerrakete','haiek','neutral']]],
+    ['NN9','imperative','present',[
+      ['errak','hi','toka'],['erran','hi','noka'],['berra','hura','neutral'],['errazu','zu','neutral'],
+      ['errazue','zuek','neutral'],['berrate','haiek','neutral']]],
+    ['NN9-esan','imperative','present',[
+      ['esak','hi','toka'],['esan','hi','noka'],['bio','hura','neutral'],['esazu','zu','neutral'],
+      ['esazue','zuek','neutral'],['biote','haiek','neutral']]],
+  ]},
+] as const) {
+  const raw=pages[spec.page-1]; const source=raw.toLowerCase().replace(/\s+/g,'');
+  if(!raw?.includes('ESANIERRAN'))failures.push(`PDF ${spec.page}: ESAN/ERRAN aingura falta da`);
+  for(const [series,mood,tense,forms] of spec.series) for(const [form,nork,treatment] of forms) {
+    checked++;
+    const paired=treatment==='noka'?forms.find(row=>row[1]===nork&&row[2]==='toka')?.[0]:null;
+    const aliases:Record<string,string>={zioen:'zloen'};
+    if(!source.includes(form)&&!source.includes(aliases[form]??'\0')&&!(paired&&source.includes(paired+'/n')))
+      failures.push(`PDF ${spec.page}: ESAN/ERRAN ${series} ${form} falta da`);
+    const lemma=series==='NN9-esan'?'esan':spec.lemma;
+    const analyses=(lookup.all(form,'batua') as {payload:string}[]).map(r=>JSON.parse(r.payload) as Analysis);
+    if(!analyses.some(a=>a.lemma===lemma&&a.kind==='synthetic'&&a.type==='nor-nork'&&a.nor==='hura'&&
+      a.nori===null&&a.nork===nork&&a.mood===mood&&a.tense===tense&&a.treatment===treatment&&!a.allocutive&&
+      (['NN1','NN2','NN9','NN9-esan'].includes(series)?a.validation==='reviewed':true)&&
+      a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')))
+      failures.push(`PDF ${spec.page}: ESAN/ERRAN ${series} ${form} analisia falta edo desegokia da`);
+  }
+}
+// Compact NOR-NORK paradigms approved on printed pp. 165¹–168¹. The 1979
+// scan has a handful of stable OCR errors; the form arrays are also checked
+// against the 1977 original below, so no reading is inferred from OCR alone.
+for(const spec of [
+  {lemma:'iraun',pages:[352,354],forms:[
+    ['N1','indicative','present',[
+      ['diraut','ni','neutral'],['dirauk','hi','toka'],['diraun','hi','noka'],['dirau','hura','neutral'],
+      ['diraugu','gu','neutral'],['dirauzu','zu','neutral'],['dirauzue','zuek','neutral'],['diraute','haiek','neutral']]],
+    ['N2','indicative','past',[
+      ['nirauen','ni','neutral'],['hirauen','hi','hika'],['zirauen','hura','neutral'],['genirauen','gu','neutral'],
+      ['zenirauen','zu','neutral'],['zenirauten','zuek','neutral'],['zirauten','haiek','neutral']]],
+    ['N3','conditional','hypothetical',[
+      ['banirau','ni','neutral'],['bahirau','hi','hika'],['balirau','hura','neutral'],['bagenirau','gu','neutral'],
+      ['bazenirau','zu','neutral'],['bazeniraute','zuek','neutral'],['baliraute','haiek','neutral']]],
+    ['N4','consequence','present',[
+      ['nirauke','ni','neutral'],['hirauke','hi','hika'],['lirauke','hura','neutral'],['genirauke','gu','neutral'],
+      ['zenirauke','zu','neutral'],['zeniraukete','zuek','neutral'],['liraukete','haiek','neutral']]],
+    ['N9','imperative','present',[
+      ['irauk','hi','toka'],['iraun','hi','noka'],['birau','hura','neutral'],['irauzu','zu','neutral'],
+      ['irauzue','zuek','neutral'],['biraute','haiek','neutral']]],
+  ]},
+  {lemma:'iruditu',pages:[356,358],forms:[
+    ['N1','indicative','present',[
+      ['dirudit','ni','neutral'],['dirudik','hi','toka'],['dirudin','hi','noka'],['dirudi','hura','neutral'],
+      ['dirudigu','gu','neutral'],['dirudizu','zu','neutral'],['dirudizue','zuek','neutral'],['dirudite','haiek','neutral']]],
+    ['N2','indicative','past',[
+      ['nirudien','ni','neutral'],['hirudien','hi','hika'],['zirudien','hura','neutral'],['genirudien','gu','neutral'],
+      ['zenirudien','zu','neutral'],['zeniruditen','zuek','neutral'],['ziruditen','haiek','neutral']]],
+    ['N3','conditional','hypothetical',[
+      ['banirudi','ni','neutral'],['bahirudi','hi','hika'],['balirudi','hura','neutral'],['bagenirudi','gu','neutral'],
+      ['bazenirudi','zu','neutral'],['bazenirudite','zuek','neutral'],['balirudite','haiek','neutral']]],
+    ['N4','consequence','present',[
+      ['nirudike','ni','neutral'],['hirudike','hi','hika'],['lirudike','hura','neutral'],['genirudike','gu','neutral'],
+      ['zenirudike','zu','neutral'],['zenirudikete','zuek','neutral'],['lirudikete','haiek','neutral']]],
+    ['N9','imperative','present',[
+      ['irudik','hi','toka'],['irudin','hi','noka'],['birudi','hura','neutral'],['irudizu','zu','neutral'],
+      ['irudizue','zuek','neutral'],['birudite','haiek','neutral']]],
+  ]},
+] as const) {
+  const source=spec.pages.map(page=>pages[page-1]).join('\n').toLowerCase().replace(/\s+/g,'');
+  if(!source.includes(spec.lemma==='iraun'?'iraun':'irudi'))
+    failures.push(`PDF ${spec.pages.join('/')}: ${spec.lemma} paradigma-aingurak falta dira`);
+  const ocrAliases:Record<string,string>={nirauen:'mrauen',zirauen:'zlrauen',genirauen:'gemrauen',zenirauen:'zemrauen',irauzu:'lrauzu',irauzue:'lrauzue'};
+  for(const [series,mood,tense,forms] of spec.forms) for(const [form,nork,treatment] of forms) {
+    checked++;
+    const paired=(form==='diraun'||form==='dirudin'||form==='iraun'||form==='irudin')?form.slice(0,-1)+'km':null;
+    if(!source.includes(form)&&!source.includes(ocrAliases[form]??'\0')&&!(paired&&source.includes(paired)))
+      failures.push(`PDF ${spec.pages.join('/')}: ${spec.lemma} ${series} ${form} falta da`);
+    const analyses=(lookup.all(form,'batua') as {payload:string}[]).map(r=>JSON.parse(r.payload) as Analysis);
+    if(!analyses.some(a=>a.lemma===spec.lemma&&a.kind==='synthetic'&&a.type==='nor-nork'&&
+      a.nor==='hura'&&a.nori===null&&a.nork===nork&&a.mood===mood&&a.tense===tense&&
+      a.treatment===treatment&&!a.allocutive&&
+      (!['toka','noka'].includes(treatment)||a.validation==='reviewed')))
+      failures.push(`PDF ${spec.pages.join('/')}: ${spec.lemma} ${series} ${form} analisia falta edo desegokia da`);
+  }
+}
+// EMAN NN9/NNN9 (printed pp. 169¹–170¹). The second page prints the
+// singular-NOR matrix and a productive plural-NOR substitution note; the
+// 1977 original below prints both full columns.
+const emanNn9=[
+  ['demadan','hura',null,'ni','neutral'],['emak','hura',null,'hi','toka'],['eman','hura',null,'hi','noka'],
+  ['bema','hura',null,'hura','neutral'],['demagun','hura',null,'gu','neutral'],['emazu','hura',null,'zu','neutral'],
+  ['emazue','hura',null,'zuek','neutral'],['bemate','hura',null,'haiek','neutral'],
+  ['dematzadan','haiek',null,'ni','neutral'],['emaitzak','haiek',null,'hi','toka'],['emaitzan','haiek',null,'hi','noka'],
+  ['bematza','haiek',null,'hura','neutral'],['dematzagun','haiek',null,'gu','neutral'],['emaitzazu','haiek',null,'zu','neutral'],
+  ['emaitzazue','haiek',null,'zuek','neutral'],['bematzate','haiek',null,'haiek','neutral'],
+] as [string,Person,null,Person,Analysis['treatment']][];
+const emanRecipients:[Person,[Person,string,string,Analysis['treatment']][]][]=[
+  ['ni',[
+    ['hi','emadak','emazkidak','toka'],['hi','emadan','emazkidan','noka'],['hura','bemakit','bemazkit','neutral'],
+    ['zu','emadazu','emazkidazu','neutral'],['zuek','emadazue','emazkidazue','neutral'],['haiek','bemakidate','bemazkidate','neutral']]],
+  ['hi',[
+    ['hura','bemakik','bemazkik','toka'],['hura','bemakin','bemazkin','noka'],
+    ['haiek','bemakiate','bemazkiate','toka'],['haiek','bemakinate','bemazkinate','noka']]],
+  ['hura',[
+    ['hi','emaiok','emazkiok','toka'],['hi','emaion','emazkion','noka'],['hura','bemakio','bemazkio','neutral'],
+    ['zu','emaiozu','emazkiozu','neutral'],['zuek','emaiozue','emazkiozue','neutral'],['haiek','bemakiote','bemazkiote','neutral']]],
+  ['gu',[
+    ['hi','emaguk','emazkiguk','toka'],['hi','emagun','emazkigun','noka'],['hura','bemakigu','bemazkigu','neutral'],
+    ['zu','emaguzu','emazkiguzu','neutral'],['zuek','emaguzue','emazkiguzue','neutral'],['haiek','bemakigute','bemazkigute','neutral']]],
+  ['zu', [['hura','bemakizu','bemazkizu','neutral'],['haiek','bemakizute','bemazkizute','neutral']]],
+  ['zuek',[['hura','bemakizue','bemazkizue','neutral'],['haiek','bemakizuete','bemazkizuete','neutral']]],
+  ['haiek',[
+    ['hi','emaiek','emazkiek','toka'],['hi','emaien','emazkien','noka'],['hura','bemakie','bemazkie','neutral'],
+    ['zu','emaiezu','emazkiezu','neutral'],['zuek','emaiezue','emazkiezue','neutral'],['haiek','bemakiete','bemazkiete','neutral']]],
+];
+const emanNnn9:[string,Person,Person,Person,Analysis['treatment']][]=[];
+for(const [nori,forms] of emanRecipients) for(const [nork,singular,plural,treatment] of forms) {
+  emanNnn9.push([singular,'hura',nori,nork,treatment]);
+  emanNnn9.push([plural,'haiek',nori,nork,treatment]);
+}
+for(const spec of [{page:360,rows:emanNn9},{page:362,rows:emanNnn9.filter(row=>row[1]==='hura')}] as const) {
+  const raw=pages[spec.page-1]; const source=raw.toLowerCase().replace(/\s+/g,'');
+  if(!raw?.includes('EMAN')||!source.includes(spec.page===360?'1691':'170i'))
+    failures.push(`PDF ${spec.page}: EMAN paradigma-aingurak falta dira`);
+  for(const [form,nor,nori,nork,treatment] of spec.rows) {
+    checked++;
+    const paired=treatment==='noka'?(form.endsWith('n')?form.slice(0,-1)+'k':form.replace(/nate$/,'ate')):null;
+    const ocrAliases:Record<string,string>={emaiozue:'emalozue'};
+    if(!source.includes(form)&&!source.includes(ocrAliases[form]??'\0')&&
+      !(paired&&(source.includes(paired+'m')||source.includes(paired+'tn')))&&
+      !(form==='bemakinate'&&source.includes('bemakiatemate')))
+      failures.push(`PDF ${spec.page}: EMAN ${form} falta da`);
+    const analyses=(lookup.all(form,'batua') as {payload:string}[]).map(r=>JSON.parse(r.payload) as Analysis);
+    if(!analyses.some(a=>a.lemma==='eman'&&a.kind==='synthetic'&&a.mood==='imperative'&&a.tense==='present'&&
+      a.nor===nor&&a.nori===nori&&a.nork===nork&&a.treatment===treatment&&!a.allocutive&&
+      (!['toka','noka'].includes(treatment)||a.validation==='reviewed')))
+      failures.push(`PDF ${spec.page}: EMAN ${form} analisia falta edo desegokia da`);
+  }
+}
 // Printed pp. 154¹–157¹: IHARDUN and IHARDUKI have compact NOR-NORK
 // tables. The OCR turns one h into b and several printed k/n cells into
 // "kln"; only those observed glyph errors are normalized here.
@@ -481,6 +670,23 @@ if(originalPdf) {
       new RegExp(`(?<![a-z])${form}(?![a-z])`).test(eroanOriginal);
     if(!visible)failures.push(`1977ko PDF 57: EROAN ${form} falta da`);
   }
+  const emanOriginal=(originalPages[58]??'')+(originalPages[59]??''); // printed pp. 842–843
+  const emanSource=emanOriginal.toLowerCase().replace(/\s+/g,'');
+  if(!/\b842\b/.test(emanOriginal)||!emanSource.includes('eman'))
+    failures.push('1977ko PDF 59–60: EMAN/842 paradigma-aingurak falta dira');
+  for(const [form,nor,nori,nork,treatment] of [...emanNn9,...emanNnn9]) {
+    originalChecked++;
+    const paired=treatment==='noka'?(form.endsWith('n')?form.slice(0,-1)+'k':form.replace(/nate$/,'ate')):null;
+    const ocrAliases:Record<string,string>={emaiozue:'emalozue'};
+    if(!emanSource.includes(form)&&!emanSource.includes(ocrAliases[form]??'\0')&&
+      !(paired&&(emanSource.includes(paired+'/-n')||emanSource.includes(paired+'/-kinate'))))
+      failures.push(`1977ko PDF 59–60: EMAN ${form} falta da`);
+    const analyses=(lookup.all(form,'batua') as {payload:string}[]).map(r=>JSON.parse(r.payload) as Analysis);
+    if(!analyses.some(a=>a.lemma==='eman'&&a.kind==='synthetic'&&a.mood==='imperative'&&a.tense==='present'&&
+      a.nor===nor&&a.nori===nori&&a.nork===nork&&a.treatment===treatment&&!a.allocutive&&
+      a.citations.some(c=>c.sourceId==='euskaltzaindia-sintetikoa1977')))
+      failures.push(`1977ko PDF 59–60: EMAN ${form} analisia/aipamena falta edo desegokia da`);
+  }
   const erakutsiOriginal=originalPages[54]; // printed p. 838
   if(!erakutsiOriginal||!/\b838\b/.test(erakutsiOriginal))
     failures.push('1977ko PDF 55: ERAKUTSI/838 aingurak falta dira');
@@ -494,5 +700,5 @@ if(originalPdf) {
   }
 }
 db.close();
-console.log(`${pageSpecs.length + 6 + norkPages.length + 2} paradigma-orri ofizial, ${checked} adizki-agerpen; 1977ko jatorrizkoan ${originalPdf?originalChecked+' agerpen eta EUTSI gatazka egiaztatuak':'ez da auditatu'}; ${failures.length} hutsune/desadostasun`);
+console.log(`${pageSpecs.length + 18 + norkPages.length + 2} paradigma-orri ofizial, ${checked} adizki-agerpen; 1977ko jatorrizkoan ${originalPdf?originalChecked+' agerpen eta EUTSI gatazka egiaztatuak':'ez da auditatu'}; ${failures.length} hutsune/desadostasun`);
 if (failures.length) { for (const failure of failures.slice(0, 100)) console.error(failure); process.exitCode = 1; }
