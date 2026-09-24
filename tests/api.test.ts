@@ -274,6 +274,23 @@ test('erauntsi imperatives and eutsi daut- readings match printed NORI/NORK cell
   assert.ok(!(await analyze('dautso')).analyses.some(a=>a.allocutive));
   assert.ok(!(await analyze('zautsok')).analyses.some(a=>a.baseForm==='dautso'));
 });
+test('eutsi imperative preserves both source tables and licensed i-less variants',async()=>{
+  for(const [form,nori,nork,treatment,validation,source] of [
+    ['eustan','ni','hi','noka','reviewed','euskaltzaindia-eab1979'],
+    ['euskuk','gu','hi','toka','reviewed','euskaltzaindia-eab1979'],
+    ['eutsien','haiek','hi','noka','reviewed','euskaltzaindia-eab1979'],
+    ['beutse','haiek','hura','neutral','reviewed','euskaltzaindia-eab1979'],
+    ['beutse','haiek','haiek','neutral','reviewed','euskaltzaindia-eab1979'],
+    ['beutsete','haiek','haiek','neutral','reviewed','euskaltzaindia-sintetikoa1977'],
+    ['eutsok','hura','hi','toka','reviewed','euskaltzaindia-eab1979'],
+    ['eutsozu','hura','zu','neutral','generated','euskaltzaindia-eab1979'],
+    ['eutsek','haiek','hi','toka','generated','euskaltzaindia-eab1979'],
+  ] as const) {
+    assert.ok((await analyze(form)).analyses.some(a=>a.lemma==='eutsi'&&a.mood==='imperative'&&
+      a.tense==='present'&&a.type==='nor-nori-nork'&&a.nor==='hura'&&a.nori===nori&&a.nork===nork&&
+      a.treatment===treatment&&a.validation===validation&&a.citations.some(c=>c.sourceId===source)),form);
+  }
+});
 test('all segmentation offsets reconstruct their surface and unknown history stays absent',async()=>{
   for(const form of ['hatzait','dut','du','haiz','naiz','didazue','dator','dakit','zarete']){
     for(const a of (await analyze(form)).analyses){

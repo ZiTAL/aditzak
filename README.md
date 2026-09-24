@@ -188,10 +188,14 @@ formak ere gehitu dira, NORI/NORK pertsona zehatzekin. Alabaina,
 `deut-` formak inprimatzen ditu eta 1979ko liburuak `daut-` formak: gatazka
 horregatik, `daut-` irakurketak «sortua» gisa markatu dira, ez
 «berrikusia» gisa, eta ez da haiengandik alokutiborik sortzen. Apertiumeko
-`deut-` lau irakurketa jatorrizko zerrendaren bidez berrikusi dira.
-Bigarren PDFa audit-komandoan hautazkoa da, baina emanez gero iturri-gatazka
-eta IRAUN/IRUDIren 70, EMANen 80, IHARDUKIren 10, ERAUNTSIren lau, EROANen hamabi eta
-ERAKUTSIren hamasei jatorrizko
+`deut-` lau irakurketa jatorrizko zerrendaren bidez berrikusi dira. EUTSIren
+20 agintera-irakurketak ere osorik auditatu dira: 1979ko taulak azken
+`beutse` errepikatzen du, eta 1977koak gelaxka horretan `beutsete` dakar;
+bi lekukotasunak mantendu dira. `eutsok/eutson` eta oharrak baimentzen dituen
+gainerako sei i-rik gabeko aldaerak ere eskaintzen dira, sei horiek
+«sortua» gisa. Bigarren PDFa audit-komandoan hautazkoa da, baina emanez gero
+iturri-gatazka eta IRAUN/IRUDIren 70, EMANen 80, EUTSIren 20, IHARDUKIren 10,
+ERAUNTSIren lau, EROANen hamabi eta ERAKUTSIren hamasei jatorrizko
 adizki-agerpenak ere egiaztatzen dira; multzo horretan ez da hutsunerik aurkitu.
 
 Arauaren bidez berrikusitako irakurketak inportatu gabekoen aurretik erakusten

@@ -515,6 +515,64 @@ for(const [lemma,mood,page,prefixes] of [
     };
     insert.run(analysis.id,form,lemma,'batua',1,'euskaltzaindia-eab1979',JSON.stringify(analysis));
   }
+// EUTSI's full imperative occupies the lower half of p. 164¹. The 1979
+// table accidentally repeats beutse for both third-person subjects, whereas
+// the 1977 source prints beutsete in the plural-subject cell. Preserve both
+// source readings instead of silently choosing one of them.
+const eutsiImperatives=[
+  ['eustak','ni','hi','toka'],['eustan','ni','hi','noka'],
+  ['eustazu','ni','zu','neutral'],['eustazue','ni','zuek','neutral'],
+  ['euskuk','gu','hi','toka'],['euskun','gu','hi','noka'],
+  ['euskuzu','gu','zu','neutral'],['euskuzue','gu','zuek','neutral'],
+  ['eutsiok','hura','hi','toka'],['eutsion','hura','hi','noka'],
+  ['beutso','hura','hura','neutral'],['eutsiozu','hura','zu','neutral'],
+  ['eutsiozue','hura','zuek','neutral'],['beutsote','hura','haiek','neutral'],
+  ['eutsiek','haiek','hi','toka'],['eutsien','haiek','hi','noka'],
+  ['beutse','haiek','hura','neutral'],['eutsiezu','haiek','zu','neutral'],
+  ['eutsiezue','haiek','zuek','neutral'],['beutse','haiek','haiek','neutral'],
+] as [string,Person,Person,Treatment][];
+for(const [form,nori,nork,treatment] of eutsiImperatives) {
+  const rows=db.prepare('SELECT id,payload FROM analyses WHERE form=? AND lemma=? AND base=1').all(form,'eutsi') as {id:string;payload:string}[];
+  const row=rows.find(r=>{const a=JSON.parse(r.payload) as Analysis;
+    return a.mood==='imperative'&&a.nor==='hura'&&a.nori===nori&&a.nork===nork;});
+  if(!row)throw new Error(`1979ko EUTSI agintera falta da: ${form} (${nori}, ${nork})`);
+  const analysis=JSON.parse(row.payload) as Analysis;
+  Object.assign(analysis,{type:'nor-nori-nork' as const,tense:'present' as Tense,treatment,
+    allocutive:false,validation:'reviewed' as const});
+  analysis.citations.push({sourceId:'euskaltzaindia-eab1979',locator:'164¹. or. (PDF 350), EUTSI NNN9'});
+  if(!(form==='beutse'&&nork==='haiek'))
+    analysis.citations.push({sourceId:'euskaltzaindia-sintetikoa1977',locator:'826. or., EUTSI agintera'});
+  reviewedImperative.run(JSON.stringify(analysis),'euskaltzaindia-eab1979',row.id);
+}
+const beutsete:Analysis={
+  id:createHash('sha256').update(JSON.stringify(['euskaltzaindia-sintetikoa1977','beutsete','eutsi','haiek','haiek'])).digest('hex').slice(0,24),
+  form:'beutsete',lemma:'eutsi',kind:'synthetic',variety:'batua',mood:'imperative',tense:'present',
+  type:'nor-nori-nork',nor:'hura',nori:'haiek',nork:'haiek',treatment:'neutral',allocutive:false,
+  affixes:[],rawTags:['aditz-sintetikoa1977','NNN9'],baseForm:'beutsete',origin:'rule',validation:'reviewed',
+  citations:[{sourceId:'euskaltzaindia-sintetikoa1977',locator:'826. or., EUTSI agintera: beutsete'}],
+  segmentation:null,history:[],
+};
+insert.run(beutsete.id,beutsete.form,beutsete.lemma,'batua',1,'euskaltzaindia-sintetikoa1977',JSON.stringify(beutsete));
+// Both editions explicitly license the i-less eutsok/eutson pair and "eta
+// abar" licenses the same alternation in the remaining hari/haiei cells.
+// Keep the explicitly printed pair reviewed and mark the extrapolated six as
+// generated so the API exposes the evidence boundary.
+for(const [form,nori,nork,treatment,validation] of [
+  ['eutsok','hura','hi','toka','reviewed'],['eutson','hura','hi','noka','reviewed'],
+  ['eutsozu','hura','zu','neutral','generated'],['eutsozue','hura','zuek','neutral','generated'],
+  ['eutsek','haiek','hi','toka','generated'],['eutsen','haiek','hi','noka','generated'],
+  ['eutsezu','haiek','zu','neutral','generated'],['eutsezue','haiek','zuek','neutral','generated'],
+] as [string,Person,Person,Treatment,Analysis['validation']][]) {
+  const analysis:Analysis={
+    id:createHash('sha256').update(JSON.stringify(['eab1979-eutsi-i-less',form,nori,nork])).digest('hex').slice(0,24),
+    form,lemma:'eutsi',kind:'synthetic',variety:'batua',mood:'imperative',tense:'present',type:'nor-nori-nork',
+    nor:'hura',nori,nork,treatment,allocutive:false,affixes:[],rawTags:['eab1979','NNN9','i-less'],
+    baseForm:form,origin:'rule',validation,segmentation:null,history:[],
+    citations:[{sourceId:'euskaltzaindia-eab1979',locator:'164¹. or. (PDF 350), EUTSI oharra: eutsiok = eutsok; eta abar'},
+      {sourceId:'euskaltzaindia-sintetikoa1977',locator:'826. or., EUTSI oharra: i-dun formen aldamenean i-gabeak ere ontzat'}],
+  };
+  insert.run(analysis.id,form,'eutsi','batua',1,'euskaltzaindia-eab1979',JSON.stringify(analysis));
+}
 // The 1977 original unequivocally prints the deut- EUTSI quartet. Upgrade
 // the matching lexicon readings without suppressing the 1979 daut- dispute.
 const reviewedDeut=db.prepare('UPDATE analyses SET payload=?, source=? WHERE id=?');

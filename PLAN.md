@@ -21,14 +21,18 @@ audit honek egiaztatzen, eta sintetikoei ez die 78. arauak estaldura ematen.
 *Euskal Aditz Batua* (1979) liburuko paradigma ofizialen 43 orrialdeetan,
 EGON, JOAN, ETORRI, IBILI eta ETZANen NOR saileko 263 agerpen,
 IRAKATSIren aginterako 36, IHARDUN/IHARDUKIren 70 eta
-ERAUNTSI/EUTSIren 40, JARIOren 32, EROANen 26, ERAKUTSIren 98 eta beste
-paradigma trinkoetako 303 agerpen auditatu dira; guztira 868.
+ERAUNTSI/EUTSIren 56, JARIOren 32, EROANen 26, ERAKUTSIren 98 eta beste
+paradigma trinkoetako 303 agerpen auditatu dira; guztira 884, EUTSIren
+oharrean onartutako beste zortzi aldaerez gain.
 *Irakatsi*ren 158¹. orrialdea
 (PDF 338) ofiziala dela berretsi da; horren hitz bakarreko paradigmak eta
 Apertiumeko lema-zuzenketa gehitu dira. Oraingoz ez da desadostasunik; beste
 paradigma trinkoak eta tratamenduen egiaztapena falta dira. IHARDUKIren
 aginterako sei forma eta beste lau forma osatu dira. ERAUNTSIren lau agintera
-eta EUTSIren 1979ko lau `daut-` aldaera ere gehitu dira. Aurrez aurreko eraikuntza-taulak
+eta EUTSIren 1979ko lau `daut-` aldaera ere gehitu dira. EUTSIren aginterako
+20 irakurketak eta i-rik gabeko zortzi aldaerak ere estali dira; 1979ko
+`beutse` errepikapena eta 1977ko `beutsete` lekukotasuna biak gorde dira.
+Aurrez aurreko eraikuntza-taulak
 editorearenak dira, ez Akademiaren paradigma ofizialak.
 
 JARIO/JARIN/JARIATUren 1979ko NN4/NN9 taulek beste 24 analisi falta
@@ -55,7 +59,7 @@ EUTSIren `daut-` formak 1979ko liburuan ageri dira, baina 1977ko jatorrizko
 *Aditz sintetikoa* zerrendak `deut-` ematen du. Gatazka ebatzi gabe dago;
 `daut-` sarrerak «sortua» gisa agertzen dira eta ez dute alokutiborik sortzen.
 `deut-` saileko lau oinarrizko irakurketak 1977ko zerrendarekin berrikusi dira.
-1977ko dokumentuko IRAUN/IRUDI sailen 70, EMANen 80, IHARDUKIren 10 eta
+1977ko dokumentuko IRAUN/IRUDI sailen 70, EMANen 80, EUTSIren 20, IHARDUKIren 10 eta
 ERAUNTSIren lau, EROANen hamabi eta ERAKUTSIren hamasei agerpen ere egiaztatu dira,
 hutsegiterik gabe; honek ez du gainerako aditz trinkoen estaldura frogatzen.
 

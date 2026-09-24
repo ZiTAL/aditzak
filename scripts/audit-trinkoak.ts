@@ -43,6 +43,7 @@ type Row = { label: string; first: string; second: string | null };
 const failures: string[] = [];
 let checked = 0;
 let originalChecked = 0;
+let noteVariants = 0;
 const moods: Partial<Record<Series, { mood: Mood; tense: Tense }>> = {
   N1: { mood: 'indicative', tense: 'present' },
   N2: { mood: 'indicative', tense: 'past' },
@@ -580,14 +581,59 @@ for(const spec of [
         a.nori===nori&&a.nork===nork&&a.mood===expected.mood&&a.tense===expected.tense))
         failures.push(`PDF ${spec.page}: ${form} -> NORI ${nori}, NORK ${nork}, ${expected.mood}`);
     }
-    const imperativeForm=spec.imperative[row];checked++;
-    if(!new RegExp(`(?<![a-z])${imperativeForm}(?![a-z])`).test(source))
-      failures.push(`PDF ${spec.page}: ${imperativeForm} agintera ezin da aurkitu`);
-    const imperativeAnalyses=(lookup.all(imperativeForm,'batua') as {payload:string}[]).map(r=>JSON.parse(r.payload) as Analysis);
-    if(!imperativeAnalyses.some(a=>a.lemma===spec.lemma&&a.type==='nor-nori-nork'&&a.nor==='hura'&&
-      a.nori===nori&&a.nork===nork&&a.mood==='imperative'&&a.tense==='present'))
-      failures.push(`PDF ${spec.page}: ${imperativeForm} agintera -> NORI ${nori}, NORK ${nork}`);
+    if(spec.lemma==='erauntsi') {
+      const imperativeForm=spec.imperative[row];checked++;
+      if(!new RegExp(`(?<![a-z])${imperativeForm}(?![a-z])`).test(source))
+        failures.push(`PDF ${spec.page}: ${imperativeForm} agintera ezin da aurkitu`);
+      const imperativeAnalyses=(lookup.all(imperativeForm,'batua') as {payload:string}[]).map(r=>JSON.parse(r.payload) as Analysis);
+      if(!imperativeAnalyses.some(a=>a.lemma===spec.lemma&&a.type==='nor-nori-nork'&&a.nor==='hura'&&
+        a.nori===nori&&a.nork===nork&&a.mood==='imperative'&&a.tense==='present'))
+        failures.push(`PDF ${spec.page}: ${imperativeForm} agintera -> NORI ${nori}, NORK ${nork}`);
+    }
   }
+}
+// EUTSI p. 164¹ has twenty imperative readings. Its final beutse is a
+// genuine repetition in the printed 1979 table, not an OCR artefact; the
+// 1977 source instead has beutsete for that plural-subject cell.
+const eutsiPage=pages[349];
+const compactEutsi=eutsiPage?.toLowerCase().replace(/\s+/g,'')??'';
+const eutsiImperatives:[string,Person,Person,Analysis['treatment']][]=[
+  ['eustak','ni','hi','toka'],['eustan','ni','hi','noka'],
+  ['eustazu','ni','zu','neutral'],['eustazue','ni','zuek','neutral'],
+  ['euskuk','gu','hi','toka'],['euskun','gu','hi','noka'],
+  ['euskuzu','gu','zu','neutral'],['euskuzue','gu','zuek','neutral'],
+  ['eutsiok','hura','hi','toka'],['eutsion','hura','hi','noka'],
+  ['beutso','hura','hura','neutral'],['eutsiozu','hura','zu','neutral'],
+  ['eutsiozue','hura','zuek','neutral'],['beutsote','hura','haiek','neutral'],
+  ['eutsiek','haiek','hi','toka'],['eutsien','haiek','hi','noka'],
+  ['beutse','haiek','hura','neutral'],['eutsiezu','haiek','zu','neutral'],
+  ['eutsiezue','haiek','zuek','neutral'],['beutse','haiek','haiek','neutral'],
+];
+for(const [form,nori,nork,treatment] of eutsiImperatives) {
+  checked++;
+  const toka=treatment==='noka'?eutsiImperatives.find(row=>row[1]===nori&&row[2]===nork&&row[3]==='toka')?.[0]:null;
+  const visible=form==='beutse'&&nork==='haiek'?
+    (eutsiPage?.match(/(?<![a-z])beutse(?![a-z])/g)?.length??0)>=2:
+    compactEutsi.includes(form)||(toka!==null&&compactEutsi.includes(toka+'m'));
+  if(!visible)failures.push(`PDF 350: EUTSI NNN9 ${form} (${nori}, ${nork}) falta da`);
+  const analyses=(lookup.all(form,'batua') as {payload:string}[]).map(r=>JSON.parse(r.payload) as Analysis);
+  if(!analyses.some(a=>a.lemma==='eutsi'&&a.kind==='synthetic'&&a.type==='nor-nori-nork'&&
+    a.mood==='imperative'&&a.tense==='present'&&a.nor==='hura'&&a.nori===nori&&a.nork===nork&&
+    a.treatment===treatment&&!a.allocutive&&a.validation==='reviewed'&&
+    a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')))
+    failures.push(`PDF 350: EUTSI NNN9 ${form} analisia falta edo desegokia da`);
+}
+for(const [form,nori,nork,treatment,validation] of [
+  ['eutsok','hura','hi','toka','reviewed'],['eutson','hura','hi','noka','reviewed'],
+  ['eutsozu','hura','zu','neutral','generated'],['eutsozue','hura','zuek','neutral','generated'],
+  ['eutsek','haiek','hi','toka','generated'],['eutsen','haiek','hi','noka','generated'],
+  ['eutsezu','haiek','zu','neutral','generated'],['eutsezue','haiek','zuek','neutral','generated'],
+] as [string,Person,Person,Analysis['treatment'],Analysis['validation']][]) {
+  noteVariants++;
+  const analyses=(lookup.all(form,'batua') as {payload:string}[]).map(r=>JSON.parse(r.payload) as Analysis);
+  if(!analyses.some(a=>a.lemma==='eutsi'&&a.mood==='imperative'&&a.nor==='hura'&&a.nori===nori&&a.nork===nork&&
+    a.treatment===treatment&&a.validation===validation&&a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')))
+    failures.push(`PDF 350: EUTSIren i gabeko ${form} aldaera falta edo desegokia da`);
 }
 if(originalPdf) {
   const originalPages=execFileSync('pdftotext',['-layout',originalPdf,'-'],{
@@ -607,6 +653,21 @@ if(originalPdf) {
       a.mood==='indicative'&&a.tense==='present'&&a.validation==='reviewed'&&
       a.citations.some(c=>c.sourceId==='euskaltzaindia-sintetikoa1977')))
       failures.push(`1977ko PDF 43: ${form} irakurketaren aipamena/egiaztapena falta da`);
+  }
+  for(const [form,nori,nork,treatment] of [
+    ...eutsiImperatives.filter(row=>!(row[0]==='beutse'&&row[2]==='haiek')),
+    ['beutsete','haiek','haiek','neutral'],
+  ] as [string,Person,Person,Analysis['treatment']][]) {
+    originalChecked++;
+    const toka=treatment==='noka'?eutsiImperatives.find(row=>row[1]===nori&&row[2]===nork&&row[3]==='toka')?.[0]:null;
+    const originalSpelling=form==='euskuzue'?'euskuzüe':form;
+    if(!original.includes(originalSpelling)&&!(toka&&original.includes(`${toka}/${form}`)))
+      failures.push(`1977ko PDF 43: EUTSI ${form} agintera falta da`);
+    const analyses=(lookup.all(form,'batua') as {payload:string}[]).map(r=>JSON.parse(r.payload) as Analysis);
+    if(!analyses.some(a=>a.lemma==='eutsi'&&a.mood==='imperative'&&a.tense==='present'&&a.nor==='hura'&&
+      a.nori===nori&&a.nork===nork&&a.treatment===treatment&&a.validation==='reviewed'&&
+      a.citations.some(c=>c.sourceId==='euskaltzaindia-sintetikoa1977')))
+      failures.push(`1977ko PDF 43: EUTSI ${form} analisia/aipamena falta edo desegokia da`);
   }
   // Printed p. 841, physical PDF p. 58: two complete NOR-NORK matrices.
   // The original prints IRUDI; the present lexicon maps that family to
@@ -700,5 +761,5 @@ if(originalPdf) {
   }
 }
 db.close();
-console.log(`${pageSpecs.length + 18 + norkPages.length + 2} paradigma-orri ofizial, ${checked} adizki-agerpen; 1977ko jatorrizkoan ${originalPdf?originalChecked+' agerpen eta EUTSI gatazka egiaztatuak':'ez da auditatu'}; ${failures.length} hutsune/desadostasun`);
+console.log(`${pageSpecs.length + 18 + norkPages.length + 2} paradigma-orri ofizial, ${checked} adizki-agerpen eta ${noteVariants} ohar-aldaera; 1977ko jatorrizkoan ${originalPdf?originalChecked+' agerpen eta EUTSI gatazka egiaztatuak':'ez da auditatu'}; ${failures.length} hutsune/desadostasun`);
 if (failures.length) { for (const failure of failures.slice(0, 100)) console.error(failure); process.exitCode = 1; }
