@@ -42,6 +42,7 @@ const pageSpecs: Page[] = [
 type Row = { label: string; first: string; second: string | null };
 const failures: string[] = [];
 let checked = 0;
+let originalChecked = 0;
 const moods: Partial<Record<Series, { mood: Mood; tense: Tense }>> = {
   N1: { mood: 'indicative', tense: 'present' },
   N2: { mood: 'indicative', tense: 'past' },
@@ -260,7 +261,58 @@ if(originalPdf) {
       a.citations.some(c=>c.sourceId==='euskaltzaindia-sintetikoa1977')))
       failures.push(`1977ko PDF 43: ${form} irakurketaren aipamena/egiaztapena falta da`);
   }
+  // Printed p. 841, physical PDF p. 58: two complete NOR-NORK matrices.
+  // The original prints IRUDI; the present lexicon maps that family to
+  // iruditu, as documented separately in Hiztegi Batua.
+  const compact=originalPages[57];
+  if(!compact?.includes('IRAUN')||!compact.includes('IRUDI')||!/\b841\b/.test(compact))
+    failures.push('1977ko PDF 58: IRAUN/IRUDI orrialde-aingurak falta dira');
+  for(const [heading,lemma] of [['IRAUN','iraun'],['IRUDI','iruditu']] as const) {
+    const section=compact.split(new RegExp(`^\\s*${heading}\\s*$`,'m'))[1]?.split(/^\s*[A-Z]{4,}\s*$/m)[0]??'';
+    const rows=section.split('\n').filter(line=>/^\s*[a-z]/i.test(line)).slice(0,7)
+      .map(line=>line.trim().replace('m rauen','nirauen').split(/\s{2,}/));
+    if(rows.length!==7){failures.push(`1977ko PDF 58: ${heading} ${rows.length} lerro`);continue;}
+    for(let i=0;i<7;i++) {
+      if(rows[i].length!==(i===1||i===2||i>=4?5:4))
+        failures.push(`1977ko PDF 58: ${heading} ${i+1}. lerroaren luzera ${rows[i].length}`);
+      for(let col=0;col<rows[i].length;col++) {
+        const cell=rows[i][col];
+        const forms=cell.endsWith('/-n')?[cell.replace('/-n',''),cell.replace(/k\/-n$/,'n')]:[cell];
+        for(const form of forms) {
+          originalChecked++;
+          const analyses=(lookup.all(form,'batua') as {payload:string}[]).map(r=>JSON.parse(r.payload) as Analysis);
+          const expected=[
+            {mood:'indicative',tense:'present'}, {mood:'indicative',tense:'past'},
+            {mood:'conditional',tense:'hypothetical'}, {mood:'consequence',tense:'present'},
+            {mood:'imperative',tense:'present'},
+          ][col];
+          if(!analyses.some(a=>a.lemma===lemma&&a.kind==='synthetic'&&a.type==='nor-nork'&&
+            a.nor==='hura'&&a.nori===null&&a.nork===seven[i]&&
+            a.mood===expected.mood&&a.tense===expected.tense))
+            failures.push(`1977ko PDF 58: ${heading}, ${seven[i]}, ${col+1}. saila: ${form}`);
+        }
+      }
+    }
+  }
+  const ihardukiOriginal=originalPages[57]?.split(/^\s*IHARDUKI\s*$/m)[1]?.split(/^\s*IRAUN\s*$/m)[0]??'';
+  for(const form of [
+    'dihardukazue','hihardukake','zenihardukake','zenihardukakete',
+    'ihardukak','ihardukan','biharduka','ihardukazu','ihardukazue','bihardukate',
+  ]) {
+    originalChecked++;
+    const visible=form==='ihardukan'?ihardukiOriginal.includes('ihardukak/-n'):
+      new RegExp(`(?<![a-z])${form}(?![a-z])`).test(ihardukiOriginal);
+    if(!visible)failures.push(`1977ko PDF 58: IHARDUKI ${form} falta da`);
+  }
+  const erauntsiOriginal=originalPages[55];
+  if(!erauntsiOriginal?.includes('ERAUNTSI')||!/\b839\b/.test(erauntsiOriginal))
+    failures.push('1977ko PDF 56: ERAUNTSI/839 aingurak falta dira');
+  for(const form of ['berauntso','berauntsote','berauntse','berauntsete']) {
+    originalChecked++;
+    if(!new RegExp(`(?<![a-z])${form}(?![a-z])`).test(erauntsiOriginal))
+      failures.push(`1977ko PDF 56: ERAUNTSI ${form} falta da`);
+  }
 }
 db.close();
-console.log(`${pageSpecs.length + 1 + norkPages.length + 2} paradigma-orri ofizial, ${checked} adizki-agerpen, 1977ko gatazka ${originalPdf?'egiaztatua':'egiaztatu gabe'}, ${failures.length} hutsune/desadostasun`);
+console.log(`${pageSpecs.length + 1 + norkPages.length + 2} paradigma-orri ofizial, ${checked} adizki-agerpen; 1977ko jatorrizkoan ${originalPdf?originalChecked+' agerpen eta EUTSI gatazka egiaztatuak':'ez da auditatu'}; ${failures.length} hutsune/desadostasun`);
 if (failures.length) { for (const failure of failures.slice(0, 100)) console.error(failure); process.exitCode = 1; }

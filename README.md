@@ -164,7 +164,8 @@ horregatik, `daut-` irakurketak «sortua» gisa markatu dira, ez
 «berrikusia» gisa, eta ez da haiengandik alokutiborik sortzen. Apertiumeko
 `deut-` lau irakurketa jatorrizko zerrendaren bidez berrikusi dira.
 Bigarren PDFa audit-komandoan hautazkoa da, baina emanez gero iturri-gatazka
-ere egiaztatzen da.
+eta IRAUN/IRUDIren 70, IHARDUKIren 10 eta ERAUNTSIren lau jatorrizko
+adizki-agerpenak ere egiaztatzen dira; multzo horretan ez da hutsunerik aurkitu.
 
 Arauaren bidez berrikusitako irakurketak inportatu gabekoen aurretik erakusten
 dira; Apertiumeko beste irakurketak ez dira automatikoki ezabatzen, banakako

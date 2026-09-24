@@ -33,6 +33,9 @@ EUTSIren `daut-` formak 1979ko liburuan ageri dira, baina 1977ko jatorrizko
 *Aditz sintetikoa* zerrendak `deut-` ematen du. Gatazka ebatzi gabe dago;
 `daut-` sarrerak «sortua» gisa agertzen dira eta ez dute alokutiborik sortzen.
 `deut-` saileko lau oinarrizko irakurketak 1977ko zerrendarekin berrikusi dira.
+1977ko dokumentuko IRAUN/IRUDI sailen 70, IHARDUKIren 10 eta
+ERAUNTSIren lau agerpen ere egiaztatu dira,
+hutsegiterik gabe; honek ez du gainerako aditz trinkoen estaldura frogatzen.
 
 Vue interfazea, Fastify APIa, SQLite inportatzailea, iturri-erregistroa eta
 Podman edukiontziak martxan daude. `hatzait` kasua, hitanoa, anbiguotasuna,
