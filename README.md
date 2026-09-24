@@ -116,6 +116,7 @@ deskargatu eta hau exekutatu:
 npm run audit:alokutibo -- /bidea/Araua_0014.pdf
 npm run audit:laguntzaile -- /bidea/Araua_0078.pdf
 npm run audit:laguntzaile:semantika -- /bidea/Araua_0078.pdf
+npm run audit:trinkoak -- /bidea/euskal-aditz-batua.pdf
 ```
 
 78. arauko bigarren auditak adizki osoko taulak dituzten 54 orrialdeak
@@ -126,6 +127,19 @@ dira. PDFko lerro hautsiak banaka transkribatu dira; bi gelaxka ez daude
 inprimatutako adizki osoko taulan. Tratamendua eta morfema-zatiketa ez ditu
 egiaztatzen, eta aditz trinkoak beste iturri batzuen mende daude;
 `complete: false` mantentzen da.
+
+Euskaltzaindiaren [*Euskal Aditz Batua* (1979)](https://www.euskaltzaindia.eus/dok/iker_jagon_tegiak/6833.pdf)
+liburuko ezkerreko paradigma ofizialen 19 orrialdetan, EGON, JOAN, ETORRI,
+IBILI eta ETZAN aditzen 263 adizki-agerpen alderatu dira: azaleko forma,
+lema, NOR pertsona eta NOR saileko analisiak ez dute desadostasunik. N1/N2,
+N3, N4, N5 eta N9 sailen modu/aldia ere egiaztatzen dira; N4', N7 eta N10
+sailen interpretazio anitzak ez dira etiketa bakarrera behartzen. Liburuaren
+hitzaurreak zehazten du eskuineko eraikuntza-taulak eta sailen izen
+gramatikalak editorearenak direla, ez Euskaltzaindiaren onespen berekoak.
+Horregatik, auditak ez ditu horiek paradigma ofizial gisa hartzen. Gainerako
+aditz trinkoen paradigma osoak, alokutiboen semantika eta zatiketa
+morfologikoa egiaztatu gabe daude.
+
 Arauaren bidez berrikusitako irakurketak inportatu gabekoen aurretik erakusten
 dira; Apertiumeko beste irakurketak ez dira automatikoki ezabatzen, banakako
 arautasun-egiaztapena falta baitzaie.

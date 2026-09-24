@@ -1,6 +1,6 @@
 # Aditzak deseraiki — garapen-plana
 
-## Egungo egoera (2026-09-23)
+## Egungo egoera (2026-09-24)
 
 Plana idatzi ondoren prototipo funtzionala eraiki da. Uneko datu-baseak 42 lema,
 10.473 oinarrizko forma desberdin, 412.627 azaleko forma eta 664.484 analisi
@@ -17,6 +17,12 @@ aldia. Hogeita hiru irakurketa falta arauaren aipamenarekin gehitu dira.
 PDFko lerro hautsi batzuk eskuz transkribatu dira; bi gelaxka ez daude
 inprimatutako adizki osoko taulan. Tratamendua eta morfema-zatiketa ez ditu
 audit honek egiaztatzen, eta sintetikoei ez die 78. arauak estaldura ematen.
+
+*Euskal Aditz Batua* (1979) liburuko paradigma ofizialen 19 orrialdeetan,
+EGON, JOAN, ETORRI, IBILI eta ETZANen NOR saileko 263 adizki-agerpen
+auditatu dira. Oraingoz ez da desadostasunik; beste paradigma trinkoak
+eta tratamenduen egiaztapena falta dira. Aurrez aurreko eraikuntza-taulak
+editorearenak dira, ez Akademiaren paradigma ofizialak.
 
 Vue interfazea, Fastify APIa, SQLite inportatzailea, iturri-erregistroa eta
 Podman edukiontziak martxan daude. `hatzait` kasua, hitanoa, anbiguotasuna,
