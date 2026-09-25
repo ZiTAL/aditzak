@@ -392,6 +392,21 @@ test('erabili NN pages preserve the 1979 cell and its distinct 1977 predecessor'
     a.mood==='indicative'&&a.tense==='past'&&a.nor==='gu'&&a.nork==='haiek'&&a.validation==='reviewed'&&
     a.citations.some(c=>c.sourceId==='euskaltzaindia-sintetikoa1977')));
 });
+test('ezagutu pages distinguish printed paradigms from licensed g-less variants',async()=>{
+  for(const [form,mood,tense,nor,nork,treatment,validation] of [
+    ['nazagun','indicative','present','ni','hi','noka','reviewed'],
+    ['zindezaguzteten','indicative','past','zuek','haiek','neutral','reviewed'],
+    ['nindezaguken','potential','hypothetical','ni','hi','noka','generated'],
+    ['ezagun','imperative','present','hura','hi','noka','reviewed'],
+    ['bezaguzkite','imperative','present','haiek','haiek','neutral','reviewed'],
+    ['dazaut','indicative','present','hura','ni','neutral','generated'],
+    ['nindezauken','potential','hypothetical','ni','hi','noka','generated'],
+  ] as const) assert.ok((await analyze(form)).analyses.some(a=>a.lemma==='ezagutu'&&a.type==='nor-nork'&&
+    a.mood===mood&&a.tense===tense&&a.nor===nor&&a.nork===nork&&a.treatment===treatment&&
+    a.validation===validation&&a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')),form);
+  for(const analytic of ['ezaguitzak','ezaguitzan','ezaguitzazu','ezaguitzazue'])
+    assert.equal((await analyze(analytic)).analyses.filter(a=>a.lemma==='ezagutu').length,0);
+});
 test('all segmentation offsets reconstruct their surface and unknown history stays absent',async()=>{
   for(const form of ['hatzait','dut','du','haiz','naiz','didazue','dator','dakit','zarete']){
     for(const a of (await analyze(form)).analyses){
