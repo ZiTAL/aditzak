@@ -435,6 +435,19 @@ test('egin NNN pages preserve printed, ellipsis and plural-rule evidence',async(
     a.mood===mood&&a.tense===tense&&a.nor===nor&&a.nori===nori&&a.nork===nork&&a.treatment===treatment&&
     a.validation===validation&&a.citations.some(c=>c.sourceId===source)),form);
 });
+test('ikusi pages retain parenthesized variants and exact dative examples',async()=>{
+  for(const [form,type,mood,tense,nor,nori,nork,treatment,validation] of [
+    ['dakusan','nor-nork','indicative','present','hura',null,'hi','noka','reviewed'],
+    ['dakusna','nor-nork','indicative','present','hura',null,'hi','noka','generated'],
+    ['nekusazke','nor-nork','consequence','present','haiek',null,'ni','neutral','generated'],
+    ['bekuski','nor-nork','imperative','present','haiek',null,'hura','neutral','reviewed'],
+    ['dekust','nor-nori-nork','indicative','present','hura','ni','ni','neutral','generated'],
+    ['dekutsut','nor-nori-nork','indicative','present','hura','zu','ni','neutral','generated'],
+    ['dekuskigute','nor-nori-nork','indicative','present','haiek','gu','haiek','neutral','generated'],
+  ] as const) assert.ok((await analyze(form)).analyses.some(a=>a.lemma==='ikusi'&&a.type===type&&a.mood===mood&&
+    a.tense===tense&&a.nor===nor&&a.nori===nori&&a.nork===nork&&a.treatment===treatment&&
+    a.validation===validation&&a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')),form);
+});
 test('all segmentation offsets reconstruct their surface and unknown history stays absent',async()=>{
   for(const form of ['hatzait','dut','du','haiz','naiz','didazue','dator','dakit','zarete']){
     for(const a of (await analyze(form)).analyses){
