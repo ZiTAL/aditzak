@@ -320,6 +320,17 @@ test('eduki official paradigms preserve hika, parenthesized variants and NN4 amb
   assert.ok(nn4.some(a=>a.mood==='consequence'&&a.tense==='present'));
   assert.ok(nn4.some(a=>a.mood==='potential'&&a.tense==='hypothetical'));
 });
+test('ekarri NN1 and synthetic NN9 keep irregular noka and exclude analytic alternatives',async()=>{
+  for(const [form,mood,nor,nork,treatment] of [
+    ['nakarna','indicative','ni','hi','noka'],['dakartzak','indicative','haiek','hi','toka'],
+    ['zakarztete','indicative','zuek','haiek','neutral'],['ekarna','imperative','hura','hi','noka'],
+    ['bekartzate','imperative','haiek','haiek','neutral'],
+  ] as const) assert.ok((await analyze(form)).analyses.some(a=>a.lemma==='ekarri'&&a.type==='nor-nork'&&
+    a.mood===mood&&a.nor===nor&&a.nork===nork&&a.treatment===treatment&&a.validation==='reviewed'&&
+    a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')),form);
+  for(const analytic of ['ekaritzak','ekaritzan','ekaritzazu','ekaritzazue'])
+    assert.equal((await analyze(analytic)).analyses.filter(a=>a.lemma==='ekarri').length,0);
+});
 test('all segmentation offsets reconstruct their surface and unknown history stays absent',async()=>{
   for(const form of ['hatzait','dut','du','haiz','naiz','didazue','dator','dakit','zarete']){
     for(const a of (await analyze(form)).analyses){

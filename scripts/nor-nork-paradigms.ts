@@ -50,3 +50,25 @@ for(const [nor,forms] of [['hura',['eukak','eukan','beuka','eukazu','eukazue','b
   forms.forEach((form,i)=>add(254,'116','NN9',form,nor,['hi','hi','hura','zu','zuek','haiek'][i] as Person,i===0?'toka':i===1?'noka':'neutral'));
 
 export const edukiReadings=readings;
+
+const ekarri:NorNorkReading[]=[];
+function ekarriAdd(series:'NN1'|'NN9',form:string,nor:Person,nork:Person,treatment:Treatment='neutral'){
+  ekarri.push({page:256,printed:'117',heading:'EKARRI',lemma:'ekarri',series,form,nor,nork,treatment,
+    interpretations:[...interpretations[series]]});
+}
+function ekarriPair(series:'NN1'|'NN9',toka:string,noka:string,nor:Person){ekarriAdd(series,toka,nor,'hi','toka');ekarriAdd(series,noka,nor,'hi','noka');}
+ekarriPair('NN1','nakark','nakarna','ni');for(const [nork,form] of [['hura','nakar'],['zu','nakarzu'],['zuek','nakarzue'],['haiek','nakarte']] as [Person,string][])ekarriAdd('NN1',form,'ni',nork);
+ekarriPair('NN1','gakartzak','gakartzan','gu');for(const [nork,form] of [['hura','gakartza'],['zu','gakartzazu'],['zuek','gakartzazue'],['haiek','gakartzate']] as [Person,string][])ekarriAdd('NN1',form,'gu',nork);
+for(const [nor,forms] of [['hi',['hakart','hakar','hakargu','hakarte']],['zu',['zakartzat','zakartza','zakartzagu','zakartzate']]] as [Person,string[]][])
+  forms.forEach((form,i)=>ekarriAdd('NN1',form,nor,['ni','hura','gu','haiek'][i] as Person));
+for(const [nork,form] of [['ni','zakarztet'],['hura','zakarzte'],['gu','zakarztegu'],['haiek','zakarzte'],['haiek','zakarztete']] as [Person,string][])ekarriAdd('NN1',form,'zuek',nork);
+for(const [nor,forms,noka] of [
+  ['hura',['dakart','dakark','dakar','dakargu','dakarzu','dakarzue','dakarte'],'dakarna'],
+  ['haiek',['dakartzat','dakartzak','dakartza','dakartzagu','dakartzazu','dakartzazue','dakartzate'],'dakartzan'],
+] as [Person,string[],string][]) {
+  ekarriAdd('NN1',forms[0],nor,'ni');ekarriPair('NN1',forms[1],noka,nor);
+  forms.slice(2).forEach((form,i)=>ekarriAdd('NN1',form,nor,['hura','gu','zu','zuek','haiek'][i] as Person));
+}
+ekarriPair('NN9','ekark','ekarna','hura');for(const [nork,form] of [['hura','bekar'],['zu','ekarzu'],['zuek','ekarzue'],['haiek','bekarte']] as [Person,string][])ekarriAdd('NN9',form,'hura',nork);
+ekarriAdd('NN9','bekartza','haiek','hura');ekarriAdd('NN9','bekartzate','haiek','haiek');
+export const ekarriNorNorkReadings=ekarri;
