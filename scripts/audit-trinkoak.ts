@@ -4,7 +4,8 @@ import type { Analysis, Mood, Person, Tense } from '../packages/shared/src/index
 import { defaultDatabasePath } from '../apps/api/src/database.js';
 import { earlyNorNoriReadings } from './nor-nori-paradigms.js';
 import { edukiReadings, ekarriNorNorkReadings, eramanNorNorkReadings } from './nor-nork-paradigms.js';
-import { ekarriNnnPrinted, ekarriNnnDerived, eramanNnnPrinted, eramanNnnDerived } from './ekarri-nnn-paradigms.js';
+import { ekarriNnnPrinted, ekarriNnnDerived, eramanNnnPrinted, eramanNnnDerived,
+  erabiliNnnPrinted, erabiliNnnDerived } from './ekarri-nnn-paradigms.js';
 
 // Only the left-hand, Academy-approved whole-form paradigms in the 1979 book.
 // The facing construction charts and their grammatical labels are the editor's,
@@ -178,22 +179,27 @@ for(const reading of officialNorNorkReadings){
     a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')))
     failures.push(`PDF ${reading.page}: ${reading.heading} ${reading.form} analisia falta edo desegokia da`);
 }
-for(const reading of [...ekarriNnnPrinted,...ekarriNnnDerived,...eramanNnnPrinted,...eramanNnnDerived]){
-  const lemma=reading.page>=268?'eraman':'ekarri';
+for(const reading of [...ekarriNnnPrinted,...ekarriNnnDerived,...eramanNnnPrinted,...eramanNnnDerived,
+  ...erabiliNnnPrinted,...erabiliNnnDerived]){
+  const lemma=reading.page>=278?'erabili':reading.page>=268?'eraman':'ekarri';
   if(reading.derived)noteVariants++;else checked++;
   const source=pages[reading.page-1]??'';const compact=source.toLowerCase().replace(/\s+/g,'');
   if(reading.derived){
-    if(!compact.includes('askida=')||!compact.includes(lemma==='eraman'?'ramazki':'karzki'))
+    const ruleStem=lemma==='erabili'?'rabilzki':lemma==='eraman'?'ramazki':'karzki';
+    const ruleAnchor=lemma==='erabili'&&reading.page===278?
+      compact.includes('objeto')&&compact.includes('erabilzkiok'):
+      (compact.includes('askida=')||compact.includes('askide='))&&compact.includes(ruleStem);
+    if(!ruleAnchor)
       failures.push(`PDF ${reading.page}: ${lemma.toUpperCase()} NOR plurala egiteko araua falta da`);
   }else{
-    const printedReadings=lemma==='eraman'?eramanNnnPrinted:ekarriNnnPrinted;
+    const printedReadings=lemma==='erabili'?erabiliNnnPrinted:lemma==='eraman'?eramanNnnPrinted:ekarriNnnPrinted;
     const toka=reading.treatment==='noka'?printedReadings.find(r=>r.page===reading.page&&r.series===reading.series&&
       r.nori===reading.nori&&r.nork===reading.nork&&r.treatment==='toka')?.form:null;
     const aliases:Record<string,string>={bekarkizuete:'bekarkizuet<',zeramakizuten:'zeramatizuten',
-      eramaiok:'eramaiek',eramaiozu:'eramalezu'};
+      eramaiok:'eramaiek',eramaiozu:'eramalezu',darabilkiguk:'darabilkjguk'};
     const visibleToka=toka?(aliases[toka]??toka):null;
     const pos=visibleToka?compact.indexOf(visibleToka):-1;const tail=pos>=0&&visibleToka?compact.slice(pos+visibleToka.length,pos+visibleToka.length+12):'';
-    const paired=pos>=0&&(/^(?:\/|m|ln|in|mate)/.test(tail)||reading.form==='zekarkinaten');
+    const paired=pos>=0&&(/^(?:\/|m|ln|in|mate|llan|llaten|lilan|lilaten)/.test(tail)||reading.form==='zekarkinaten');
     if(!compact.includes(reading.form)&&!compact.includes(aliases[reading.form]??'\0')&&!paired)
       failures.push(`PDF ${reading.page}: ${lemma.toUpperCase()} ${reading.series} ${reading.form} falta da`);
   }
@@ -873,5 +879,5 @@ if(originalPdf) {
   }
 }
 db.close();
-console.log(`${pageSpecs.length + 40 + norkPages.length + 2} paradigma-orri ofizial, ${checked} adizki-agerpen eta ${noteVariants} ohar-aldaera; 1977ko jatorrizkoan ${originalPdf?originalChecked+' agerpen, EUTSI gatazka eta JARRAIKIren 2 iturri-akats egiaztatuak':'ez da auditatu'}; ${failures.length} hutsune/desadostasun`);
+console.log(`${pageSpecs.length + 43 + norkPages.length + 2} paradigma-orri ofizial, ${checked} adizki-agerpen eta ${noteVariants} ohar-aldaera; 1977ko jatorrizkoan ${originalPdf?originalChecked+' agerpen, EUTSI gatazka eta JARRAIKIren 2 iturri-akats egiaztatuak':'ez da auditatu'}; ${failures.length} hutsune/desadostasun`);
 if (failures.length) { for (const failure of failures.slice(0, 100)) console.error(failure); process.exitCode = 1; }

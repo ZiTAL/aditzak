@@ -62,3 +62,15 @@ function eramanPlural(form:string){return form.includes('ramaki')?form.replace('
   form.includes('ramai')?form.replace('ramai','ramazki'):form.replace('rama','ramazki');}
 export const eramanNnnPrinted=printed.map(r=>({...r,page:r.page+10,printed:String(Number(r.printed)+5),form:eramanForm(r)}));
 export const eramanNnnDerived=eramanNnnPrinted.map(r=>({...r,form:eramanPlural(r.form),nor:'haiek' as Person,derived:true}));
+
+function erabiliForm(r:EkarriNnnReading){
+  const f=r.form;
+  if(r.series==='NNN1')return f.replace('dakarki','darabilki');
+  if(r.series==='NNN2')return f.replace('zenekarki','zenerabilki').replace('genekarki','generabilki')
+    .replace('nekarki','nerabilki').replace('hekarki','herabilki').replace('zekarki','zerabilki');
+  return f.replace('bekarki','berabilki').replace('ekarri','erabili').replace('ekard','erabild').replace('ekarg','erabilg');
+}
+function erabiliPlural(form:string){return form.includes('rabilki')?form.replace('rabilki','rabilzki'):
+  form.includes('rabili')?form.replace('rabili','rabilzki'):form.replace('rabil','rabilzki');}
+export const erabiliNnnPrinted=printed.map(r=>({...r,page:r.page+20,printed:String(Number(r.printed)+10),form:erabiliForm(r)}));
+export const erabiliNnnDerived=erabiliNnnPrinted.map(r=>({...r,form:erabiliPlural(r.form),nor:'haiek' as Person,derived:true}));

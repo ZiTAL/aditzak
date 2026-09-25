@@ -366,6 +366,18 @@ test('eraman NN pages include irregular noka, optional plurals and synthetic imp
     a.mood===mood&&a.tense===tense&&a.nor===nor&&a.nork===nork&&a.treatment===treatment&&
     a.validation==='reviewed'&&a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')),form);
 });
+test('erabili NNN pages preserve printed agreement and derived plural NOR',async()=>{
+  for(const [form,mood,tense,nor,nori,nork,treatment,validation] of [
+    ['darabilkinat','indicative','present','hura','hi','ni','noka','reviewed'],
+    ['zerabilkinaten','indicative','past','hura','hi','haiek','noka','reviewed'],
+    ['berabilkizuete','imperative','present','hura','zuek','haiek','neutral','reviewed'],
+    ['darabilzkinat','indicative','present','haiek','hi','ni','noka','generated'],
+    ['zerabilzkinaten','indicative','past','haiek','hi','haiek','noka','generated'],
+    ['erabilzkiguzu','imperative','present','haiek','gu','zu','neutral','generated'],
+  ] as const) assert.ok((await analyze(form)).analyses.some(a=>a.lemma==='erabili'&&a.type==='nor-nori-nork'&&
+    a.mood===mood&&a.tense===tense&&a.nor===nor&&a.nori===nori&&a.nork===nork&&
+    a.treatment===treatment&&a.validation===validation&&a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')),form);
+});
 test('all segmentation offsets reconstruct their surface and unknown history stays absent',async()=>{
   for(const form of ['hatzait','dut','du','haiz','naiz','didazue','dator','dakit','zarete']){
     for(const a of (await analyze(form)).analyses){
