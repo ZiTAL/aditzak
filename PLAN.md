@@ -18,13 +18,14 @@ PDFko lerro hautsi batzuk eskuz transkribatu dira; bi gelaxka ez daude
 inprimatutako adizki osoko taulan. Tratamendua eta morfema-zatiketa ez ditu
 audit honek egiaztatzen, eta sintetikoei ez die 78. arauak estaldura ematen.
 
-*Euskal Aditz Batua* (1979) liburuko paradigma ofizialen 60 orrialdeetan,
+*Euskal Aditz Batua* (1979) liburuko paradigma ofizialen 63 orrialdeetan,
 EGON, JOAN, ETORRI, IBILI eta ETZANen NOR saileko 263 agerpen,
 IRAKATSIren aginterako 36, IHARDUN/IHARDUKIren 70 eta
 ERAUNTSI/EUTSIren 56, JARIOren 64, EROANen 26, ERAKUTSIren 98,
-ATXEKI/JARRAIKIren 272, EKINen 52, EDUKIren 170, EKARRIren 165 eta
-beste paradigma trinkoetako 303 agerpen auditatu dira; guztira 1.575.
-EUTSIren zortzi eta EKARRIren NOR pluraleko 116 ohar-aldaera ere estaltzen dira.
+ATXEKI/JARRAIKIren 272, EKINen 52, EDUKIren 170, EKARRIren 165,
+ERAMANen NNN saileko 116 eta beste paradigma trinkoetako 303 agerpen
+auditatu dira; guztira 1.691. EUTSIren zortzi eta EKARRI/ERAMANen NOR
+pluraleko 232 ohar-aldaera ere estaltzen dira.
 1977ko JARRAIKI jatorrizkoak bi iturri-akats ditu: `garraizkie` falta da eta
 `zinderraizkien` gelaxkan `ginderraizkien` errepikatzen da; 1979ko taulak
 biak zuzen ematen ditu.

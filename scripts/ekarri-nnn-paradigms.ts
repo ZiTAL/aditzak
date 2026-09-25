@@ -50,3 +50,15 @@ function pluralize(form:string){return form.includes('karki')?form.replace('kark
 const derived=printed.map(r=>({...r,form:pluralize(r.form),nor:'haiek' as Person,derived:true}));
 export const ekarriNnnPrinted=printed;
 export const ekarriNnnDerived=derived;
+
+function eramanForm(r:EkarriNnnReading){
+  const f=r.form;
+  if(r.series==='NNN1')return f.replace('dakarki','daramaki');
+  if(r.series==='NNN2')return f.replace('zenekarki','zeneramaki').replace('genekarki','generamaki')
+    .replace('nekarki','neramaki').replace('hekarki','heramaki').replace('zekarki','zeramaki');
+  return f.replace('bekarki','beramaki').replace('ekarri','eramai').replace('ekard','eramad').replace('ekarg','eramag');
+}
+function eramanPlural(form:string){return form.includes('ramaki')?form.replace('ramaki','ramazki'):
+  form.includes('ramai')?form.replace('ramai','ramazki'):form.replace('rama','ramazki');}
+export const eramanNnnPrinted=printed.map(r=>({...r,page:r.page+10,printed:String(Number(r.printed)+5),form:eramanForm(r)}));
+export const eramanNnnDerived=eramanNnnPrinted.map(r=>({...r,form:eramanPlural(r.form),nor:'haiek' as Person,derived:true}));

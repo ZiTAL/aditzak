@@ -4,7 +4,7 @@ import type { Analysis, Mood, Person, Tense } from '../packages/shared/src/index
 import { defaultDatabasePath } from '../apps/api/src/database.js';
 import { earlyNorNoriReadings } from './nor-nori-paradigms.js';
 import { edukiReadings, ekarriNorNorkReadings } from './nor-nork-paradigms.js';
-import { ekarriNnnPrinted, ekarriNnnDerived } from './ekarri-nnn-paradigms.js';
+import { ekarriNnnPrinted, ekarriNnnDerived, eramanNnnPrinted, eramanNnnDerived } from './ekarri-nnn-paradigms.js';
 
 // Only the left-hand, Academy-approved whole-form paradigms in the 1979 book.
 // The facing construction charts and their grammatical labels are the editor's,
@@ -177,27 +177,31 @@ for(const reading of [...edukiReadings,...ekarriNorNorkReadings]){
     a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')))
     failures.push(`PDF ${reading.page}: ${reading.heading} ${reading.form} analisia falta edo desegokia da`);
 }
-for(const reading of [...ekarriNnnPrinted,...ekarriNnnDerived]){
+for(const reading of [...ekarriNnnPrinted,...ekarriNnnDerived,...eramanNnnPrinted,...eramanNnnDerived]){
+  const lemma=reading.page>=268?'eraman':'ekarri';
   if(reading.derived)noteVariants++;else checked++;
   const source=pages[reading.page-1]??'';const compact=source.toLowerCase().replace(/\s+/g,'');
   if(reading.derived){
-    if(!compact.includes('askida=')||!compact.includes('karzki'))
-      failures.push(`PDF ${reading.page}: EKARRI NOR plurala egiteko -karzki- araua falta da`);
+    if(!compact.includes('askida=')||!compact.includes(lemma==='eraman'?'ramazki':'karzki'))
+      failures.push(`PDF ${reading.page}: ${lemma.toUpperCase()} NOR plurala egiteko araua falta da`);
   }else{
-    const toka=reading.treatment==='noka'?ekarriNnnPrinted.find(r=>r.page===reading.page&&r.series===reading.series&&
+    const printedReadings=lemma==='eraman'?eramanNnnPrinted:ekarriNnnPrinted;
+    const toka=reading.treatment==='noka'?printedReadings.find(r=>r.page===reading.page&&r.series===reading.series&&
       r.nori===reading.nori&&r.nork===reading.nork&&r.treatment==='toka')?.form:null;
-    const pos=toka?compact.indexOf(toka):-1;const tail=pos>=0&&toka?compact.slice(pos+toka.length,pos+toka.length+12):'';
+    const aliases:Record<string,string>={bekarkizuete:'bekarkizuet<',zeramakizuten:'zeramatizuten',
+      eramaiok:'eramaiek',eramaiozu:'eramalezu'};
+    const visibleToka=toka?(aliases[toka]??toka):null;
+    const pos=visibleToka?compact.indexOf(visibleToka):-1;const tail=pos>=0&&visibleToka?compact.slice(pos+visibleToka.length,pos+visibleToka.length+12):'';
     const paired=pos>=0&&(/^(?:\/|m|ln|in|mate)/.test(tail)||reading.form==='zekarkinaten');
-    const aliases:Record<string,string>={bekarkizuete:'bekarkizuet<'};
     if(!compact.includes(reading.form)&&!compact.includes(aliases[reading.form]??'\0')&&!paired)
-      failures.push(`PDF ${reading.page}: EKARRI ${reading.series} ${reading.form} falta da`);
+      failures.push(`PDF ${reading.page}: ${lemma.toUpperCase()} ${reading.series} ${reading.form} falta da`);
   }
   const analyses=(lookup.all(reading.form,'batua') as {payload:string}[]).map(r=>JSON.parse(r.payload) as Analysis);
-  if(!analyses.some(a=>a.lemma==='ekarri'&&a.kind==='synthetic'&&a.type==='nor-nori-nork'&&
+  if(!analyses.some(a=>a.lemma===lemma&&a.kind==='synthetic'&&a.type==='nor-nori-nork'&&
     a.nor===reading.nor&&a.nori===reading.nori&&a.nork===reading.nork&&a.mood===reading.mood&&a.tense===reading.tense&&
     a.treatment===reading.treatment&&!a.allocutive&&a.validation===(reading.derived?'generated':'reviewed')&&
     a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')))
-    failures.push(`PDF ${reading.page}: EKARRI ${reading.form} analisia falta edo desegokia da`);
+    failures.push(`PDF ${reading.page}: ${lemma.toUpperCase()} ${reading.form} analisia falta edo desegokia da`);
 }
 // Printed p. 110¹/PDF 242 has parallel NOR singular/plural columns. Four
 // hi cells abbreviate the noka counterpart as /n or /nake; expand only
@@ -868,5 +872,5 @@ if(originalPdf) {
   }
 }
 db.close();
-console.log(`${pageSpecs.length + 35 + norkPages.length + 2} paradigma-orri ofizial, ${checked} adizki-agerpen eta ${noteVariants} ohar-aldaera; 1977ko jatorrizkoan ${originalPdf?originalChecked+' agerpen, EUTSI gatazka eta JARRAIKIren 2 iturri-akats egiaztatuak':'ez da auditatu'}; ${failures.length} hutsune/desadostasun`);
+console.log(`${pageSpecs.length + 38 + norkPages.length + 2} paradigma-orri ofizial, ${checked} adizki-agerpen eta ${noteVariants} ohar-aldaera; 1977ko jatorrizkoan ${originalPdf?originalChecked+' agerpen, EUTSI gatazka eta JARRAIKIren 2 iturri-akats egiaztatuak':'ez da auditatu'}; ${failures.length} hutsune/desadostasun`);
 if (failures.length) { for (const failure of failures.slice(0, 100)) console.error(failure); process.exitCode = 1; }

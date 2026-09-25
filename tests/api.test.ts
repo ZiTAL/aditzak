@@ -343,6 +343,18 @@ test('ekarri NNN pages distinguish printed singular NOR from rule-derived plural
     a.mood===mood&&a.tense===tense&&a.nor===nor&&a.nori===nori&&a.nork===nork&&
     a.treatment===treatment&&a.validation===validation&&a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')),form);
 });
+test('eraman NNN pages preserve the parallel printed and plural-NOR rule series',async()=>{
+  for(const [form,mood,tense,nor,nori,nork,treatment,validation] of [
+    ['daramakinat','indicative','present','hura','hi','ni','noka','reviewed'],
+    ['zeramakinaten','indicative','past','hura','hi','haiek','noka','reviewed'],
+    ['beramakizuete','imperative','present','hura','zuek','haiek','neutral','reviewed'],
+    ['daramazkinat','indicative','present','haiek','hi','ni','noka','generated'],
+    ['zeramazkinaten','indicative','past','haiek','hi','haiek','noka','generated'],
+    ['eramazkiguzu','imperative','present','haiek','gu','zu','neutral','generated'],
+  ] as const) assert.ok((await analyze(form)).analyses.some(a=>a.lemma==='eraman'&&a.type==='nor-nori-nork'&&
+    a.mood===mood&&a.tense===tense&&a.nor===nor&&a.nori===nori&&a.nork===nork&&
+    a.treatment===treatment&&a.validation===validation&&a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')),form);
+});
 test('all segmentation offsets reconstruct their surface and unknown history stays absent',async()=>{
   for(const form of ['hatzait','dut','du','haiz','naiz','didazue','dator','dakit','zarete']){
     for(const a of (await analyze(form)).analyses){
