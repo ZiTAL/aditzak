@@ -331,6 +331,18 @@ test('ekarri NN1 and synthetic NN9 keep irregular noka and exclude analytic alte
   for(const analytic of ['ekaritzak','ekaritzan','ekaritzazu','ekaritzazue'])
     assert.equal((await analyze(analytic)).analyses.filter(a=>a.lemma==='ekarri').length,0);
 });
+test('ekarri NNN pages distinguish printed singular NOR from rule-derived plural NOR',async()=>{
+  for(const [form,mood,tense,nor,nori,nork,treatment,validation] of [
+    ['dakarkinat','indicative','present','hura','hi','ni','noka','reviewed'],
+    ['zekarkinaten','indicative','past','hura','hi','haiek','noka','reviewed'],
+    ['bekarkizuete','imperative','present','hura','zuek','haiek','neutral','reviewed'],
+    ['dakarzkinat','indicative','present','haiek','hi','ni','noka','generated'],
+    ['zekarzkinaten','indicative','past','haiek','hi','haiek','noka','generated'],
+    ['ekarzkiguzu','imperative','present','haiek','gu','zu','neutral','generated'],
+  ] as const) assert.ok((await analyze(form)).analyses.some(a=>a.lemma==='ekarri'&&a.type==='nor-nori-nork'&&
+    a.mood===mood&&a.tense===tense&&a.nor===nor&&a.nori===nori&&a.nork===nork&&
+    a.treatment===treatment&&a.validation===validation&&a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')),form);
+});
 test('all segmentation offsets reconstruct their surface and unknown history stays absent',async()=>{
   for(const form of ['hatzait','dut','du','haiz','naiz','didazue','dator','dakit','zarete']){
     for(const a of (await analyze(form)).analyses){

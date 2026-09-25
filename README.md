@@ -130,11 +130,11 @@ egiaztatzen, eta aditz trinkoak beste iturri batzuen mende daude;
 `complete: false` mantentzen da.
 
 Euskaltzaindiaren [*Euskal Aditz Batua* (1979)](https://www.euskaltzaindia.eus/dok/iker_jagon_tegiak/6833.pdf)
-liburuko ezkerreko paradigma ofizialen 57 orrialdetan, EGON, JOAN, ETORRI,
+liburuko ezkerreko paradigma ofizialen 60 orrialdetan, EGON, JOAN, ETORRI,
 IBILI, ATXEKI/ATXIKI, JARRAIKI, EKIN, ETZAN, EDUKI, EKARRI, JARIO, EROAN, ERAKUTSI,
 IRAKATSI, UTZI, IGORRI, EROSI,
 IHARDETSI, IHARDUN, IHARDUKI, ERAUNTSI, EUTSI, IRAUN, IRUDI/IRUDITU,
-EMAN eta ESAN/ERRAN aditzen 1.459 adizki-agerpen
+EMAN eta ESAN/ERRAN aditzen 1.575 adizki-agerpen eta ohar bidezko 124 aldaera
 alderatu dira: azaleko forma,
 lema eta dagokien NOR/NORI/NORK pertsonak ez dute desadostasunik. N1/N2,
 N3, N4, N5 eta N9 sailen modu/aldia ere egiaztatzen dira; N4', N7 eta N10
@@ -178,6 +178,10 @@ EKARRIren 117¹ orrialdeko NN1 eta hitz bakarreko NN9ko 49 irakurketak
 auditatu dira. `nakarna`, `dakarna` eta `ekarna` forma irregularrak orriko
 ohar/genero-bikoteekin normalizatu dira. Parentesi artean bi hitzez emandako
 `ekar itzak/itzan/itzazu/itzazue` ez dira hitz bakarreko sarrera bihurtu.
+118¹–120¹ orrialdeetako NNN1, NNN2 eta NNN9ko 116 taula-irakurketak
+ere osorik auditatu dira. Orriek NOR plurala egiteko ematen duten
+`-karki-/-kar- → -karzki-` arauarekin beste 116 irakurketa sortu dira;
+banaka inprimatu ez direnez, «sortua» gisa bereizten dira.
 
 ERAKUTSIren 149¹–151¹. orrialdeetako (PDFko 320., 322. eta 324.a)
 hiru paradigma osoak auditatu dira. Lehenaldiko bi forma, baldintzako 13
