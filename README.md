@@ -130,11 +130,11 @@ egiaztatzen, eta aditz trinkoak beste iturri batzuen mende daude;
 `complete: false` mantentzen da.
 
 Euskaltzaindiaren [*Euskal Aditz Batua* (1979)](https://www.euskaltzaindia.eus/dok/iker_jagon_tegiak/6833.pdf)
-liburuko ezkerreko paradigma ofizialen 76 orrialdetan, EGON, JOAN, ETORRI,
+liburuko ezkerreko paradigma ofizialen 81 orrialdetan, EGON, JOAN, ETORRI,
 IBILI, ATXEKI/ATXIKI, JARRAIKI, EKIN, ETZAN, EDUKI, EKARRI, JARIO, EROAN, ERAKUTSI,
 IRAKATSI, UTZI, IGORRI, EROSI,
 IHARDETSI, IHARDUN, IHARDUKI, ERAUNTSI, EUTSI, IRAUN, IRUDI/IRUDITU,
-ERAMAN, ERABILI, EZAGUTU, EGIN, EMAN eta ESAN/ERRAN aditzen 2.223 adizki-agerpen eta ohar bidezko 561 aldaera
+ERAMAN, ERABILI, EZAGUTU, EGIN, EMAN eta ESAN/ERRAN aditzen 2.431 adizki-agerpen eta ohar bidezko 873 aldaera
 alderatu dira: azaleko forma,
 lema eta dagokien NOR/NORI/NORK pertsonak ez dute desadostasunik. N1/N2,
 N3, N4, N5 eta N9 sailen modu/aldia ere egiaztatzen dira; N4', N7 eta N10
@@ -213,6 +213,11 @@ taula-irakurketa auditatu dira. 1979ko azken NN9 gelaxkako `begitza`
 errepikapena eta 1977ko `begitzate` irakurketa bereizita gorde dira; era
 berean, 1977ko `negizke…` NOR pluraleko NN4 serieak bere aipamena dauka,
 1979ko `negitzake…` seriearen ondoan.
+EGINen 137¹–141¹ orrialdeetako NNN1, NNN2, NNN3, NNN4, NNN7 eta NNN9ko
+208 taula-irakurketa ere auditatu dira. NNN7ko `eta abar`-ek gainerako 32
+koordinatuak ematen ditu, eta `-gi- → -gizki-` arauak NOR pluraleko 240
+forma sortzen ditu; NN4ren interpretazio bikoitza mantentzen da. 1979ko
+`bebiete` eta 1977ko `begiete` bakoitza bere iturriarekin gordetzen dira.
 
 ERAKUTSIren 149¹–151¹. orrialdeetako (PDFko 320., 322. eta 324.a)
 hiru paradigma osoak auditatu dira. Lehenaldiko bi forma, baldintzako 13

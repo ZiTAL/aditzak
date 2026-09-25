@@ -419,6 +419,22 @@ test('egin NN pages retain current readings and distinct 1977 alternatives',asyn
     a.mood===mood&&a.tense===tense&&a.nor===nor&&a.nork===nork&&a.treatment===treatment&&
     a.validation===(mood==='consequence'?'generated':'reviewed')&&a.citations.some(c=>c.sourceId===source)),form);
 });
+test('egin NNN pages preserve printed, ellipsis and plural-rule evidence',async()=>{
+  for(const [form,mood,tense,nor,nori,nork,treatment,validation,source] of [
+    ['deginate','indicative','present','hura','hi','haiek','noka','reviewed','euskaltzaindia-eab1979'],
+    ['zeginaten','indicative','past','hura','hi','haiek','noka','reviewed','euskaltzaindia-eab1979'],
+    ['negiake','consequence','present','hura','hi','ni','toka','generated','euskaltzaindia-eab1979'],
+    ['negizkiake','potential','hypothetical','haiek','hi','ni','toka','generated','euskaltzaindia-eab1979'],
+    ['degidanan','subjunctive','present','hura','ni','hi','noka','reviewed','euskaltzaindia-eab1979'],
+    ['degionan','subjunctive','present','hura','hura','hi','noka','generated','euskaltzaindia-eab1979'],
+    ['degizkionan','subjunctive','present','haiek','hura','hi','noka','generated','euskaltzaindia-eab1979'],
+    ['bebiete','imperative','present','hura','haiek','haiek','neutral','reviewed','euskaltzaindia-eab1979'],
+    ['begiete','imperative','present','hura','haiek','haiek','neutral','reviewed','euskaltzaindia-sintetikoa1977'],
+    ['begizkiete','imperative','present','haiek','haiek','haiek','neutral','generated','euskaltzaindia-eab1979'],
+  ] as const) assert.ok((await analyze(form)).analyses.some(a=>a.lemma==='egin'&&a.type==='nor-nori-nork'&&
+    a.mood===mood&&a.tense===tense&&a.nor===nor&&a.nori===nori&&a.nork===nork&&a.treatment===treatment&&
+    a.validation===validation&&a.citations.some(c=>c.sourceId===source)),form);
+});
 test('all segmentation offsets reconstruct their surface and unknown history stays absent',async()=>{
   for(const form of ['hatzait','dut','du','haiz','naiz','didazue','dator','dakit','zarete']){
     for(const a of (await analyze(form)).analyses){
