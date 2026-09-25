@@ -407,6 +407,18 @@ test('ezagutu pages distinguish printed paradigms from licensed g-less variants'
   for(const analytic of ['ezaguitzak','ezaguitzan','ezaguitzazu','ezaguitzazue'])
     assert.equal((await analyze(analytic)).analyses.filter(a=>a.lemma==='ezagutu').length,0);
 });
+test('egin NN pages retain current readings and distinct 1977 alternatives',async()=>{
+  for(const [form,mood,tense,nor,nork,treatment,source] of [
+    ['dagin','indicative','present','hura','hi','noka','euskaltzaindia-eab1979'],
+    ['begitza','imperative','present','haiek','hura','neutral','euskaltzaindia-eab1979'],
+    ['begitza','imperative','present','haiek','haiek','neutral','euskaltzaindia-eab1979'],
+    ['begitzate','imperative','present','haiek','haiek','neutral','euskaltzaindia-sintetikoa1977'],
+    ['negitzake','consequence','present','haiek','ni','neutral','euskaltzaindia-eab1979'],
+    ['negizke','consequence','present','haiek','ni','neutral','euskaltzaindia-sintetikoa1977'],
+  ] as const) assert.ok((await analyze(form)).analyses.some(a=>a.lemma==='egin'&&a.type==='nor-nork'&&
+    a.mood===mood&&a.tense===tense&&a.nor===nor&&a.nork===nork&&a.treatment===treatment&&
+    a.validation===(mood==='consequence'?'generated':'reviewed')&&a.citations.some(c=>c.sourceId===source)),form);
+});
 test('all segmentation offsets reconstruct their surface and unknown history stays absent',async()=>{
   for(const form of ['hatzait','dut','du','haiz','naiz','didazue','dator','dakit','zarete']){
     for(const a of (await analyze(form)).analyses){
