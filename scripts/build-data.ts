@@ -11,6 +11,7 @@ import { ezagutuReadings, ezagutuGlessReadings } from './ezagutu-paradigms.js';
 import { eginNorNorkReadings, egin1977Readings, eginNnnPrinted, eginNnnEllipsis, eginNnnPlural,
   egin1977NnnReading } from './egin-paradigms.js';
 import { ikusiReadings, ikusiShortReadings, ikusiDativeExamples } from './ikusi-paradigms.js';
+import { jakinReadings, jakinDativeExamples } from './jakin-paradigms.js';
 import { ekarriNnnPrinted, ekarriNnnDerived, eramanNnnPrinted, eramanNnnDerived,
   erabiliNnnPrinted, erabiliNnnDerived } from './ekarri-nnn-paradigms.js';
 import type { Analysis, Coverage, Mood, Tense, Person, Source, Treatment } from '../packages/shared/src/index.js';
@@ -256,7 +257,7 @@ for(const row of db.prepare('SELECT id,payload FROM analyses WHERE form=? AND le
 // cells and expand each explicit k/n cell. As elsewhere, NN4 verifies the
 // surface/agreement but leaves its two imported mood readings generated.
 for(const reading of [...edukiReadings,...ekarriNorNorkReadings,...eramanNorNorkReadings,...erabiliNorNorkReadings,
-  ...ezagutuReadings,...eginNorNorkReadings,...ikusiReadings]) for(const interpretation of reading.interpretations) {
+  ...ezagutuReadings,...eginNorNorkReadings,...ikusiReadings,...jakinReadings]) for(const interpretation of reading.interpretations) {
   const rows=db.prepare('SELECT id,payload FROM analyses WHERE form=? AND lemma=? AND base=1')
     .all(reading.form,reading.lemma) as {id:string;payload:string}[];
   const row=rows.find(r=>{const a=JSON.parse(r.payload) as Analysis;return a.type==='nor-nork'&&
@@ -338,6 +339,24 @@ for(const example of ikusiDativeExamples) {
       affixes:[],rawTags:['eab1979','note:dative-example'],baseForm:example.form,origin:'rule',validation:'generated',
       citations:[citation],segmentation:null,history:[]};
     lemmaInsert.run('ikusi','synthetic');insert.run(analysis.id,analysis.form,'ikusi','batua',1,'euskaltzaindia-eab1979',JSON.stringify(analysis));
+  }
+}
+for(const example of jakinDativeExamples) {
+  const rows=db.prepare('SELECT id,payload FROM analyses WHERE form=? AND lemma=? AND base=1').all(example.form,'jakin') as {id:string;payload:string}[];
+  const row=rows.find(r=>{const a=JSON.parse(r.payload) as Analysis;return a.type==='nor-nori-nork'&&a.nor===example.nor&&
+    a.nori===example.nori&&a.nork===example.nork&&a.mood==='indicative'&&a.tense==='present';});
+  const citation={sourceId:'euskaltzaindia-eab1979',locator:`145¹. or. (PDF 312), JAKIN datibozko adibidea: ${example.form}`};
+  if(row){
+    const analysis=JSON.parse(row.payload) as Analysis;Object.assign(analysis,{treatment:'neutral',allocutive:false,validation:'generated'});
+    analysis.rawTags=[...new Set([...analysis.rawTags,'eab1979','note:dative-example'])];analysis.citations.push(citation);
+    updateOfficialNorNori.run(JSON.stringify(analysis),'euskaltzaindia-eab1979',row.id);
+  }else{
+    const analysis:Analysis={id:createHash('sha256').update(JSON.stringify(['eab1979-jakin-dative',example])).digest('hex').slice(0,24),
+      form:example.form,lemma:'jakin',kind:'synthetic',variety:'batua',mood:'indicative',tense:'present',
+      type:'nor-nori-nork',nor:example.nor,nori:example.nori,nork:example.nork,treatment:'neutral',allocutive:false,
+      affixes:[],rawTags:['eab1979','note:dative-example'],baseForm:example.form,origin:'rule',validation:'generated',
+      citations:[citation],segmentation:null,history:[]};
+    lemmaInsert.run('jakin','synthetic');insert.run(analysis.id,analysis.form,'jakin','batua',1,'euskaltzaindia-eab1979',JSON.stringify(analysis));
   }
 }
 // ERABILI NN2: the original 1977 table has ginderabiltzaten where the
@@ -1081,7 +1100,7 @@ const coverage: Coverage = {
   lemmas, varieties:['batua'], source:'apertium+wiktionary+euskaltzaindia', complete:false,
   reviewedSegmentations:6, historicalNotes:2, missingLemmas:[],
   limitations:[
-    {eu:'Apertiumeko 35 paradigma, ba- saileko beste 5 lema, *iro/*io osagarriak eta *irakatsi*ren agintera. 14. arauko hikako taulak, 78. arauko laguntzaile-gelaxkak eta 1979ko Euskal Aditz Batuaren 83 paradigma-orri auditatu dira; horrek ez du euskara batuko inbentario eta analisi guztien estaldura osoa frogatzen. Liburuko gainerako paradigma trinkoen auditoria amaitu gabe dago.'},
+    {eu:'Apertiumeko 35 paradigma, ba- saileko beste 5 lema, *iro/*io osagarriak eta *irakatsi*ren agintera. 14. arauko hikako taulak, 78. arauko laguntzaile-gelaxkak eta 1979ko Euskal Aditz Batuaren 85 paradigma-orri auditatu dira; horrek ez du euskara batuko inbentario eta analisi guztien estaldura osoa frogatzen. Liburuko gainerako paradigma trinkoen auditoria amaitu gabe dago.'},
     {eu:'Atxeki → atxiki, irudi/iruditu eta erion → jario loturak Hiztegi Batuaren arabera ebatzi dira; erion bizkaierazko forma urria da, eta ez da euskara batuko lema bereizi gisa inportatu. *io aparteko lema gisa dago.'},
     {eu:'Arau bidez sortutako hitano-formak «sortua» gisa markatzen dira; banakako arautasun-ziurtagiria ez da. 14. arauaren PDFa emanda, audit:alokutibo komandoak hiru zutabeko formak alderatzen ditu.'},
     {eu:'Lexikoak forma literarioak eta arraroak ere baditu; banakako arautasun-auditoria amaitu gabe dago.'},

@@ -448,6 +448,18 @@ test('ikusi pages retain parenthesized variants and exact dative examples',async
     a.tense===tense&&a.nor===nor&&a.nori===nori&&a.nork===nork&&a.treatment===treatment&&
     a.validation===validation&&a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')),form);
 });
+test('jakin pages preserve hika, plural NOR and cited dative examples',async()=>{
+  for(const [form,type,mood,tense,nor,nori,nork,treatment,validation] of [
+    ['dakin','nor-nork','indicative','present','hura',null,'hi','noka','reviewed'],
+    ['nekizke','nor-nork','consequence','present','haiek',null,'ni','neutral','generated'],
+    ['bekizkite','nor-nork','imperative','present','haiek',null,'haiek','neutral','reviewed'],
+    ['dekit','nor-nori-nork','indicative','present','hura','ni','hura','neutral','generated'],
+    ['dekizu','nor-nori-nork','indicative','present','hura','zu','hura','neutral','generated'],
+    ['dekio','nor-nori-nork','indicative','present','hura','hura','hura','neutral','generated'],
+  ] as const) assert.ok((await analyze(form)).analyses.some(a=>a.lemma==='jakin'&&a.type===type&&a.mood===mood&&
+    a.tense===tense&&a.nor===nor&&a.nori===nori&&a.nork===nork&&a.treatment===treatment&&
+    a.validation===validation&&a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')),form);
+});
 test('all segmentation offsets reconstruct their surface and unknown history stays absent',async()=>{
   for(const form of ['hatzait','dut','du','haiz','naiz','didazue','dator','dakit','zarete']){
     for(const a of (await analyze(form)).analyses){

@@ -9,6 +9,7 @@ import { ezagutuReadings, ezagutuGlessReadings } from './ezagutu-paradigms.js';
 import { eginNorNorkReadings, egin1977Readings, eginNnnPrinted, eginNnnEllipsis, eginNnnPlural,
   egin1977NnnReading } from './egin-paradigms.js';
 import { ikusiReadings, ikusiShortReadings, ikusiDativeExamples } from './ikusi-paradigms.js';
+import { jakinReadings, jakinDativeExamples } from './jakin-paradigms.js';
 import { ekarriNnnPrinted, ekarriNnnDerived, eramanNnnPrinted, eramanNnnDerived,
   erabiliNnnPrinted, erabiliNnnDerived } from './ekarri-nnn-paradigms.js';
 
@@ -165,13 +166,13 @@ for(const reading of earlyNorNoriReadings) {
     failures.push(`PDF ${reading.page}: ${reading.form} analisia falta edo desegokia da (${reading.nor}, ${reading.nori})`);
 }
 const officialNorNorkReadings=[...edukiReadings,...ekarriNorNorkReadings,...eramanNorNorkReadings,
-  ...erabiliNorNorkReadings,...ezagutuReadings,...eginNorNorkReadings,...ikusiReadings];
+  ...erabiliNorNorkReadings,...ezagutuReadings,...eginNorNorkReadings,...ikusiReadings,...jakinReadings];
 for(const reading of officialNorNorkReadings){
   checked++;
   const source=pages[reading.page-1]??'';const compact=source.toLowerCase().replace(/\s+/g,'');
   const toka=reading.treatment==='noka'?officialNorNorkReadings.find(r=>r.page===reading.page&&r.series===reading.series&&
     r.nor===reading.nor&&r.nork===reading.nork&&r.treatment==='toka')?.form:null;
-  const paired=toka&&[toka+'/n',toka+'/nan',toka+'m',toka+'man',toka+'in',toka+'tn',toka+'iii'].some(value=>compact.includes(value));
+  const paired=toka&&[toka+'/n',toka+'/nan',toka+'/ll',toka+'m',toka+'man',toka+'in',toka+'tn',toka+'iii'].some(value=>compact.includes(value));
   const optional=reading.form.endsWith('teten')?compact.includes(reading.form.replace(/teten$/,'te(te)n')):
     reading.form.endsWith('tete')?compact.includes(reading.form.replace(/tete$/,'te(te)')):false;
   const aliases:Record<string,string>={ekarna:'ekama',ginderabiltzaan:'ginderabiltzanman',
@@ -220,6 +221,18 @@ for(const example of ikusiDativeExamples) {
     a.nork===example.nork&&a.mood==='indicative'&&a.tense==='present'&&a.validation==='generated'&&
     a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')))
     failures.push(`PDF 308: IKUSIren datibozko ${example.form} adibidea falta edo desegokia da`);
+}
+const jakinNote=(pages[311]??'').toLowerCase().replace(/\s+/g,'');
+if(!jakinNote.includes('datibozkoflexioak')||
+  !(jakinNote.includes('dekit,dekizu,dekio')||jakinNote.includes('dekit,dekizu,dekia')))
+  failures.push('PDF 312: JAKINen datibozko adibideen ohar-aingura falta da');
+for(const example of jakinDativeExamples) {
+  noteVariants++;
+  const analyses=(lookup.all(example.form,'batua') as {payload:string}[]).map(r=>JSON.parse(r.payload) as Analysis);
+  if(!analyses.some(a=>a.lemma==='jakin'&&a.type==='nor-nori-nork'&&a.nor===example.nor&&a.nori===example.nori&&
+    a.nork===example.nork&&a.mood==='indicative'&&a.tense==='present'&&a.validation==='generated'&&
+    a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')))
+    failures.push(`PDF 312: JAKINen datibozko ${example.form} adibidea falta edo desegokia da`);
 }
 for(const reading of eginNnnPrinted) {
   checked++;
@@ -986,5 +999,5 @@ if(originalPdf) {
   }
 }
 db.close();
-console.log(`${pageSpecs.length + 58 + norkPages.length + 2} paradigma-orri ofizial, ${checked} adizki-agerpen eta ${noteVariants} ohar-aldaera; 1977ko jatorrizkoan ${originalPdf?originalChecked+' agerpen, EUTSI/JARRAIKI/ERABILI/EGIN iturri-desberdintasunak egiaztatuak':'ez da auditatu'}; ${failures.length} hutsune/desadostasun`);
+console.log(`${pageSpecs.length + 60 + norkPages.length + 2} paradigma-orri ofizial, ${checked} adizki-agerpen eta ${noteVariants} ohar-aldaera; 1977ko jatorrizkoan ${originalPdf?originalChecked+' agerpen, EUTSI/JARRAIKI/ERABILI/EGIN iturri-desberdintasunak egiaztatuak':'ez da auditatu'}; ${failures.length} hutsune/desadostasun`);
 if (failures.length) { for (const failure of failures.slice(0, 100)) console.error(failure); process.exitCode = 1; }
