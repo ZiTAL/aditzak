@@ -355,6 +355,17 @@ test('eraman NNN pages preserve the parallel printed and plural-NOR rule series'
     a.mood===mood&&a.tense===tense&&a.nor===nor&&a.nori===nori&&a.nork===nork&&
     a.treatment===treatment&&a.validation===validation&&a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')),form);
 });
+test('eraman NN pages include irregular noka, optional plurals and synthetic imperatives',async()=>{
+  for(const [form,mood,tense,nor,nork,treatment] of [
+    ['naraman','indicative','present','ni','hi','noka'],
+    ['ninderamanan','indicative','past','ni','hi','noka'],
+    ['zaramaztete','indicative','present','zuek','haiek','neutral'],
+    ['eramaitzan','imperative','present','haiek','hi','noka'],
+    ['eramaitzazue','imperative','present','haiek','zuek','neutral'],
+  ] as const) assert.ok((await analyze(form)).analyses.some(a=>a.lemma==='eraman'&&a.type==='nor-nork'&&
+    a.mood===mood&&a.tense===tense&&a.nor===nor&&a.nork===nork&&a.treatment===treatment&&
+    a.validation==='reviewed'&&a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')),form);
+});
 test('all segmentation offsets reconstruct their surface and unknown history stays absent',async()=>{
   for(const form of ['hatzait','dut','du','haiz','naiz','didazue','dator','dakit','zarete']){
     for(const a of (await analyze(form)).analyses){

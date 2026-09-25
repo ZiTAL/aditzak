@@ -72,3 +72,32 @@ for(const [nor,forms,noka] of [
 ekarriPair('NN9','ekark','ekarna','hura');for(const [nork,form] of [['hura','bekar'],['zu','ekarzu'],['zuek','ekarzue'],['haiek','bekarte']] as [Person,string][])ekarriAdd('NN9',form,'hura',nork);
 ekarriAdd('NN9','bekartza','haiek','hura');ekarriAdd('NN9','bekartzate','haiek','haiek');
 export const ekarriNorNorkReadings=ekarri;
+
+function eramanNnForm(form:string,series:'NN1'|'NN9'){
+  if(series==='NN9')return form==='ekarna'?'eraman':form.replace('bekar','berama').replace('ekar','erama');
+  return form.replace('nakarna','naraman').replace('nakar','narama').replace('gakartza','garamatza')
+    .replace('hakar','harama').replace('zakarz','zaramaz').replace('zakartza','zaramatza')
+    .replace('dakarna','daraman').replace('dakartza','daramatza').replace('dakar','darama');
+}
+const eraman:NorNorkReading[]=ekarri.map(r=>{
+  if(r.series!=='NN1'&&r.series!=='NN9')throw new Error(`Ustekabeko EKARRI saila: ${r.series}`);
+  return {...r,page:r.series==='NN1'?264:266,printed:r.series==='NN1'?'121':'122',
+    heading:'ERAMAN',lemma:'eraman',form:eramanNnForm(r.form,r.series)};
+});
+function eramanAdd(form:string,nor:Person,nork:Person,treatment:Treatment='neutral'){
+  eraman.push({page:266,printed:'122',heading:'ERAMAN',lemma:'eraman',series:'NN2',form,nor,nork,treatment,
+    interpretations:[{mood:'indicative',tense:'past'}]});
+}
+function eramanPastPair(toka:string,noka:string,nor:Person){eramanAdd(toka,nor,'hi','toka');eramanAdd(noka,nor,'hi','noka');}
+eramanPastPair('ninderamaan','ninderamanan','ni');for(const [nork,form] of [['hura','ninderaman'],['zu','ninderamazun'],['zuek','ninderamazuen'],['haiek','ninderamaten']] as [Person,string][])eramanAdd(form,'ni',nork);
+eramanPastPair('ginderamatzaan','ginderamatzanan','gu');for(const [nork,form] of [['hura','ginderamatzan'],['zu','ginderamatzazun'],['zuek','ginderamatzazuen'],['haiek','ginderamatzaten']] as [Person,string][])eramanAdd(form,'gu',nork);
+for(const [nor,forms] of [['hi',['hinderamadan','hinderaman','hinderamagun','hinderamaten']],['zu',['zinderamatzadan','zinderamatzan','zinderamatzagun','zinderamatzaten']]] as [Person,string[]][])
+  forms.forEach((form,i)=>eramanAdd(form,nor,['ni','hura','gu','haiek'][i] as Person));
+for(const [nork,form] of [['ni','zinderamaztedan'],['hura','zinderamazten'],['gu','zinderamaztegun'],['haiek','zinderamazten'],['haiek','zinderamazteten']] as [Person,string][])eramanAdd(form,'zuek',nork);
+for(const [nor,forms] of [['hura',['neraman','heraman','zeraman','generaman','zeneraman','zeneramaten','zeramaten']],
+  ['haiek',['neramatzan','heramatzan','zeramatzan','generamatzan','zeneramatzan','zeneramatzaten','zeramatzaten']]] as [Person,string[]][])
+  forms.forEach((form,i)=>eramanAdd(form,nor,['ni','hi','hura','gu','zu','zuek','haiek'][i] as Person,i===1?'hika':'neutral'));
+for(const [form,nork,treatment] of [['eramaitzak','hi','toka'],['eramaitzan','hi','noka'],['eramaitzazu','zu','neutral'],['eramaitzazue','zuek','neutral']] as [string,Person,Treatment][])
+  eraman.push({page:266,printed:'122',heading:'ERAMAN',lemma:'eraman',series:'NN9',form,nor:'haiek',nork,treatment,
+    interpretations:[{mood:'imperative',tense:'present'}]});
+export const eramanNorNorkReadings=eraman;

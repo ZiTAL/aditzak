@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { parseDictionary, expandEntry, type Entry } from './dictionary.js';
 import { allocutiveCandidates } from './allocutive.js';
 import { earlyNorNoriReadings } from './nor-nori-paradigms.js';
-import { edukiReadings, ekarriNorNorkReadings } from './nor-nork-paradigms.js';
+import { edukiReadings, ekarriNorNorkReadings, eramanNorNorkReadings } from './nor-nork-paradigms.js';
 import { ekarriNnnPrinted, ekarriNnnDerived, eramanNnnPrinted, eramanNnnDerived } from './ekarri-nnn-paradigms.js';
 import type { Analysis, Coverage, Mood, Tense, Person, Source, Treatment } from '../packages/shared/src/index.js';
 
@@ -249,7 +249,7 @@ for(const row of db.prepare('SELECT id,payload FROM analyses WHERE form=? AND le
 // EDUKI pp. 113¹–116¹: retain both values of the parenthesized -te(te)
 // cells and expand each explicit k/n cell. As elsewhere, NN4 verifies the
 // surface/agreement but leaves its two imported mood readings generated.
-for(const reading of [...edukiReadings,...ekarriNorNorkReadings]) for(const interpretation of reading.interpretations) {
+for(const reading of [...edukiReadings,...ekarriNorNorkReadings,...eramanNorNorkReadings]) for(const interpretation of reading.interpretations) {
   const rows=db.prepare('SELECT id,payload FROM analyses WHERE form=? AND lemma=? AND base=1')
     .all(reading.form,reading.lemma) as {id:string;payload:string}[];
   const row=rows.find(r=>{const a=JSON.parse(r.payload) as Analysis;return a.type==='nor-nork'&&
@@ -919,7 +919,7 @@ const coverage: Coverage = {
   lemmas, varieties:['batua'], source:'apertium+wiktionary+euskaltzaindia', complete:false,
   reviewedSegmentations:6, historicalNotes:2, missingLemmas:[],
   limitations:[
-    {eu:'Apertiumeko 35 paradigma, ba- saileko beste 5 lema, *iro/*io osagarriak eta *irakatsi*ren agintera. 14. arauko hikako taulak, 78. arauko laguntzaile-gelaxkak eta 1979ko Euskal Aditz Batuaren 63 paradigma-orri auditatu dira; horrek ez du euskara batuko inbentario eta analisi guztien estaldura osoa frogatzen. Liburuko gainerako paradigma trinkoen auditoria amaitu gabe dago.'},
+    {eu:'Apertiumeko 35 paradigma, ba- saileko beste 5 lema, *iro/*io osagarriak eta *irakatsi*ren agintera. 14. arauko hikako taulak, 78. arauko laguntzaile-gelaxkak eta 1979ko Euskal Aditz Batuaren 65 paradigma-orri auditatu dira; horrek ez du euskara batuko inbentario eta analisi guztien estaldura osoa frogatzen. Liburuko gainerako paradigma trinkoen auditoria amaitu gabe dago.'},
     {eu:'Atxeki → atxiki, irudi/iruditu eta erion → jario loturak Hiztegi Batuaren arabera ebatzi dira; erion bizkaierazko forma urria da, eta ez da euskara batuko lema bereizi gisa inportatu. *io aparteko lema gisa dago.'},
     {eu:'Arau bidez sortutako hitano-formak «sortua» gisa markatzen dira; banakako arautasun-ziurtagiria ez da. 14. arauaren PDFa emanda, audit:alokutibo komandoak hiru zutabeko formak alderatzen ditu.'},
     {eu:'Lexikoak forma literarioak eta arraroak ere baditu; banakako arautasun-auditoria amaitu gabe dago.'},
