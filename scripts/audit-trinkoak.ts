@@ -3,7 +3,8 @@ import { DatabaseSync } from 'node:sqlite';
 import type { Analysis, Mood, Person, Tense } from '../packages/shared/src/index.ts';
 import { defaultDatabasePath } from '../apps/api/src/database.js';
 import { earlyNorNoriReadings } from './nor-nori-paradigms.js';
-import { edukiReadings, ekarriNorNorkReadings, eramanNorNorkReadings } from './nor-nork-paradigms.js';
+import { edukiReadings, ekarriNorNorkReadings, eramanNorNorkReadings, erabiliNorNorkReadings,
+  erabili1977Reading } from './nor-nork-paradigms.js';
 import { ekarriNnnPrinted, ekarriNnnDerived, eramanNnnPrinted, eramanNnnDerived,
   erabiliNnnPrinted, erabiliNnnDerived } from './ekarri-nnn-paradigms.js';
 
@@ -159,16 +160,17 @@ for(const reading of earlyNorNoriReadings) {
     a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')))
     failures.push(`PDF ${reading.page}: ${reading.form} analisia falta edo desegokia da (${reading.nor}, ${reading.nori})`);
 }
-const officialNorNorkReadings=[...edukiReadings,...ekarriNorNorkReadings,...eramanNorNorkReadings];
+const officialNorNorkReadings=[...edukiReadings,...ekarriNorNorkReadings,...eramanNorNorkReadings,...erabiliNorNorkReadings];
 for(const reading of officialNorNorkReadings){
   checked++;
   const source=pages[reading.page-1]??'';const compact=source.toLowerCase().replace(/\s+/g,'');
   const toka=reading.treatment==='noka'?officialNorNorkReadings.find(r=>r.page===reading.page&&r.series===reading.series&&
     r.nor===reading.nor&&r.nork===reading.nork&&r.treatment==='toka')?.form:null;
-  const paired=toka&&[toka+'/n',toka+'/nan',toka+'m',toka+'man'].some(value=>compact.includes(value));
+  const paired=toka&&[toka+'/n',toka+'/nan',toka+'m',toka+'man',toka+'iii'].some(value=>compact.includes(value));
   const optional=reading.form.endsWith('teten')?compact.includes(reading.form.replace(/teten$/,'te(te)n')):
     reading.form.endsWith('tete')?compact.includes(reading.form.replace(/tete$/,'te(te)')):false;
-  const aliases:Record<string,string>={ekarna:'ekama'};
+  const aliases:Record<string,string>={ekarna:'ekama',ginderabiltzaan:'ginderabiltzanman',
+    ginderabiltzanan:'ginderabiltzanman'};
   if(!compact.includes(reading.form)&&!compact.includes(aliases[reading.form]??'\0')&&!paired&&!optional)
     failures.push(`PDF ${reading.page}: ${reading.heading} ${reading.series} ${reading.form} falta da`);
   const analyses=(lookup.all(reading.form,'batua') as {payload:string}[]).map(r=>JSON.parse(r.payload) as Analysis);
@@ -720,6 +722,16 @@ if(originalPdf) {
   const originalPages=execFileSync('pdftotext',['-layout',originalPdf,'-'],{
     encoding:'utf8',maxBuffer:20*1024*1024,
   }).split('\f');
+  originalChecked++;
+  const erabili1977=originalPages[34]??''; // printed p. 818, ERABILI
+  if(!erabili1977.includes('ERABILI')||!new RegExp(`(?<![a-z])${erabili1977Reading.form}(?![a-z])`).test(erabili1977))
+    failures.push(`1977ko PDF 35: ERABILI ${erabili1977Reading.form} falta da`);
+  const erabili1977Analyses=(lookup.all(erabili1977Reading.form,'batua') as {payload:string}[])
+    .map(r=>JSON.parse(r.payload) as Analysis);
+  if(!erabili1977Analyses.some(a=>a.lemma==='erabili'&&a.type==='nor-nork'&&a.nor==='gu'&&a.nori===null&&
+    a.nork==='haiek'&&a.mood==='indicative'&&a.tense==='past'&&a.validation==='reviewed'&&
+    a.citations.some(c=>c.sourceId==='euskaltzaindia-sintetikoa1977')))
+    failures.push(`1977ko PDF 35: ERABILI ${erabili1977Reading.form} analisia/aipamena falta edo desegokia da`);
   const original=originalPages[42]; // printed p. 826, EUTSI
   if(!original?.includes('EUTSI')||!/\b826\b/.test(original))
     failures.push('1977ko PDF 43: EUTSI/826 orrialde-aingurak falta dira');
@@ -879,5 +891,5 @@ if(originalPdf) {
   }
 }
 db.close();
-console.log(`${pageSpecs.length + 43 + norkPages.length + 2} paradigma-orri ofizial, ${checked} adizki-agerpen eta ${noteVariants} ohar-aldaera; 1977ko jatorrizkoan ${originalPdf?originalChecked+' agerpen, EUTSI gatazka eta JARRAIKIren 2 iturri-akats egiaztatuak':'ez da auditatu'}; ${failures.length} hutsune/desadostasun`);
+console.log(`${pageSpecs.length + 45 + norkPages.length + 2} paradigma-orri ofizial, ${checked} adizki-agerpen eta ${noteVariants} ohar-aldaera; 1977ko jatorrizkoan ${originalPdf?originalChecked+' agerpen, EUTSI gatazka eta JARRAIKIren 2 iturri-akats egiaztatuak':'ez da auditatu'}; ${failures.length} hutsune/desadostasun`);
 if (failures.length) { for (const failure of failures.slice(0, 100)) console.error(failure); process.exitCode = 1; }

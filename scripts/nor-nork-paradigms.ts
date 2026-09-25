@@ -101,3 +101,34 @@ for(const [form,nork,treatment] of [['eramaitzak','hi','toka'],['eramaitzan','hi
   eraman.push({page:266,printed:'122',heading:'ERAMAN',lemma:'eraman',series:'NN9',form,nor:'haiek',nork,treatment,
     interpretations:[{mood:'imperative',tense:'present'}]});
 export const eramanNorNorkReadings=eraman;
+
+function erabiliNnForm(form:string,series:'NN1'|'NN9'){
+  if(series==='NN9')return form==='ekarna'?'erabilna':form.replace('bekar','berabil').replace('ekar','erabil');
+  return form.replace('nakarna','narabilna').replace('nakar','narabil').replace('gakartza','garabiltza')
+    .replace('hakar','harabil').replace('zakarz','zarabilz').replace('zakartza','zarabiltza')
+    .replace('dakarna','darabilna').replace('dakartza','darabiltza').replace('dakar','darabil');
+}
+const erabili:NorNorkReading[]=ekarri.map(r=>{
+  if(r.series!=='NN1'&&r.series!=='NN9')throw new Error(`Ustekabeko EKARRI saila: ${r.series}`);
+  return {...r,page:r.series==='NN1'?274:276,printed:r.series==='NN1'?'126':'127',
+    heading:'ERABILI',lemma:'erabili',form:erabiliNnForm(r.form,r.series)};
+});
+function erabiliAdd(form:string,nor:Person,nork:Person,treatment:Treatment='neutral'){
+  erabili.push({page:276,printed:'127',heading:'ERABILI',lemma:'erabili',series:'NN2',form,nor,nork,treatment,
+    interpretations:[{mood:'indicative',tense:'past'}]});
+}
+function erabiliPastPair(toka:string,noka:string,nor:Person){erabiliAdd(toka,nor,'hi','toka');erabiliAdd(noka,nor,'hi','noka');}
+erabiliPastPair('ninderabilan','ninderabilnan','ni');for(const [nork,form] of [['hura','ninderabilen'],['zu','ninderabilzun'],['zuek','ninderabilzuen'],['haiek','ninderabilten']] as [Person,string][])erabiliAdd(form,'ni',nork);
+erabiliPastPair('ginderabiltzaan','ginderabiltzanan','gu');for(const [nork,form] of [['hura','ginderabiltzan'],['zu','ginderabiltzazun'],['zuek','ginderabiltzazuen'],['haiek','ginderabilten']] as [Person,string][])erabiliAdd(form,'gu',nork);
+for(const [nor,forms] of [['hi',['hinderabildan','hinderabilen','hinderabilgun','hinderabilten']],['zu',['zinderabiltzadan','zinderabiltzan','zinderabiltzagun','zinderabiltzaten']]] as [Person,string[]][])
+  forms.forEach((form,i)=>erabiliAdd(form,nor,['ni','hura','gu','haiek'][i] as Person));
+for(const [nork,form] of [['ni','zinderabilztedan'],['hura','zinderabilzten'],['gu','zinderabilztegun'],['haiek','zinderabilzten'],['haiek','zinderabilzteten']] as [Person,string][])erabiliAdd(form,'zuek',nork);
+for(const [nor,forms] of [['hura',['nerabilen','herabilen','zerabilen','generabilen','zenerabilen','zenerabilten','zerabilten']],
+  ['haiek',['nerabiltzan','herabiltzan','zerabiltzan','generabiltzan','zenerabiltzan','zenerabiltzaten','zerabiltzaten']]] as [Person,string[]][])
+  forms.forEach((form,i)=>erabiliAdd(form,nor,['ni','hi','hura','gu','zu','zuek','haiek'][i] as Person,i===1?'hika':'neutral'));
+export const erabiliNorNorkReadings=erabili;
+// The 1977 source prints ginderabiltzaten. The 1979 book changed that cell
+// to ginderabilten, so retain the earlier standardized reading separately
+// instead of attributing it to the later table.
+export const erabili1977Reading:NorNorkReading={page:35,printed:'818',heading:'ERABILI',lemma:'erabili',series:'NN2',
+  form:'ginderabiltzaten',nor:'gu',nork:'haiek',treatment:'neutral',interpretations:[{mood:'indicative',tense:'past'}]};

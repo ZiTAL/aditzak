@@ -130,11 +130,11 @@ egiaztatzen, eta aditz trinkoak beste iturri batzuen mende daude;
 `complete: false` mantentzen da.
 
 Euskaltzaindiaren [*Euskal Aditz Batua* (1979)](https://www.euskaltzaindia.eus/dok/iker_jagon_tegiak/6833.pdf)
-liburuko ezkerreko paradigma ofizialen 68 orrialdetan, EGON, JOAN, ETORRI,
+liburuko ezkerreko paradigma ofizialen 70 orrialdetan, EGON, JOAN, ETORRI,
 IBILI, ATXEKI/ATXIKI, JARRAIKI, EKIN, ETZAN, EDUKI, EKARRI, JARIO, EROAN, ERAKUTSI,
 IRAKATSI, UTZI, IGORRI, EROSI,
 IHARDETSI, IHARDUN, IHARDUKI, ERAUNTSI, EUTSI, IRAUN, IRUDI/IRUDITU,
-EMAN eta ESAN/ERRAN aditzen 1.899 adizki-agerpen eta ohar bidezko 356 aldaera
+ERAMAN, ERABILI, EMAN eta ESAN/ERRAN aditzen 1.987 adizki-agerpen eta ohar bidezko 356 aldaera
 alderatu dira: azaleko forma,
 lema eta dagokien NOR/NORI/NORK pertsonak ez dute desadostasunik. N1/N2,
 N3, N4, N5 eta N9 sailen modu/aldia ere egiaztatzen dira; N4', N7 eta N10
@@ -197,6 +197,10 @@ ERABILIren 128¹–130¹ orrialdeetako NNN1, NNN2 eta NNN9ko 116
 taula-irakurketa auditatu dira. Oin-oharreko `-rabilki-/-rabil- →
 -rabilzki-` jarraibideak NOR pluraleko beste 116 irakurketa sortzen ditu;
 horiek «sortua» gisa ageri dira.
+ERABILIren 126¹–127¹ orrialdeetako NN1, NN2 eta NN9ko beste 88 irakurketa
+ere auditatu dira. 1979ko NN2 taulak `ginderabilten` inprimatzen du;
+1977ko jatorrizko `ginderabiltzaten` forma ere gorde da, bakoitza bere
+iturri-aipamenarekin.
 
 ERAKUTSIren 149¹–151¹. orrialdeetako (PDFko 320., 322. eta 324.a)
 hiru paradigma osoak auditatu dira. Lehenaldiko bi forma, baldintzako 13

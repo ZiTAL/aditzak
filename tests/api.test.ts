@@ -378,6 +378,20 @@ test('erabili NNN pages preserve printed agreement and derived plural NOR',async
     a.mood===mood&&a.tense===tense&&a.nor===nor&&a.nori===nori&&a.nork===nork&&
     a.treatment===treatment&&a.validation===validation&&a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')),form);
 });
+test('erabili NN pages preserve the 1979 cell and its distinct 1977 predecessor',async()=>{
+  for(const [form,mood,tense,nor,nork,treatment] of [
+    ['narabilna','indicative','present','ni','hi','noka'],
+    ['ninderabilnan','indicative','past','ni','hi','noka'],
+    ['zarabilztete','indicative','present','zuek','haiek','neutral'],
+    ['erabilna','imperative','present','hura','hi','noka'],
+    ['ginderabilten','indicative','past','gu','haiek','neutral'],
+  ] as const) assert.ok((await analyze(form)).analyses.some(a=>a.lemma==='erabili'&&a.type==='nor-nork'&&
+    a.mood===mood&&a.tense===tense&&a.nor===nor&&a.nork===nork&&a.treatment===treatment&&
+    a.validation==='reviewed'&&a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')),form);
+  assert.ok((await analyze('ginderabiltzaten')).analyses.some(a=>a.lemma==='erabili'&&a.type==='nor-nork'&&
+    a.mood==='indicative'&&a.tense==='past'&&a.nor==='gu'&&a.nork==='haiek'&&a.validation==='reviewed'&&
+    a.citations.some(c=>c.sourceId==='euskaltzaindia-sintetikoa1977')));
+});
 test('all segmentation offsets reconstruct their surface and unknown history stays absent',async()=>{
   for(const form of ['hatzait','dut','du','haiz','naiz','didazue','dator','dakit','zarete']){
     for(const a of (await analyze(form)).analyses){
