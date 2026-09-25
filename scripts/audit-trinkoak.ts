@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { DatabaseSync } from 'node:sqlite';
 import type { Analysis, Mood, Person, Tense } from '../packages/shared/src/index.ts';
 import { defaultDatabasePath } from '../apps/api/src/database.js';
+import { earlyNorNoriReadings } from './nor-nori-paradigms.js';
 
 // Only the left-hand, Academy-approved whole-form paradigms in the 1979 book.
 // The facing construction charts and their grammatical labels are the editor's,
@@ -128,6 +129,32 @@ for (const page of pageSpecs) {
       } else auditRows(page, rows, 'N9', offset + 7, 5);
     }
   }
+}
+// Dense NOR-NORI paradigms on printed pp. 101¹–109¹. The data shared
+// with the builder expands every printed k/n pair into distinct toka/noka
+// readings while retaining the exact NOR and NORI coordinates.
+for(const reading of earlyNorNoriReadings) {
+  checked++;
+  const source=pages[reading.page-1]??'';
+  const compact=source.toLowerCase().replace(/\s+/g,'');
+  const toka=reading.treatment==='noka'?earlyNorNoriReadings.find(r=>r.page===reading.page&&
+    r.series===reading.series&&r.nor===reading.nor&&r.nori===reading.nori&&r.treatment==='toka')?.form:null;
+  const paired=toka&&[
+    toka+'/n',toka+'/nan',toka+'/nake',toka+'ln',toka+'inan',toka+'make',
+  ].some(value=>compact.includes(value));
+  const aliases:Record<string,string>={narraie:'narrale',zerion:'zenon',zerigun:'zengun',
+    zerizun:'zenzun',zerizuen:'zenzuen',zerien:'zenen'};
+  const duplicatedTypo=reading.page===228&&reading.form==='zentxezkiokete'&&reading.nori==='haiek';
+  const visible=duplicatedTypo?(source.match(/(?<![a-z])zentxezkiokete(?![a-z])/g)?.length??0)>=2:
+    compact.includes(reading.form)||compact.includes(aliases[reading.form]??'\0')||Boolean(paired);
+  if(!visible)failures.push(`PDF ${reading.page}: ${reading.heading} ${reading.series} ${reading.form} falta da`);
+  const analyses=(lookup.all(reading.form,'batua') as {payload:string}[]).map(r=>JSON.parse(r.payload) as Analysis);
+  if(!analyses.some(a=>a.lemma===reading.lemma&&a.kind==='synthetic'&&a.type==='nor-nori'&&
+    a.nor===reading.nor&&a.nori===reading.nori&&a.nork===null&&a.treatment===reading.treatment&&
+    !a.allocutive&&reading.interpretations.some(i=>a.mood===i.mood&&a.tense===i.tense)&&
+    a.validation===(reading.series==='NN4'?'generated':'reviewed')&&
+    a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')))
+    failures.push(`PDF ${reading.page}: ${reading.form} analisia falta edo desegokia da (${reading.nor}, ${reading.nori})`);
 }
 // Printed p. 110¹/PDF 242 has parallel NOR singular/plural columns. Four
 // hi cells abbreviate the noka counterpart as /n or /nake; expand only
@@ -669,6 +696,43 @@ if(originalPdf) {
       a.citations.some(c=>c.sourceId==='euskaltzaindia-sintetikoa1977')))
       failures.push(`1977ko PDF 43: EUTSI ${form} analisia/aipamena falta edo desegokia da`);
   }
+  const earlyOriginalSources:Record<string,string>={
+    atxiki:(originalPages[21]??'')+(originalPages[22]??''),
+    jarraiki:(originalPages[23]??'')+(originalPages[24]??''),
+    ekin:originalPages[25]??'',jario:originalPages[26]??'',
+  };
+  for(const reading of earlyNorNoriReadings) {
+    if(reading.lemma==='atxiki'&&reading.form==='zentxezkiokete'&&reading.nori==='haiek')continue;
+    // The 1977 JARRAIKI table omits garraizkie and misprints
+    // zinderraizkien as ginderraizkien; both are explicit in 1979.
+    if(reading.lemma==='jarraiki'&&['garraizkie','zinderraizkien'].includes(reading.form))continue;
+    originalChecked++;
+    const source=earlyOriginalSources[reading.lemma]??'';
+    const compact=source.toLowerCase().replace(/\s+/g,'');
+    const toka=reading.treatment==='noka'?earlyNorNoriReadings.find(r=>r.lemma===reading.lemma&&
+      r.series===reading.series&&r.nor===reading.nor&&r.nori===reading.nori&&r.treatment==='toka')?.form:null;
+    const aliases:Record<string,string>={zetxekian:'zetxekiaiv',garraizkik:'garrraizkik',
+      ginderraizkian:'gmderraizkian',zinderraizkiguke:'zmderraizkiguke',
+      ninderraizueke:'nmderraizueke'};
+    const visibleToka=toka&&(aliases[toka]??toka);
+    const damagedSlash=reading.form==='zetxekinan'&&compact.includes('zetxekiaiv-kinan');
+    if(!compact.includes(reading.form)&&!compact.includes(aliases[reading.form]??'\0')&&
+      !(visibleToka&&compact.includes(visibleToka+'/-'))&&!damagedSlash)
+      failures.push(`1977ko PDF: ${reading.heading} ${reading.form} falta da`);
+    const analyses=(lookup.all(reading.form,'batua') as {payload:string}[]).map(r=>JSON.parse(r.payload) as Analysis);
+    if(!analyses.some(a=>a.lemma===reading.lemma&&a.type==='nor-nori'&&a.nor===reading.nor&&
+      a.nori===reading.nori&&a.nork===null&&a.treatment===reading.treatment&&
+      reading.interpretations.some(i=>a.mood===i.mood&&a.tense===i.tense)&&
+      a.citations.some(c=>c.sourceId==='euskaltzaindia-sintetikoa1977')))
+      failures.push(`1977ko PDF: ${reading.form} analisia/aipamena falta edo desegokia da`);
+  }
+  originalChecked++;
+  const originalAtxeki=(earlyOriginalSources.atxiki??'').toLowerCase().replace(/\s+/g,'');
+  if(!originalAtxeki.includes('zentxezkiekete'))failures.push('1977ko PDF 23: ATXEKI zentxezkiekete falta da');
+  const originalAtxekiAnalyses=(lookup.all('zentxezkiekete','batua') as {payload:string}[]).map(r=>JSON.parse(r.payload) as Analysis);
+  if(!originalAtxekiAnalyses.some(a=>a.lemma==='atxiki'&&a.type==='nor-nori'&&a.nor==='zuek'&&a.nori==='haiek'&&
+    a.validation==='generated'&&a.citations.some(c=>c.sourceId==='euskaltzaindia-sintetikoa1977')))
+    failures.push('1977ko PDF 23: ATXEKI zentxezkiekete analisia/aipamena falta da');
   // Printed p. 841, physical PDF p. 58: two complete NOR-NORK matrices.
   // The original prints IRUDI; the present lexicon maps that family to
   // iruditu, as documented separately in Hiztegi Batua.
@@ -761,5 +825,5 @@ if(originalPdf) {
   }
 }
 db.close();
-console.log(`${pageSpecs.length + 18 + norkPages.length + 2} paradigma-orri ofizial, ${checked} adizki-agerpen eta ${noteVariants} ohar-aldaera; 1977ko jatorrizkoan ${originalPdf?originalChecked+' agerpen eta EUTSI gatazka egiaztatuak':'ez da auditatu'}; ${failures.length} hutsune/desadostasun`);
+console.log(`${pageSpecs.length + 27 + norkPages.length + 2} paradigma-orri ofizial, ${checked} adizki-agerpen eta ${noteVariants} ohar-aldaera; 1977ko jatorrizkoan ${originalPdf?originalChecked+' agerpen, EUTSI gatazka eta JARRAIKIren 2 iturri-akats egiaztatuak':'ez da auditatu'}; ${failures.length} hutsune/desadostasun`);
 if (failures.length) { for (const failure of failures.slice(0, 100)) console.error(failure); process.exitCode = 1; }

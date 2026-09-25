@@ -4,6 +4,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { fileURLToPath } from 'node:url';
 import { parseDictionary, expandEntry, type Entry } from './dictionary.js';
 import { allocutiveCandidates } from './allocutive.js';
+import { earlyNorNoriReadings } from './nor-nori-paradigms.js';
 import type { Analysis, Coverage, Mood, Tense, Person, Source, Treatment } from '../packages/shared/src/index.js';
 
 const root = new URL('../', import.meta.url);
@@ -189,6 +190,59 @@ function insertGeneratedBase(form:string,lemma:string,kind:'auxiliary'|'syntheti
     citations:[...(sourceLocator?[{sourceId:'wiktionary-eu-verb',locator:sourceLocator}]:[]),
       {sourceId:'euskaltzaindia14',locator:`${rulePage}. or., ${lemma} paradigma; oinarrizko forma`}]};
   insert.run(analysis.id,form,lemma,'batua',1,sourceLocator?'wiktionary-eu-verb':'euskaltzaindia14',JSON.stringify(analysis));
+}
+// The first nine NOR-NORI synthetic pages (ATXEKI, JARRAIKI, EKIN and
+// JARIO) share a dense agreement layout. Attach the official evidence to
+// every reading and fill any source cell absent upstream. NN4's grammatical
+// label is editorial, so its two lexicon-compatible interpretations remain
+// generated even though the printed form and agreement are source-checked.
+const updateOfficialNorNori=db.prepare('UPDATE analyses SET payload=?,source=? WHERE id=?');
+for(const reading of earlyNorNoriReadings) for(const interpretation of reading.interpretations) {
+  const rows=db.prepare('SELECT id,payload FROM analyses WHERE form=? AND lemma=? AND base=1')
+    .all(reading.form,reading.lemma) as {id:string;payload:string}[];
+  const row=rows.find(r=>{const a=JSON.parse(r.payload) as Analysis;return a.type==='nor-nori'&&
+    a.nor===reading.nor&&a.nori===reading.nori&&a.nork===null&&
+    a.mood===interpretation.mood&&a.tense===interpretation.tense;});
+  const citation={sourceId:'euskaltzaindia-eab1979',locator:`${reading.printed}¹. or. (PDF ${reading.page}), ${reading.heading} ${reading.series}`};
+  const originalLocator={atxiki:'805–806. or., ATXEKI/ETXEKI',jarraiki:'807–808. or., JARRAIKI/JARRAITU',
+    ekin:'809. or., EKIN',jario:'810. or., JARIO/JARI(N)/JARIATU'}[reading.lemma];
+  const printedAtxekiDuplicate=reading.lemma==='atxiki'&&reading.form==='zentxezkiokete'&&reading.nori==='haiek';
+  const originalJarraikiDefect=reading.lemma==='jarraiki'&&['garraizkie','zinderraizkien'].includes(reading.form);
+  const originalCitation=originalLocator&&!printedAtxekiDuplicate&&!originalJarraikiDefect?
+    [{sourceId:'euskaltzaindia-sintetikoa1977',locator:originalLocator}]:[];
+  const validation:Analysis['validation']=reading.series==='NN4'?'generated':'reviewed';
+  if(row) {
+    const analysis=JSON.parse(row.payload) as Analysis;
+    Object.assign(analysis,{treatment:reading.treatment,allocutive:false,validation});
+    analysis.rawTags=[...new Set([...analysis.rawTags,'eab1979',reading.series])];
+    analysis.citations.push(citation,...originalCitation);
+    if(reading.lemma==='atxiki')analysis.citations.push({sourceId:'euskaltzaindia-hb-atxiki',locator:'atxeki: ikus atxiki'});
+    updateOfficialNorNori.run(JSON.stringify(analysis),'euskaltzaindia-eab1979',row.id);
+  } else {
+    const analysis:Analysis={
+      id:createHash('sha256').update(JSON.stringify(['eab1979-nor-nori',reading.form,reading.lemma,
+        interpretation.mood,interpretation.tense,reading.nor,reading.nori])).digest('hex').slice(0,24),
+      form:reading.form,lemma:reading.lemma,kind:'synthetic',variety:'batua',mood:interpretation.mood,
+      tense:interpretation.tense,type:'nor-nori',nor:reading.nor,nori:reading.nori,nork:null,
+      treatment:reading.treatment,allocutive:false,affixes:[],rawTags:['eab1979',reading.series],
+      baseForm:reading.form,origin:'rule',validation,segmentation:null,history:[],
+      citations:[citation,...originalCitation,...(reading.lemma==='atxiki'?[{sourceId:'euskaltzaindia-hb-atxiki',locator:'atxeki: ikus atxiki'}]:[])],
+    };
+    lemmaInsert.run(reading.lemma,'synthetic');
+    insert.run(analysis.id,analysis.form,analysis.lemma,'batua',1,'euskaltzaindia-eab1979',JSON.stringify(analysis));
+  }
+}
+// The original 1977 table has zentxezkiekete in the ATXEKI zuek/haiek
+// cell; the 1979 book replaced it with a duplicated zentxezkiokete. Keep
+// the original reading alongside the later printed one.
+for(const row of db.prepare('SELECT id,payload FROM analyses WHERE form=? AND lemma=? AND base=1')
+  .all('zentxezkiekete','atxiki') as {id:string;payload:string}[]) {
+  const analysis=JSON.parse(row.payload) as Analysis;
+  if(analysis.type!=='nor-nori'||analysis.nor!=='zuek'||analysis.nori!=='haiek'||
+    ![['consequence','present'],['potential','hypothetical']].some(([mood,tense])=>analysis.mood===mood&&analysis.tense===tense))continue;
+  analysis.validation='generated';
+  analysis.citations.push({sourceId:'euskaltzaindia-sintetikoa1977',locator:'806. or., ATXEKI/ETXEKI: zentxezkiekete'});
+  updateOfficialNorNori.run(JSON.stringify(analysis),'euskaltzaindia-sintetikoa1977',row.id);
 }
 // The 1979 Academy book prints only IRAKATSI's imperative (p. 158¹/PDF 338).
 // Generate its one-word cells from the four NORI stems and three NORK endings;
@@ -808,13 +862,14 @@ const coverage: Coverage = {
   lemmas, varieties:['batua'], source:'apertium+wiktionary+euskaltzaindia', complete:false,
   reviewedSegmentations:6, historicalNotes:2, missingLemmas:[],
   limitations:[
-    {eu:'Apertiumeko 35 paradigma, ba- saileko beste 5 lema, *iro/*io osagarriak eta *irakatsi*ren agintera. 14. arauko hikako taulak, 78. arauko laguntzaile-gelaxkak eta 1979ko Euskal Aditz Batuaren 43 paradigma-orri auditatu dira; horrek ez du euskara batuko inbentario eta analisi guztien estaldura osoa frogatzen. Erauntsi, eroan, iharduki, irakin eta jario lemen gainerako sailak partzialak izan daitezke.'},
+    {eu:'Apertiumeko 35 paradigma, ba- saileko beste 5 lema, *iro/*io osagarriak eta *irakatsi*ren agintera. 14. arauko hikako taulak, 78. arauko laguntzaile-gelaxkak eta 1979ko Euskal Aditz Batuaren 52 paradigma-orri auditatu dira; horrek ez du euskara batuko inbentario eta analisi guztien estaldura osoa frogatzen. Liburuko gainerako paradigma trinkoen auditoria amaitu gabe dago.'},
     {eu:'Atxeki → atxiki, irudi/iruditu eta erion → jario loturak Hiztegi Batuaren arabera ebatzi dira; erion bizkaierazko forma urria da, eta ez da euskara batuko lema bereizi gisa inportatu. *io aparteko lema gisa dago.'},
     {eu:'Arau bidez sortutako hitano-formak «sortua» gisa markatzen dira; banakako arautasun-ziurtagiria ez da. 14. arauaren PDFa emanda, audit:alokutibo komandoak hiru zutabeko formak alderatzen ditu.'},
     {eu:'Lexikoak forma literarioak eta arraroak ere baditu; banakako arautasun-auditoria amaitu gabe dago.'},
     {eu:'Morfema-zatiketa partziala da; analisi historikoa iturri zehatzak dituzten kasuetan soilik eskaintzen da.'},
     {eu:'Hitano batzuen generoa ez du iturriak esplizituki bereizten; kasu horietan «hika (zehaztu gabe)» agertzen da.'},
     {eu:'EUTSIren deut- saileko lau orainaldiko irakurketa 1977ko Aditz sintetikoa zerrendarekin berrikusi dira. 1979ko Euskal Aditz Batuak daut- ematen du; lau aldaera horiek gatazkatsu/«sortua» gisa agertzen dira eta ez dute alokutiborik sortzen.'},
+    {eu:'1977ko JARRAIKI taulak garraizkie lerroa omitzen du eta zinderraizkien gelaxkan ginderraizkien inprimatzen du; 1979ko taulak bi formak zuzen eta esplizituki ematen ditu.'},
   ],
 };
 db.prepare('INSERT INTO metadata VALUES (?,?)').run('coverage',JSON.stringify(coverage));

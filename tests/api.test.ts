@@ -291,6 +291,21 @@ test('eutsi imperative preserves both source tables and licensed i-less variants
       a.treatment===treatment&&a.validation===validation&&a.citations.some(c=>c.sourceId===source)),form);
   }
 });
+test('early NOR-NORI paradigms retain exact recipient, gender and printed duplicates',async()=>{
+  for(const [form,lemma,nor,nori,treatment,validation] of [
+    ['natxekin','atxiki','ni','hi','noka','reviewed'],
+    ['ninderraiake','jarraiki','ni','hi','toka','generated'],
+    ['zenkizkiekete','ekin','zuek','haiek','neutral','generated'],
+    ['zerizkinan','jario','haiek','hi','noka','reviewed'],
+  ] as const) assert.ok((await analyze(form)).analyses.some(a=>a.lemma===lemma&&a.type==='nor-nori'&&
+    a.nor===nor&&a.nori===nori&&a.nork===null&&a.treatment===treatment&&a.validation===validation&&
+    a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')),form);
+  const duplicated=(await analyze('zentxezkiokete')).analyses.filter(a=>a.lemma==='atxiki'&&
+    a.type==='nor-nori'&&a.nor==='zuek'&&a.mood==='consequence');
+  assert.ok(duplicated.some(a=>a.nori==='hura'));
+  assert.ok(duplicated.some(a=>a.nori==='haiek'&&a.validation==='generated'&&
+    a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')));
+});
 test('all segmentation offsets reconstruct their surface and unknown history stays absent',async()=>{
   for(const form of ['hatzait','dut','du','haiz','naiz','didazue','dator','dakit','zarete']){
     for(const a of (await analyze(form)).analyses){
