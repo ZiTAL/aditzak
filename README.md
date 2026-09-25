@@ -130,11 +130,11 @@ egiaztatzen, eta aditz trinkoak beste iturri batzuen mende daude;
 `complete: false` mantentzen da.
 
 Euskaltzaindiaren [*Euskal Aditz Batua* (1979)](https://www.euskaltzaindia.eus/dok/iker_jagon_tegiak/6833.pdf)
-liburuko ezkerreko paradigma ofizialen 52 orrialdetan, EGON, JOAN, ETORRI,
-IBILI, ATXEKI/ATXIKI, JARRAIKI, EKIN, ETZAN, JARIO, EROAN, ERAKUTSI,
+liburuko ezkerreko paradigma ofizialen 56 orrialdetan, EGON, JOAN, ETORRI,
+IBILI, ATXEKI/ATXIKI, JARRAIKI, EKIN, ETZAN, EDUKI, JARIO, EROAN, ERAKUTSI,
 IRAKATSI, UTZI, IGORRI, EROSI,
 IHARDETSI, IHARDUN, IHARDUKI, ERAUNTSI, EUTSI, IRAUN, IRUDI/IRUDITU,
-EMAN eta ESAN/ERRAN aditzen 1.240 adizki-agerpen
+EMAN eta ESAN/ERRAN aditzen 1.410 adizki-agerpen
 alderatu dira: azaleko forma,
 lema eta dagokien NOR/NORI/NORK pertsonak ez dute desadostasunik. N1/N2,
 N3, N4, N5 eta N9 sailen modu/aldia ere egiaztatzen dira; N4', N7 eta N10
@@ -168,6 +168,11 @@ ATXEKI taulak `zentxezkiokete` bi NORI gelaxkatan errepikatzen du; bi
 irakurketak gordetzen dira, eta modu-interpretazioa «sortua» da. 1977ko
 JARRAIKI taulak `garraizkie` omitzen du eta `zinderraizkien` gelaxkan
 `ginderraizkien` errepikatzen du; biak 1979ko taularekin soilik aipatzen dira.
+
+EDUKIren 113¹–116¹ orrialdeetako 170 irakurketak ere auditatu dira.
+`-k/-n` genero-bikoteak eta `-te(te)` parentesizko bi aukerak bereizita daude;
+upstream lexikoan falta ziren 49 analisi gehitu dira. NN4ko modu-irakurketak
+«sortua» dira, taula ofizialak forma eta komunztadura bermatzen dituelako.
 
 ERAKUTSIren 149¹–151¹. orrialdeetako (PDFko 320., 322. eta 324.a)
 hiru paradigma osoak auditatu dira. Lehenaldiko bi forma, baldintzako 13
