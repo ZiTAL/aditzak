@@ -9,6 +9,8 @@ test('requested example, morphology and source links',async({page},testInfo)=>{
   await page.getByRole('tab',{name:'Morfemak'}).click();await expect(page.locator('.segment-row')).toHaveText('hatzait');
   await expect(page.locator('.segment-list')).toContainText('NORI: niri');
   await page.getByRole('tab',{name:'Historia'}).click();await expect(page.locator('.not-yet')).toContainText('Ez da etimologiarik automatikoki asmatzen');
+  await expect(page.getByRole('link',{name:'Kodea GitHuben'})).toHaveAttribute('href','https://github.com/ZiTAL/aditzak/');
+  await expect(page.getByRole('link',{name:'Akats bat jakinarazi'})).toHaveAttribute('href','https://github.com/ZiTAL/aditzak/issues');
   expect(errors).toEqual([]);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();
 });
 test('ambiguity, hika and all readings are selectable',async({page})=>{

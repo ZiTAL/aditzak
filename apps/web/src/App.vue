@@ -105,6 +105,13 @@ onMounted(async()=>{
         <details class="disclosure coverage-disclosure"><summary>{{ t('coverage') }}<span aria-hidden="true">＋</span></summary><div class="disclosure-body"><ul><li v-for="(limit,i) in meta.limitations" :key="i">{{ local(limit) }}</li></ul><p>{{ t('baseForms') }}: {{ number(meta.baseForms) }}</p><p>{{ t('missing') }}: {{ meta.missingLemmas.join(', ') }}</p><h3>{{ t('allLemmas') }}</h3><div class="lemma-cloud"><span v-for="l in meta.lemmas" :key="l.lemma">{{ l.lemma }} <small>{{ number(l.forms) }}</small></span></div></div></details>
       </section>
     </main>
-    <footer><div><strong>{{ t('footer') }}</strong><p>{{ t('independent') }}</p></div><span>{{ t('license') }}</span></footer>
+    <footer>
+      <div class="footer-copy"><strong>{{ t('footer') }}</strong><p>{{ t('independent') }}</p></div>
+      <nav class="footer-links" :aria-label="t('projectLinks')">
+        <a href="https://github.com/ZiTAL/aditzak/" target="_blank" rel="noopener noreferrer">{{ t('sourceCode') }} <span aria-hidden="true">↗</span></a>
+        <a href="https://github.com/ZiTAL/aditzak/issues" target="_blank" rel="noopener noreferrer">{{ t('reportIssue') }} <span aria-hidden="true">↗</span></a>
+      </nav>
+      <span class="footer-license">{{ t('license') }}</span>
+    </footer>
   </div>
 </template>
