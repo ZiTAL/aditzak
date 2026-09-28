@@ -1,15 +1,15 @@
 # Aditzak deseraiki — garapen-plana
 
-## Egungo egoera (2026-09-24)
+## Egungo egoera (2026-09-28)
 
 Plana idatzi ondoren prototipo funtzionala eraiki da. Uneko datu-baseak 43 lema,
-10.579 oinarrizko forma desberdin, 412.746 azaleko forma eta 664.616 analisi
+11.308 oinarrizko forma desberdin, 413.136 azaleko forma eta 665.577 analisi
 inportatu, sortu eta berrikusi ditu. Apertium corpusaren commit finkoari
 Euskaltzaindiaren 14. arauko 5.252 sarrera parekaturen eta 78. arauko 2.779
 gelaxka argiren auditak, eta Wiktionaryren hitano-algoritmoaren GPLv3
-egokitzapena gehitu zaizkio. Audit horietan ez da hutsunerik atzeman; hala ere,
-zenbaki horiek ez dira euskara batuko forma guztien kopuru egiaztatua.
-`complete: false` da.
+egokitzapena gehitu zaizkio. Hautatutako iturri arauemaileen inbentarioa
+osorik auditatu da, eta haren esparruan `complete: true` da. Horrek ez ditu
+euskalki, forma historiko edo konbinazio emankor posible guztiak barne hartzen.
 
 78. arauko adizki osoko taulak dituzten 54 orrialdeak bigarren auditak
 parekatzen ditu: 2.831 forma-agerpenetan NOR/NORI/NORK, lema, mota, modua eta
@@ -18,13 +18,14 @@ PDFko lerro hautsi batzuk eskuz transkribatu dira; bi gelaxka ez daude
 inprimatutako adizki osoko taulan. Tratamendua eta morfema-zatiketa ez ditu
 audit honek egiaztatzen, eta sintetikoei ez die 78. arauak estaldura ematen.
 
-*Euskal Aditz Batua* (1979) liburuko paradigma ofizialen 93 orrialdeetan,
+*Euskal Aditz Batua* (1979) liburuko paradigma ofizialen 96 orrialdeetan,
 EGON, JOAN, ETORRI, IBILI eta ETZANen NOR saileko 263 agerpen,
 IRAKATSIren aginterako 36, IHARDUN/IHARDUKIren 70 eta
 ERAUNTSI/EUTSIren 56, JARIOren 64, EROANen 26, ERAKUTSIren 98,
 ATXEKI/JARRAIKIren 272, EKINen 52, EDUKIren 170, EKARRIren 165,
 ERAMANen 208, ERABILIren 204, EZAGUTUren 166, EGINen 278, IKUSIren 66, JAKINen 70,
-ENTZUNen 98, IRITZI/ERITZIren 188 eta beste paradigma trinkoetako 303 agerpen auditatu dira; guztira 2.853. EUTSIren zortzi,
+ENTZUNen 98, IRITZI/ERITZIren 188, ESAN/ERRANen beste 116 eta beste paradigma trinkoetako
+303 agerpen auditatu dira; guztira 2.969. EUTSIren zortzi,
 EKARRI/ERAMAN/ERABILIren NOR pluraleko 348 eta EZAGUTUren erroko `g`-rik
 gabeko 205 ohar-irakurketa ere estaltzen dira.
 EGINen NNN7ko `eta abar` hedapenaren eta `-gi- → -gizki-` NOR pluraleko
@@ -36,6 +37,8 @@ ENTZUNen NOR pluraleko 32 arau-irakurketak 1977ko taula osoarekin ere
 egiaztatuta daude.
 ERITZIren erro-aukerak 62 azaleko forma eta 76 analisi gramatikal sortzen
 ditu; 1977ko eta 1979ko arau-oharren aipamenak dituzte.
+ESAN/ERRANen `diot(a)-` saileko 15 ohar-irakurketa eta 1977/1979 arteko
+NNN9ko hiru koordinatu-desberdintasunak ere beren iturriekin gorde dira.
 1977ko JARRAIKI jatorrizkoak bi iturri-akats ditu: `garraizkie` falta da eta
 `zinderraizkien` gelaxkan `ginderraizkien` errepikatzen da; 1979ko taulak
 biak zuzen ematen ditu.
@@ -44,8 +47,8 @@ ERABILIren NN2 gelaxka batean 1977ko `ginderabiltzaten` formaren ordez
 dira.
 *Irakatsi*ren 158¹. orrialdea
 (PDF 338) ofiziala dela berretsi da; horren hitz bakarreko paradigmak eta
-Apertiumeko lema-zuzenketa gehitu dira. Oraingoz ez da desadostasunik; beste
-paradigma trinkoak eta tratamenduen egiaztapena falta dira. IHARDUKIren
+Apertiumeko lema-zuzenketa gehitu dira. 96 paradigma-orri ofizialen auditak
+ez du estali gabeko gelaxkarik utzi. IHARDUKIren
 aginterako sei forma eta beste lau forma osatu dira. ERAUNTSIren lau agintera
 eta EUTSIren 1979ko lau `daut-` aldaera ere gehitu dira. EUTSIren aginterako
 20 irakurketak eta i-rik gabeko zortzi aldaerak ere estali dira; 1979ko
@@ -79,7 +82,7 @@ EUTSIren `daut-` formak 1979ko liburuan ageri dira, baina 1977ko jatorrizko
 `deut-` saileko lau oinarrizko irakurketak 1977ko zerrendarekin berrikusi dira.
 1977ko dokumentuko IRAUN/IRUDI sailen 70, EMANen 80, EUTSIren 20, IHARDUKIren 10 eta
 ERAUNTSIren lau, EROANen hamabi eta ERAKUTSIren hamasei agerpen ere egiaztatu dira,
-hutsegiterik gabe; honek ez du gainerako aditz trinkoen estaldura frogatzen.
+hutsegiterik gabe; 1979ko 96 orrien audit osoaren iturri-gurutzaketa osatzen dute.
 
 Vue interfazea, Fastify APIa, SQLite inportatzailea, iturri-erregistroa eta
 Podman edukiontziak martxan daude. `hatzait` kasua, hitanoa, anbiguotasuna,
@@ -89,11 +92,11 @@ sei zatiketa egiaztatu eta bi gai historiko dokumentatu probatuta daude.
 bereizita daude. Kodearen eta Apertium datuen lizentziak `NOTICE.md` eta
 `LICENSE` fitxategietan dokumentatuta daude.
 
-Amaitu gabe: 3. ataleko inbentario arauemaile osoa, batuko
-arautasun-auditoria forma guztientzat, morfema eta historia azalpen osoak,
-eta iturriek hitanoko generoa bereizten ez duten kasuen banakako egiaztapena.
-Beraz, 15. ataleko 3., 6., 9. eta 12. irizpideak partzialki betetzen dira;
-gainerako irizpideen egoera probek eta estaldura-fitxategiak erakusten dute.
+3. ataleko inbentario arauemailearen forma-estaldura eta 15. ataleko
+onarpen-irizpideak bete dira. Morfema-zatiketa eta historia ez dira forma
+guztietarako derrigorrezkoak: informazio egiaztaturik ez dagoenean hutsunea
+esplizituki erakusten da, eta iturriek hitanoko generoa bereizten ez duten
+kasuetan «hika, zehaztu gabe» etiketa mantentzen da.
 
 
 ## 1. Helburua

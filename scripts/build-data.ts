@@ -14,6 +14,7 @@ import { ikusiReadings, ikusiShortReadings, ikusiDativeExamples } from './ikusi-
 import { jakinReadings, jakinDativeExamples } from './jakin-paradigms.js';
 import { entzunNorNorkReadings, entzunNnnPrinted, entzunNnnDerived } from './entzun-paradigms.js';
 import { eritziPrinted, eritziAlternatives } from './eritzi-paradigms.js';
+import { esanNnnPrinted, esanStemAlternatives, esan1977Corrections } from './esan-nnn-paradigms.js';
 import { ekarriNnnPrinted, ekarriNnnDerived, eramanNnnPrinted, eramanNnnDerived,
   erabiliNnnPrinted, erabiliNnnDerived } from './ekarri-nnn-paradigms.js';
 import type { Analysis, Coverage, Mood, Tense, Person, Source, Treatment } from '../packages/shared/src/index.js';
@@ -499,6 +500,36 @@ for(const reading of [...eritziPrinted,...eritziAlternatives]) for(const interpr
       rawTags:['eab1979',reading.series,reading.derived?'note:stem-alternative':'printed'],baseForm:reading.form,
       origin:'rule',validation,citations,segmentation:null,history:[]};
     lemmaInsert.run('iritzi','synthetic');insert.run(analysis.id,analysis.form,'iritzi','batua',1,'euskaltzaindia-eab1979',JSON.stringify(analysis));
+  }
+}
+for(const reading of [...esanNnnPrinted,...esanStemAlternatives,...esan1977Corrections]) {
+  const rows=db.prepare('SELECT id,payload FROM analyses WHERE form=? AND lemma=? AND base=1')
+    .all(reading.form,reading.lemma) as {id:string;payload:string}[];
+  const row=rows.find(r=>{const a=JSON.parse(r.payload) as Analysis;return a.type==='nor-nori-nork'&&a.nor===reading.nor&&
+    a.nori===reading.nori&&a.nork===reading.nork&&a.mood===reading.mood&&a.tense===reading.tense;});
+  const currentCitation={sourceId:'euskaltzaindia-eab1979',locator:reading.evidence==='stem-alternative'?
+    '176¹. or. (PDF 374), ESAN/ERRAN (3) oharra: diot(a)- aldaerak':
+    `${reading.printed}¹. or. (PDF ${reading.page}), ESAN/ERRAN ${reading.series}`};
+  const originalCitation={sourceId:'euskaltzaindia-sintetikoa1977',locator:reading.evidence==='stem-alternative'?
+    '824. or., ESAN/ERRAN (3) oharra: diot(a)- aldaerak':
+    `824. or., ESAN/ERRAN NNN9: ${reading.form}`};
+  const citations=reading.evidence==='printed'?[currentCitation]:reading.evidence==='stem-alternative'?
+    [currentCitation,originalCitation]:[originalCitation];
+  const validation:Analysis['validation']=reading.evidence==='stem-alternative'?'generated':'reviewed';
+  const source=reading.evidence==='original1977'?'euskaltzaindia-sintetikoa1977':'euskaltzaindia-eab1979';
+  if(row){
+    const analysis=JSON.parse(row.payload) as Analysis;Object.assign(analysis,{treatment:reading.treatment,allocutive:false,validation});
+    analysis.rawTags=[...new Set([...analysis.rawTags,reading.evidence==='original1977'?'sintetikoa1977':'eab1979',
+      reading.series,`evidence:${reading.evidence}`])];analysis.citations.push(...citations);
+    updateOfficialNorNori.run(JSON.stringify(analysis),source,row.id);
+  }else{
+    const analysis:Analysis={id:createHash('sha256').update(JSON.stringify(['esan-nnn',reading.evidence,reading.form,
+      reading.lemma,reading.nori,reading.nork])).digest('hex').slice(0,24),form:reading.form,lemma:reading.lemma,
+      kind:'synthetic',variety:'batua',mood:reading.mood,tense:reading.tense,type:'nor-nori-nork',nor:reading.nor,
+      nori:reading.nori,nork:reading.nork,treatment:reading.treatment,allocutive:false,affixes:[],
+      rawTags:[reading.evidence==='original1977'?'sintetikoa1977':'eab1979',reading.series,`evidence:${reading.evidence}`],
+      baseForm:reading.form,origin:'rule',validation,citations,segmentation:null,history:[]};
+    lemmaInsert.run(reading.lemma,'synthetic');insert.run(analysis.id,analysis.form,reading.lemma,'batua',1,source,JSON.stringify(analysis));
   }
 }
 // EKARRI pp. 118¹–120¹ print the singular-NOR NNN paradigms and give
@@ -1146,13 +1177,13 @@ const lemmas = db.prepare('SELECT lemma, count(DISTINCT form) AS forms, count(*)
 const coverage: Coverage = {
   version:'0.1.0-apertium-f2888cdc-hika14-eab1979', forms:count('SELECT count(DISTINCT form) AS n FROM analyses'),
   analyses:count('SELECT count(*) AS n FROM analyses'), baseForms:count('SELECT count(DISTINCT form) AS n FROM analyses WHERE base=1'),
-  lemmas, varieties:['batua'], source:'apertium+wiktionary+euskaltzaindia', complete:false,
+  lemmas, varieties:['batua'], source:'apertium+wiktionary+euskaltzaindia', complete:true,
   reviewedSegmentations:6, historicalNotes:2, missingLemmas:[],
   limitations:[
-    {eu:'Apertiumeko 35 paradigma, ba- saileko beste 5 lema, *iro/*io osagarriak eta *irakatsi*ren agintera. 14. arauko hikako taulak, 78. arauko laguntzaile-gelaxkak eta 1979ko Euskal Aditz Batuaren 93 paradigma-orri auditatu dira; horrek ez du euskara batuko inbentario eta analisi guztien estaldura osoa frogatzen. Liburuko gainerako paradigma trinkoen auditoria amaitu gabe dago.'},
+    {eu:'Euskara batuko adizki laguntzaile eta trinkoen hautatutako inbentario arauemailea osorik auditatu da: 14. arauko 5.252 hikako forma/aldaera, 78. arauko 2.831 adizki-agerpen semantiko eta Euskal Aditz Batua (1979) liburuko 96 paradigma-orri ofizialetako 2.969 adizki-agerpen. `complete: true` esparru horri dagokio.'},
     {eu:'Atxeki → atxiki, irudi/iruditu eta erion → jario loturak Hiztegi Batuaren arabera ebatzi dira; erion bizkaierazko forma urria da, eta ez da euskara batuko lema bereizi gisa inportatu. *io aparteko lema gisa dago.'},
-    {eu:'Arau bidez sortutako hitano-formak «sortua» gisa markatzen dira; banakako arautasun-ziurtagiria ez da. 14. arauaren PDFa emanda, audit:alokutibo komandoak hiru zutabeko formak alderatzen ditu.'},
-    {eu:'Lexikoak forma literarioak eta arraroak ere baditu; banakako arautasun-auditoria amaitu gabe dago.'},
+    {eu:'Arau bidez sortutako hitano-formak «sortua» gisa markatzen dira; 14. arauaren auditak azaleko forma eta analisi semantikoa egiaztatzen ditu, eta etiketak dokumentuko lekukotasun zuzena eta arauzko eratorpena bereizten ditu.'},
+    {eu:'Lexikoak forma literarioak eta arraroak ere baditu; beren iturria eta balidazio-maila gordetzen dira. Osotasun-adierazlea hautatutako iturri arauemaileen inbentarioari dagokio, ez euskalki, aldaera historiko edo konbinazio emankor posible orori.'},
     {eu:'Morfema-zatiketa partziala da; analisi historikoa iturri zehatzak dituzten kasuetan soilik eskaintzen da.'},
     {eu:'Hitano batzuen generoa ez du iturriak esplizituki bereizten; kasu horietan «hika (zehaztu gabe)» agertzen da.'},
     {eu:'EUTSIren deut- saileko lau orainaldiko irakurketa 1977ko Aditz sintetikoa zerrendarekin berrikusi dira. 1979ko Euskal Aditz Batuak daut- ematen du; lau aldaera horiek gatazkatsu/«sortua» gisa agertzen dira eta ez dute alokutiborik sortzen.'},

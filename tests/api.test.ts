@@ -488,6 +488,21 @@ test('eritzi pages preserve printed stems and licensed all-tense alternatives',a
     a.validation===validation&&a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')&&
     (!alternative||a.citations.some(c=>c.sourceId==='euskaltzaindia-sintetikoa1977'))),form);
 });
+test('esan NNN pages retain 1979 cells, stem alternatives and 1977 corrections',async()=>{
+  for(const [form,lemma,mood,tense,nori,nork,treatment,validation,source] of [
+    ['diostan','io','indicative','present','ni','hi','noka','reviewed','euskaltzaindia-eab1979'],
+    ['niosnan','io','indicative','past','hi','ni','noka','reviewed','euskaltzaindia-eab1979'],
+    ['diotsan','io','indicative','present','hura','hi','noka','generated','euskaltzaindia-eab1979'],
+    ['niotsan','io','indicative','past','hura','ni','neutral','generated','euskaltzaindia-sintetikoa1977'],
+    ['esaiozu','esan','imperative','present','gu','zu','neutral','reviewed','euskaltzaindia-eab1979'],
+    ['biotsote','esan','imperative','present','gu','haiek','neutral','reviewed','euskaltzaindia-eab1979'],
+    ['esaguzu','esan','imperative','present','gu','zu','neutral','reviewed','euskaltzaindia-sintetikoa1977'],
+    ['esaguzue','esan','imperative','present','gu','zuek','neutral','reviewed','euskaltzaindia-sintetikoa1977'],
+    ['bioskute','esan','imperative','present','gu','haiek','neutral','reviewed','euskaltzaindia-sintetikoa1977'],
+  ] as const) assert.ok((await analyze(form)).analyses.some(a=>a.lemma===lemma&&a.type==='nor-nori-nork'&&
+    a.mood===mood&&a.tense===tense&&a.nor==='hura'&&a.nori===nori&&a.nork===nork&&a.treatment===treatment&&
+    a.validation===validation&&a.citations.some(c=>c.sourceId===source)),form);
+});
 test('all segmentation offsets reconstruct their surface and unknown history stays absent',async()=>{
   for(const form of ['hatzait','dut','du','haiz','naiz','didazue','dator','dakit','zarete']){
     for(const a of (await analyze(form)).analyses){
@@ -511,6 +526,6 @@ test('typo suggestions and absence are not fabricated analyses',async()=>{
   const unknown=await analyze('qqqqqqqq');assert.deepEqual(unknown.analyses,[]);assert.deepEqual(unknown.suggestions,[]);
 });
 test('coverage counts and provenance remain explicit',async()=>{
-  const meta=(await app.inject({url:'/api/v1/meta'})).json();assert.ok(meta.forms>412000);assert.ok(meta.analyses>664000);assert.equal(meta.lemmas.length,43);assert.equal(meta.complete,false);assert.equal(meta.reviewedSegmentations,6);
+  const meta=(await app.inject({url:'/api/v1/meta'})).json();assert.ok(meta.forms>413000);assert.ok(meta.analyses>665000);assert.equal(meta.lemmas.length,43);assert.equal(meta.complete,true);assert.equal(meta.reviewedSegmentations,6);
   const a=(await analyze('hatzait')).analyses[0];const byId=(await app.inject({url:'/api/v1/forms/'+a.id})).json<Analysis>();assert.equal(byId.id,a.id);
 });

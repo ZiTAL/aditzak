@@ -12,6 +12,7 @@ import { ikusiReadings, ikusiShortReadings, ikusiDativeExamples } from './ikusi-
 import { jakinReadings, jakinDativeExamples } from './jakin-paradigms.js';
 import { entzunNorNorkReadings, entzunNnnPrinted, entzunNnnDerived } from './entzun-paradigms.js';
 import { eritziPrinted, eritziAlternatives } from './eritzi-paradigms.js';
+import { esanNnnPrinted, esanStemAlternatives, esan1977Corrections } from './esan-nnn-paradigms.js';
 import { ekarriNnnPrinted, ekarriNnnDerived, eramanNnnPrinted, eramanNnnDerived,
   erabiliNnnPrinted, erabiliNnnDerived } from './ekarri-nnn-paradigms.js';
 
@@ -321,6 +322,38 @@ for(const reading of eritziAlternatives) for(const interpretation of reading.int
     a.validation==='generated'&&a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')&&
     a.citations.some(c=>c.sourceId==='euskaltzaindia-sintetikoa1977')))
     failures.push(`PDF ${reading.page}: ERITZIren ${reading.form} erro-aldaera falta edo desegokia da`);
+}
+for(const reading of esanNnnPrinted) {
+  checked++;
+  const compact=(pages[reading.page-1]??'').toLowerCase().replace(/\s+/g,'');
+  const toka=reading.treatment==='noka'?esanNnnPrinted.find(r=>r.page===reading.page&&r.series===reading.series&&
+    r.nori===reading.nori&&r.nork===reading.nork&&r.treatment==='toka')?.form:null;
+  const paired=toka&&[toka+'/n',toka+'ln',toka+'kln',toka+'m',toka+'man',toka+'mat',toka+'magu',toka+'mate']
+    .some(value=>compact.includes(value));
+  const aliases:Record<string,string>={esaiezu:'esalezu',esaiezue:'esalezue',
+    diosat:'dios(n)at',diosnat:'dios(n)at',diosagu:'dios(n)agu',diosnagu:'dios(n)agu',
+    diosate:'dios(n)ate',diosnate:'dios(n)ate',niosan:'nios(n)an',niosnan:'nios(n)an',
+    ziosan:'zios(n)an',ziosnan:'zios(n)an',geniosan:'genios(n)an',geniosnan:'genios(n)an',
+    ziosaten:'zios(n)aten',ziosnaten:'zios(n)aten',biosate:'bios(n)ate',biosnate:'bios(n)ate'};
+  if(!compact.includes(reading.form)&&!compact.includes(aliases[reading.form]??'\0')&&!paired)
+    failures.push(`PDF ${reading.page}: ESAN/ERRAN ${reading.series} ${reading.form} falta da`);
+  const analyses=(lookup.all(reading.form,'batua') as {payload:string}[]).map(r=>JSON.parse(r.payload) as Analysis);
+  if(!analyses.some(a=>a.lemma===reading.lemma&&a.type==='nor-nori-nork'&&a.nor==='hura'&&a.nori===reading.nori&&
+    a.nork===reading.nork&&a.treatment===reading.treatment&&a.mood===reading.mood&&a.tense===reading.tense&&
+    a.validation==='reviewed'&&a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')))
+    failures.push(`PDF ${reading.page}: ESAN/ERRAN ${reading.series} ${reading.form} analisia falta edo desegokia da`);
+}
+const esanStemNote=(pages[373]??'').toLowerCase().replace(/\s+/g,'');
+if(!esanStemNote.includes('diotsat,niotsan,diotsagu,ziotsaten'))
+  failures.push('PDF 374: ESAN/ERRAN diot(a)- aldaeren ohar-aingura falta da');
+for(const reading of esanStemAlternatives) {
+  noteVariants++;
+  const analyses=(lookup.all(reading.form,'batua') as {payload:string}[]).map(r=>JSON.parse(r.payload) as Analysis);
+  if(!analyses.some(a=>a.lemma==='io'&&a.type==='nor-nori-nork'&&a.nor==='hura'&&a.nori==='hura'&&
+    a.nork===reading.nork&&a.treatment===reading.treatment&&a.mood==='indicative'&&a.tense===reading.tense&&
+    a.validation==='generated'&&a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')&&
+    a.citations.some(c=>c.sourceId==='euskaltzaindia-sintetikoa1977')))
+    failures.push(`PDF 374: ESAN/ERRAN ${reading.form} diot(a)- aldaera falta edo desegokia da`);
 }
 for(const reading of [...ekarriNnnPrinted,...ekarriNnnDerived,...eramanNnnPrinted,...eramanNnnDerived,
   ...erabiliNnnPrinted,...erabiliNnnDerived]){
@@ -899,6 +932,20 @@ if(originalPdf) {
   const eritzi1977=(originalPages[39]??'').toLowerCase().replace(/\s+/g,'');
   if(!eritzi1977.includes('deritza-zeinderitzo-etaderitze-zeinderizte-')||!eritzi1977.includes('denboraguztietan'))
     failures.push('1977ko PDF 40: ERITZIren erro-aukeraren ohar-aingura falta da');
+  const esan1977=((originalPages[40]??'')+(originalPages[41]??'')).toLowerCase().replace(/\s+/g,'');
+  originalChecked++;
+  if(!esan1977.includes('diotsat,niotsan,diotsagu,ziotsaten'))
+    failures.push('1977ko PDF 41: ESAN/ERRAN diot(a)- aldaeren ohar-aingura falta da');
+  for(const reading of esan1977Corrections) {
+    originalChecked++;
+    if(!esan1977.includes(reading.form))
+      failures.push(`1977ko PDF 41/42: ESAN/ERRAN ${reading.form} falta da`);
+    const analyses=(lookup.all(reading.form,'batua') as {payload:string}[]).map(r=>JSON.parse(r.payload) as Analysis);
+    if(!analyses.some(a=>a.lemma==='esan'&&a.type==='nor-nori-nork'&&a.nor==='hura'&&a.nori==='gu'&&
+      a.nork===reading.nork&&a.mood==='imperative'&&a.validation==='reviewed'&&
+      a.citations.some(c=>c.sourceId==='euskaltzaindia-sintetikoa1977')))
+      failures.push(`1977ko PDF 41/42: ESAN/ERRAN ${reading.form} analisia/aipamena falta edo desegokia da`);
+  }
   originalChecked++;
   const erabili1977=originalPages[34]??''; // printed p. 818, ERABILI
   if(!erabili1977.includes('ERABILI')||!new RegExp(`(?<![a-z])${erabili1977Reading.form}(?![a-z])`).test(erabili1977))
@@ -1068,5 +1115,5 @@ if(originalPdf) {
   }
 }
 db.close();
-console.log(`${pageSpecs.length + 68 + norkPages.length + 2} paradigma-orri ofizial, ${checked} adizki-agerpen eta ${noteVariants} ohar-aldaera; 1977ko jatorrizkoan ${originalPdf?originalChecked+' agerpen, iturri-desberdintasunak eta arau-aldaerak egiaztatuak':'ez da auditatu'}; ${failures.length} hutsune/desadostasun`);
+console.log(`${pageSpecs.length + 71 + norkPages.length + 2} paradigma-orri ofizial, ${checked} adizki-agerpen eta ${noteVariants} ohar-aldaera; 1977ko jatorrizkoan ${originalPdf?originalChecked+' agerpen, iturri-desberdintasunak eta arau-aldaerak egiaztatuak':'ez da auditatu'}; ${failures.length} hutsune/desadostasun`);
 if (failures.length) { for (const failure of failures.slice(0, 100)) console.error(failure); process.exitCode = 1; }
