@@ -13,6 +13,7 @@ import { eginNorNorkReadings, egin1977Readings, eginNnnPrinted, eginNnnEllipsis,
 import { ikusiReadings, ikusiShortReadings, ikusiDativeExamples } from './ikusi-paradigms.js';
 import { jakinReadings, jakinDativeExamples } from './jakin-paradigms.js';
 import { entzunNorNorkReadings, entzunNnnPrinted, entzunNnnDerived } from './entzun-paradigms.js';
+import { eritziPrinted, eritziAlternatives } from './eritzi-paradigms.js';
 import { ekarriNnnPrinted, ekarriNnnDerived, eramanNnnPrinted, eramanNnnDerived,
   erabiliNnnPrinted, erabiliNnnDerived } from './ekarri-nnn-paradigms.js';
 import type { Analysis, Coverage, Mood, Tense, Person, Source, Treatment } from '../packages/shared/src/index.js';
@@ -474,6 +475,30 @@ for(const reading of [...entzunNnnPrinted,...entzunNnnDerived]) {
         reading.derived?'rule:plural-nor':'printed'],baseForm:reading.form,origin:'rule',validation,citations,
       segmentation:null,history:[]};
     lemmaInsert.run('entzun','synthetic');insert.run(analysis.id,analysis.form,'entzun','batua',1,'euskaltzaindia-eab1979',JSON.stringify(analysis));
+  }
+}
+for(const reading of [...eritziPrinted,...eritziAlternatives]) for(const interpretation of reading.interpretations) {
+  const rows=db.prepare('SELECT id,payload FROM analyses WHERE form=? AND lemma=? AND base=1').all(reading.form,'iritzi') as {id:string;payload:string}[];
+  const row=rows.find(r=>{const a=JSON.parse(r.payload) as Analysis;return a.type==='nor-nori-nork'&&a.nor===reading.nor&&
+    a.nori===reading.nori&&a.nork===reading.nork&&a.mood===interpretation.mood&&a.tense===interpretation.tense;});
+  const currentCitation={sourceId:'euskaltzaindia-eab1979',locator:reading.derived?
+    `${reading.printed}¹. or. (PDF ${reading.page}), ERITZI ${reading.series}: deritzo-/deritza- eta deritze-/derizte- aukera`:
+    `${reading.printed}¹. or. (PDF ${reading.page}), ERITZI ${reading.series}`};
+  const citations=reading.derived?[currentCitation,{sourceId:'euskaltzaindia-sintetikoa1977',
+    locator:'823. or., ERITZI (1) oharra: deritza-/deritzo- eta deritze-/derizte-, denbora guztietan'}]:[currentCitation];
+  const validation:Analysis['validation']=reading.derived||reading.series==='NNN4'?'generated':'reviewed';
+  if(row){
+    const analysis=JSON.parse(row.payload) as Analysis;Object.assign(analysis,{treatment:reading.treatment,allocutive:false,validation});
+    analysis.rawTags=[...new Set([...analysis.rawTags,'eab1979',reading.series,reading.derived?'note:stem-alternative':'printed'])];
+    analysis.citations.push(...citations);updateOfficialNorNori.run(JSON.stringify(analysis),'euskaltzaindia-eab1979',row.id);
+  }else{
+    const analysis:Analysis={id:createHash('sha256').update(JSON.stringify(['eab1979-eritzi',reading.form,interpretation.mood,
+      interpretation.tense,reading.nori,reading.nork])).digest('hex').slice(0,24),form:reading.form,lemma:'iritzi',kind:'synthetic',
+      variety:'batua',mood:interpretation.mood,tense:interpretation.tense,type:'nor-nori-nork',nor:reading.nor,
+      nori:reading.nori,nork:reading.nork,treatment:reading.treatment,allocutive:false,affixes:[],
+      rawTags:['eab1979',reading.series,reading.derived?'note:stem-alternative':'printed'],baseForm:reading.form,
+      origin:'rule',validation,citations,segmentation:null,history:[]};
+    lemmaInsert.run('iritzi','synthetic');insert.run(analysis.id,analysis.form,'iritzi','batua',1,'euskaltzaindia-eab1979',JSON.stringify(analysis));
   }
 }
 // EKARRI pp. 118¹–120¹ print the singular-NOR NNN paradigms and give
@@ -1124,7 +1149,7 @@ const coverage: Coverage = {
   lemmas, varieties:['batua'], source:'apertium+wiktionary+euskaltzaindia', complete:false,
   reviewedSegmentations:6, historicalNotes:2, missingLemmas:[],
   limitations:[
-    {eu:'Apertiumeko 35 paradigma, ba- saileko beste 5 lema, *iro/*io osagarriak eta *irakatsi*ren agintera. 14. arauko hikako taulak, 78. arauko laguntzaile-gelaxkak eta 1979ko Euskal Aditz Batuaren 88 paradigma-orri auditatu dira; horrek ez du euskara batuko inbentario eta analisi guztien estaldura osoa frogatzen. Liburuko gainerako paradigma trinkoen auditoria amaitu gabe dago.'},
+    {eu:'Apertiumeko 35 paradigma, ba- saileko beste 5 lema, *iro/*io osagarriak eta *irakatsi*ren agintera. 14. arauko hikako taulak, 78. arauko laguntzaile-gelaxkak eta 1979ko Euskal Aditz Batuaren 93 paradigma-orri auditatu dira; horrek ez du euskara batuko inbentario eta analisi guztien estaldura osoa frogatzen. Liburuko gainerako paradigma trinkoen auditoria amaitu gabe dago.'},
     {eu:'Atxeki → atxiki, irudi/iruditu eta erion → jario loturak Hiztegi Batuaren arabera ebatzi dira; erion bizkaierazko forma urria da, eta ez da euskara batuko lema bereizi gisa inportatu. *io aparteko lema gisa dago.'},
     {eu:'Arau bidez sortutako hitano-formak «sortua» gisa markatzen dira; banakako arautasun-ziurtagiria ez da. 14. arauaren PDFa emanda, audit:alokutibo komandoak hiru zutabeko formak alderatzen ditu.'},
     {eu:'Lexikoak forma literarioak eta arraroak ere baditu; banakako arautasun-auditoria amaitu gabe dago.'},

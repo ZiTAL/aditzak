@@ -130,11 +130,11 @@ egiaztatzen, eta aditz trinkoak beste iturri batzuen mende daude;
 `complete: false` mantentzen da.
 
 Euskaltzaindiaren [*Euskal Aditz Batua* (1979)](https://www.euskaltzaindia.eus/dok/iker_jagon_tegiak/6833.pdf)
-liburuko ezkerreko paradigma ofizialen 88 orrialdetan, EGON, JOAN, ETORRI,
+liburuko ezkerreko paradigma ofizialen 93 orrialdetan, EGON, JOAN, ETORRI,
 IBILI, ATXEKI/ATXIKI, JARRAIKI, EKIN, ETZAN, EDUKI, EKARRI, JARIO, EROAN, ERAKUTSI,
 IRAKATSI, UTZI, IGORRI, EROSI,
 IHARDETSI, IHARDUN, IHARDUKI, ERAUNTSI, EUTSI, IRAUN, IRUDI/IRUDITU,
-ERAMAN, ERABILI, EZAGUTU, EGIN, IKUSI, JAKIN, ENTZUN, EMAN eta ESAN/ERRAN aditzen 2.665 adizki-agerpen eta ohar bidezko 919 aldaera
+ERAMAN, ERABILI, EZAGUTU, EGIN, IKUSI, JAKIN, ENTZUN, IRITZI/ERITZI, EMAN eta ESAN/ERRAN aditzen 2.853 adizki-agerpen eta ohar bidezko 995 aldaera
 alderatu dira: azaleko forma,
 lema eta dagokien NOR/NORI/NORK pertsonak ez dute desadostasunik. N1/N2,
 N3, N4, N5 eta N9 sailen modu/aldia ere egiaztatzen dira; N4', N7 eta N10
@@ -224,6 +224,13 @@ taula-irakurketa auditatu dira. `a` gabeko zortzi aldaerak eta oharrean
 hitzez hitz emandako hiru datibo-adibideak gehitu dira; datibozko paradigma
 osoa ez da hiru adibidetatik asmatu. NOR pluraleko NN9 aukera analitikoak
 ez dira hitz bakarreko sarrerak.
+
+ERITZIren 171¹–175¹ orrialdeetako NNN1, NNN2, NNN3, NNN4 eta NNN9ko
+188 taula-irakurketa `iritzi` lema batuarekin auditatu dira. Iturriek
+denbora guztietarako baimentzen dituzten `deritzo-/deritza-` eta
+`deritze-/derizte-` aukerek 62 azaleko forma eta 76 analisi gramatikal
+sortzen dituzte; arauaren lekukotasuna eta banaka inprimatutako formak
+bereizita aipatzen dira.
 
 JAKINen 144¹–145¹ orrialdeetako NN1, NN2, NN3, NN4 eta NN9ko 70
 taula-irakurketa auditatu dira. Datibozko flexioari buruzko oharrean

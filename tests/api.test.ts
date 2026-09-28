@@ -474,6 +474,20 @@ test('entzun pages preserve NN and source-corroborated plural-NOR NNN9',async()=
     a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')&&
     (!original||a.citations.some(c=>c.sourceId==='euskaltzaindia-sintetikoa1977'))),form);
 });
+test('eritzi pages preserve printed stems and licensed all-tense alternatives',async()=>{
+  for(const [form,mood,tense,nori,nork,treatment,validation,alternative] of [
+    ['deriztan','indicative','present','ni','hi','noka','reviewed',false],
+    ['deritzon','indicative','present','hura','hi','noka','reviewed',false],
+    ['deritzan','indicative','present','hura','hi','noka','generated',true],
+    ['nerizten','indicative','past','haiek','ni','neutral','generated',true],
+    ['heritzake','consequence','present','hura','hi','hika','generated',true],
+    ['beritza','imperative','present','hura','hura','neutral','generated',true],
+    ['berizte','imperative','present','haiek','hura','neutral','generated',true],
+  ] as const) assert.ok((await analyze(form)).analyses.some(a=>a.lemma==='iritzi'&&a.type==='nor-nori-nork'&&
+    a.mood===mood&&a.tense===tense&&a.nor==='hura'&&a.nori===nori&&a.nork===nork&&a.treatment===treatment&&
+    a.validation===validation&&a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')&&
+    (!alternative||a.citations.some(c=>c.sourceId==='euskaltzaindia-sintetikoa1977'))),form);
+});
 test('all segmentation offsets reconstruct their surface and unknown history stays absent',async()=>{
   for(const form of ['hatzait','dut','du','haiz','naiz','didazue','dator','dakit','zarete']){
     for(const a of (await analyze(form)).analyses){
