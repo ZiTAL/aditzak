@@ -460,6 +460,20 @@ test('jakin pages preserve hika, plural NOR and cited dative examples',async()=>
     a.tense===tense&&a.nor===nor&&a.nori===nori&&a.nork===nork&&a.treatment===treatment&&
     a.validation===validation&&a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')),form);
 });
+test('entzun pages preserve NN and source-corroborated plural-NOR NNN9',async()=>{
+  for(const [form,type,mood,tense,nor,nori,nork,treatment,validation,original] of [
+    ['dantzun','nor-nork','indicative','present','hura',null,'hi','noka','reviewed',false],
+    ['nentzuzke','nor-nork','consequence','present','haiek',null,'ni','neutral','generated',false],
+    ['bentzuzki','nor-nork','imperative','present','haiek',null,'hura','neutral','reviewed',false],
+    ['bentzukinate','nor-nori-nork','imperative','present','hura','hi','haiek','noka','reviewed',false],
+    ['bentzuzkinate','nor-nori-nork','imperative','present','haiek','hi','haiek','noka','generated',true],
+    ['entzuzkiozu','nor-nori-nork','imperative','present','haiek','hura','zu','neutral','generated',true],
+  ] as const) assert.ok((await analyze(form)).analyses.some(a=>a.lemma==='entzun'&&a.type===type&&
+    a.mood===mood&&a.tense===tense&&
+    a.nor===nor&&a.nori===nori&&a.nork===nork&&a.treatment===treatment&&a.validation===validation&&
+    a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')&&
+    (!original||a.citations.some(c=>c.sourceId==='euskaltzaindia-sintetikoa1977'))),form);
+});
 test('all segmentation offsets reconstruct their surface and unknown history stays absent',async()=>{
   for(const form of ['hatzait','dut','du','haiz','naiz','didazue','dator','dakit','zarete']){
     for(const a of (await analyze(form)).analyses){

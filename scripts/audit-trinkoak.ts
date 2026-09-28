@@ -10,6 +10,7 @@ import { eginNorNorkReadings, egin1977Readings, eginNnnPrinted, eginNnnEllipsis,
   egin1977NnnReading } from './egin-paradigms.js';
 import { ikusiReadings, ikusiShortReadings, ikusiDativeExamples } from './ikusi-paradigms.js';
 import { jakinReadings, jakinDativeExamples } from './jakin-paradigms.js';
+import { entzunNorNorkReadings, entzunNnnPrinted, entzunNnnDerived } from './entzun-paradigms.js';
 import { ekarriNnnPrinted, ekarriNnnDerived, eramanNnnPrinted, eramanNnnDerived,
   erabiliNnnPrinted, erabiliNnnDerived } from './ekarri-nnn-paradigms.js';
 
@@ -166,7 +167,8 @@ for(const reading of earlyNorNoriReadings) {
     failures.push(`PDF ${reading.page}: ${reading.form} analisia falta edo desegokia da (${reading.nor}, ${reading.nori})`);
 }
 const officialNorNorkReadings=[...edukiReadings,...ekarriNorNorkReadings,...eramanNorNorkReadings,
-  ...erabiliNorNorkReadings,...ezagutuReadings,...eginNorNorkReadings,...ikusiReadings,...jakinReadings];
+  ...erabiliNorNorkReadings,...ezagutuReadings,...eginNorNorkReadings,...ikusiReadings,...jakinReadings,
+  ...entzunNorNorkReadings];
 for(const reading of officialNorNorkReadings){
   checked++;
   const source=pages[reading.page-1]??'';const compact=source.toLowerCase().replace(/\s+/g,'');
@@ -264,6 +266,30 @@ for(const reading of [...eginNnnEllipsis,...eginNnnPlural]) for(const interpreta
     a.nork===reading.nork&&a.treatment===reading.treatment&&!a.allocutive&&a.mood===interpretation.mood&&
     a.tense===interpretation.tense&&a.validation==='generated'&&a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')))
     failures.push(`PDF ${reading.page}: EGIN ${reading.series} ${reading.evidence} ${reading.form} falta edo desegokia da`);
+}
+for(const reading of entzunNnnPrinted) {
+  checked++;
+  const compact=(pages[317]??'').toLowerCase().replace(/\s+/g,'');
+  const toka=reading.treatment==='noka'?entzunNnnPrinted.find(r=>r.nori===reading.nori&&r.nork===reading.nork&&r.treatment==='toka')?.form:null;
+  const paired=toka&&[toka+'/n',toka+'m',toka+'man',toka+'iii',toka+'mate'].some(value=>compact.includes(value));
+  if(!compact.includes(reading.form)&&!paired)failures.push(`PDF 318: ENTZUN NNN9 ${reading.form} falta da`);
+  const analyses=(lookup.all(reading.form,'batua') as {payload:string}[]).map(r=>JSON.parse(r.payload) as Analysis);
+  if(!analyses.some(a=>a.lemma==='entzun'&&a.type==='nor-nori-nork'&&a.nor==='hura'&&a.nori===reading.nori&&
+    a.nork===reading.nork&&a.treatment===reading.treatment&&a.mood==='imperative'&&a.tense==='present'&&
+    a.validation==='reviewed'&&a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')))
+    failures.push(`PDF 318: ENTZUN NNN9 ${reading.form} analisia falta edo desegokia da`);
+}
+const entzunRule=(pages[317]??'').toLowerCase().replace(/\s+/g,'');
+if(!entzunRule.includes('ntzu->-ntzuzki-')||!entzunRule.includes('ntzuki->-ntzuzki-'))
+  failures.push('PDF 318: ENTZUNen NOR plurala egiteko arau-aingurak falta dira');
+for(const reading of entzunNnnDerived) {
+  noteVariants++;
+  const analyses=(lookup.all(reading.form,'batua') as {payload:string}[]).map(r=>JSON.parse(r.payload) as Analysis);
+  if(!analyses.some(a=>a.lemma==='entzun'&&a.type==='nor-nori-nork'&&a.nor==='haiek'&&a.nori===reading.nori&&
+    a.nork===reading.nork&&a.treatment===reading.treatment&&a.mood==='imperative'&&a.tense==='present'&&
+    a.validation==='generated'&&a.citations.some(c=>c.sourceId==='euskaltzaindia-eab1979')&&
+    a.citations.some(c=>c.sourceId==='euskaltzaindia-sintetikoa1977')))
+    failures.push(`PDF 318: ENTZUNen NOR pluraleko ${reading.form} falta edo desegokia da`);
 }
 for(const reading of [...ekarriNnnPrinted,...ekarriNnnDerived,...eramanNnnPrinted,...eramanNnnDerived,
   ...erabiliNnnPrinted,...erabiliNnnDerived]){
@@ -830,6 +856,14 @@ if(originalPdf) {
     a.nori==='haiek'&&a.nork==='haiek'&&a.mood==='imperative'&&a.validation==='reviewed'&&
     a.citations.some(c=>c.sourceId==='euskaltzaindia-sintetikoa1977')))
     failures.push(`1977ko PDF 47: EGIN ${egin1977NnnReading.form} analisia/aipamena falta edo desegokia da`);
+  const entzun1977=((originalPages[51]??'')+(originalPages[52]??'')).toLowerCase().replace(/\s+/g,'');
+  for(const reading of entzunNnnDerived) {
+    originalChecked++;
+    const toka=reading.treatment==='noka'?entzunNnnDerived.find(r=>r.nori===reading.nori&&r.nork===reading.nork&&r.treatment==='toka')?.form:null;
+    if(!entzun1977.includes(reading.form)&&!(toka&&
+      (entzun1977.includes(toka+'/-n')||entzun1977.includes(toka+'/-kinate'))))
+      failures.push(`1977ko PDF 52/53: ENTZUN ${reading.form} falta da`);
+  }
   originalChecked++;
   const erabili1977=originalPages[34]??''; // printed p. 818, ERABILI
   if(!erabili1977.includes('ERABILI')||!new RegExp(`(?<![a-z])${erabili1977Reading.form}(?![a-z])`).test(erabili1977))
@@ -999,5 +1033,5 @@ if(originalPdf) {
   }
 }
 db.close();
-console.log(`${pageSpecs.length + 60 + norkPages.length + 2} paradigma-orri ofizial, ${checked} adizki-agerpen eta ${noteVariants} ohar-aldaera; 1977ko jatorrizkoan ${originalPdf?originalChecked+' agerpen, EUTSI/JARRAIKI/ERABILI/EGIN iturri-desberdintasunak egiaztatuak':'ez da auditatu'}; ${failures.length} hutsune/desadostasun`);
+console.log(`${pageSpecs.length + 63 + norkPages.length + 2} paradigma-orri ofizial, ${checked} adizki-agerpen eta ${noteVariants} ohar-aldaera; 1977ko jatorrizkoan ${originalPdf?originalChecked+' agerpen, EUTSI/JARRAIKI/ERABILI/EGIN iturri-desberdintasunak eta ENTZUNen NOR plurala egiaztatuak':'ez da auditatu'}; ${failures.length} hutsune/desadostasun`);
 if (failures.length) { for (const failure of failures.slice(0, 100)) console.error(failure); process.exitCode = 1; }
