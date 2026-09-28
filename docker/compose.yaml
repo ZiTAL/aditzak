@@ -28,7 +28,9 @@ services:
       NO_PROXY: api,localhost,127.0.0.1
       no_proxy: api,localhost,127.0.0.1
     ports:
-      - "127.0.0.1:${WEB_PORT:-8080}:8080"
+      # Single public entry point: Caddy serves the UI and proxies /api and
+      # /health to the private API container. The API has no published port.
+      - "${WEB_BIND_ADDRESS:-127.0.0.1}:${WEB_PORT:-8006}:8080"
     depends_on:
       api:
         condition: service_healthy

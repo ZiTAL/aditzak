@@ -49,7 +49,8 @@ Argitaratutako Releaseko `SHA256SUMS` fitxategitik hartu
 `aditzak.sqlite.zst` lerroko hash-a. `docker/.env` fitxategian ezarri:
 
 ```dotenv
-WEB_PORT=8080
+WEB_BIND_ADDRESS=127.0.0.1
+WEB_PORT=8006
 DATABASE_RELEASE_URL=https://github.com/ZiTAL/aditzak/releases/download/db-v0.1.0/aditzak.sqlite.zst
 DATABASE_RELEASE_SHA256=HEMEN_64_KARAKTEREKO_SHA256_BALIOA
 ```
@@ -60,8 +61,8 @@ Ondoren:
 cd docker
 podman compose -f compose.yaml -f compose.release.yaml up --build -d
 podman compose -f compose.yaml -f compose.release.yaml ps
-curl --fail http://127.0.0.1:8080/health
-curl --fail http://127.0.0.1:8080/api/v1/meta
+curl --fail http://127.0.0.1:8006/health
+curl --fail http://127.0.0.1:8006/api/v1/meta
 ```
 
 `compose.release.yaml` fitxategiak URL edo hash hutsa duen deploy-a berehala
@@ -101,10 +102,13 @@ podman compose up --build -d
 
 ## 5. Internetera irekitzea
 
-Uneko Compose konfigurazioak `127.0.0.1` helbidean soilik argitaratzen du weba.
+Uneko Compose konfigurazioak frontend-a, APIa eta `/health` sarrera bakarrean
+argitaratzen ditu: `127.0.0.1:8006`. API edukiontziaren `3000` ataka Compose
+sare pribatuan bakarrik dago. LANetik `8006` atakara zuzenean sartzeko,
+`WEB_BIND_ADDRESS=0.0.0.0` ezarri `docker/.env` fitxategian.
 Produkzio publikorako bi aukera daude:
 
-- zerbitzariaren kanpoko reverse proxy/TLS geruzak `127.0.0.1:8080` helbidera
+- zerbitzariaren kanpoko reverse proxy/TLS geruzak `127.0.0.1:8006` helbidera
   bideratzea; edo
 - Caddyri benetako domeinua eman eta 80/443 atakak argitaratzea.
 

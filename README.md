@@ -14,7 +14,8 @@ cd docker
 podman compose up --build -d
 ```
 
-Weba: <http://localhost:8080>. APIa webaren `/api/v1/` azpian dago. Lehen
+Weba: <http://localhost:8006>. APIa webaren `/api/v1/` azpian dago, ataka
+beretik; API edukiontziak ez du aparteko atakarik argitaratzen. Lehen
 eraikuntzak Internet behar du npm paketeak eta Apertiumeko corpus finkatua
 deskargatzeko; ondorengo erabilerak ez du Internet behar.
 
@@ -36,7 +37,9 @@ ondoren edukiontzi zaharrak ordezteko `podman compose down` eta jarraian
 `podman compose up --build -d` exekutatu. Datu-basea irudiaren barruan dago;
 komando horrek ez du bilaketa-historiarik ezabatzen, ez baita gordetzen.
 
-Ataka `127.0.0.1` helbidean bakarrik argitaratzen da. Edukiontziak ez dira root
+Ataka `127.0.0.1` helbidean bakarrik argitaratzen da lehenespenez. LANetik
+zuzenean sartzeko, ezarri `WEB_BIND_ADDRESS=0.0.0.0` `docker/.env` fitxategian.
+Edukiontziak ez dira root
 gisa exekutatzen, fitxategi-sistema irakurtzeko soilik dute, eta ez dago kanpoko
 datu-base zerbitzaririk. SQLite irudiaren barruan dago; bilaketek ez dute daturik
 aldatzen, eta ez da erabiltzailearen bilaketa-historiarik gordetzen.
@@ -91,7 +94,7 @@ corpusaren datu-basea sortzeko eta Vue/Vite frontenda browser-erako biltzeko.
 ```sh
 npm run check
 npm run test:e2e
-E2E_BASE_URL=http://127.0.0.1:8080 npm run test:e2e
+E2E_BASE_URL=http://127.0.0.1:8006 npm run test:e2e
 ```
 
 E2E probek `/usr/bin/chromium` erabiltzen dute. Beste kokaleku bat:
@@ -333,11 +336,11 @@ dira.
 ## APIa
 
 ```sh
-curl 'http://localhost:8080/api/v1/analyze?form=hatzait'
-curl 'http://localhost:8080/api/v1/analyze?form=nauk&variety=batua'
-curl 'http://localhost:8080/api/v1/meta'
-curl 'http://localhost:8080/api/v1/sources'
-curl 'http://localhost:8080/health'
+curl 'http://localhost:8006/api/v1/analyze?form=hatzait'
+curl 'http://localhost:8006/api/v1/analyze?form=nauk&variety=batua'
+curl 'http://localhost:8006/api/v1/meta'
+curl 'http://localhost:8006/api/v1/sources'
+curl 'http://localhost:8006/health'
 ```
 
 - `GET /api/v1/analyze?form=…&variety=batua`: analisi guztiak, forma normalizatua,
