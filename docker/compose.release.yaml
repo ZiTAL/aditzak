@@ -1,0 +1,7 @@
+# Release deployment: refuse to build unless both immutable database inputs exist.
+services:
+  api:
+    build:
+      args:
+        DATABASE_RELEASE_URL: ${DATABASE_RELEASE_URL:?DATABASE_RELEASE_URL is required}
+        DATABASE_RELEASE_SHA256: ${DATABASE_RELEASE_SHA256:?DATABASE_RELEASE_SHA256 is required}

@@ -5,6 +5,9 @@ services:
       context: ..
       dockerfile: docker/Containerfile
       target: api
+      args:
+        DATABASE_RELEASE_URL: ${DATABASE_RELEASE_URL:-}
+        DATABASE_RELEASE_SHA256: ${DATABASE_RELEASE_SHA256:-}
     read_only: true
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]

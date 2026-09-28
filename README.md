@@ -62,6 +62,12 @@ Docker konfigurazioko fitxategiak `docker/` karpetan daude. Erroko
 denez, Dockerrek eta Podmanek bertan bilatzen dute bazterketa-zerrenda;
 edukia `docker/.dockerignore` fitxategian dago.
 
+Produkzioan datu-basea GitHub Release finko batetik hartzeko, ikus
+[deploy-gida](docs/DEPLOY.md). Fluxuak Releaseko assetaren SHA-256 balioa,
+SQLite integritatea eta `complete: true` egiaztatzen ditu build-ean; Releasea
+prestatzeko GitHub Actions workflowak draft bat sortzen du, inoiz ez argitalpen
+automatikoa.
+
 ## Garapen lokala
 
 Node.js 24 edo berriagoa, npm eta curl behar dira. Komando hauek proiektuaren
@@ -358,7 +364,9 @@ data/sources.json  Bibliografia eta erabilera/lizentzia metadatuak
 data/vendor/       Jatorrizko corpusa; sortua, Git-etik kanpo
 data/generated/    SQLite eta estaldura-txostena; sortuak, Git-etik kanpo
 tests/             Unitate, API eta arakatzaile-probak
-docker/            Containerfile, Compose, Caddy eta eraikuntza-konfigurazioa
+docker/            Containerfile, Compose, Release deploy-a, Caddy eta build-a
+.github/workflows/ Datu-basearen draft Release automatizazioa
+docs/DEPLOY.md      Release, deploy, eguneraketa eta rollback gida
 PLAN.md            Garapena hasi aurreko plana eta amaierako egoera
 ```
 

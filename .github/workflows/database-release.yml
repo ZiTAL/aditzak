@@ -1,0 +1,141 @@
+name: Prepare database release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Draft Release etiketa, adibidez db-v0.1.0"
+        required: true
+        default: "db-v0.1.0"
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: database-release
+  cancel-in-progress: false
+
+jobs:
+  database-release:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    env:
+      RELEASE_TAG: ${{ inputs.tag }}
+    steps:
+      - name: Checkout exact source revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install audit and packaging tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes poppler-utils sqlite3 zstd
+
+      - name: Validate release tag
+        run: |
+          [[ "$RELEASE_TAG" =~ ^db-v[0-9]+\.[0-9]+\.[0-9]+([.-][A-Za-z0-9._-]+)?$ ]] || {
+            echo "Etiketa baliogabea: $RELEASE_TAG" >&2
+            exit 1
+          }
+
+      - name: Build and test database and application
+        run: |
+          npm ci
+          npm run data:fetch
+          npm run data:build
+          npm run check
+
+      - name: Download normative audit documents
+        run: |
+          mkdir -p "$RUNNER_TEMP/aditzak-audit"
+          curl --fail --show-error --location --retry 4 \
+            https://www.euskaltzaindia.eus/dok/arauak/Araua_0014.pdf \
+            -o "$RUNNER_TEMP/aditzak-audit/arau14.pdf"
+          curl --fail --show-error --location --retry 4 \
+            https://www.euskaltzaindia.eus/dok/arauak/Araua_0078.pdf \
+            -o "$RUNNER_TEMP/aditzak-audit/arau78.pdf"
+          curl --fail --show-error --location --retry 4 \
+            https://www.euskaltzaindia.eus/dok/iker_jagon_tegiak/6833.pdf \
+            -o "$RUNNER_TEMP/aditzak-audit/euskal-aditz-batua.pdf"
+          curl --fail --show-error --location --retry 4 \
+            https://www.euskaltzaindia.eus/dok/euskera/7623.pdf \
+            -o "$RUNNER_TEMP/aditzak-audit/aditz-sintetikoa-1977.pdf"
+
+      - name: Audit complete normative inventory
+        run: |
+          npm run audit:alokutibo -- "$RUNNER_TEMP/aditzak-audit/arau14.pdf"
+          npm run audit:laguntzaile -- "$RUNNER_TEMP/aditzak-audit/arau78.pdf"
+          npm run audit:laguntzaile:semantika -- "$RUNNER_TEMP/aditzak-audit/arau78.pdf"
+          npm run audit:trinkoak -- \
+            "$RUNNER_TEMP/aditzak-audit/euskal-aditz-batua.pdf" \
+            "$RUNNER_TEMP/aditzak-audit/aditz-sintetikoa-1977.pdf"
+
+      - name: Package release assets
+        run: scripts/package-database-release.sh "$RUNNER_TEMP/database-release" "$RELEASE_TAG"
+
+      - name: Prepare release notes
+        run: |
+          node -e "const c=require('./data/generated/coverage.json');process.stdout.write([
+            '# Aditzak datu-basea',
+            '',
+            '- Bertsioa: '+c.version,
+            '- complete: '+c.complete,
+            '- Azaleko formak: '+c.forms,
+            '- Analisiak: '+c.analyses,
+            '- Oinarrizko formak: '+c.baseForms,
+            '- Lemak: '+c.lemmas.length,
+            '',
+            'SHA-256 balioak SHA256SUMS fitxategian daude. Release hau draft gisa sortu da; berrikusi assetak argitaratu aurretik.',
+            '',
+          ].join('\n'));" > "$RUNNER_TEMP/database-release/RELEASE_NOTES.md"
+
+      - name: Transfer verified assets to release job
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: database-release-${{ inputs.tag }}
+          path: ${{ runner.temp }}/database-release/
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
+
+  create-draft-release:
+    needs: database-release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    env:
+      RELEASE_TAG: ${{ inputs.tag }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Download verified assets
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: database-release-${{ inputs.tag }}
+          path: ${{ runner.temp }}/release-bundle
+
+      - name: Create draft GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo "Release etiketa lehendik badago: $RELEASE_TAG" >&2
+            exit 1
+          fi
+          gh release create "$RELEASE_TAG" \
+            "$RUNNER_TEMP/release-bundle/aditzak.sqlite.zst" \
+            "$RUNNER_TEMP/release-bundle/coverage.json" \
+            "$RUNNER_TEMP/release-bundle/aditzak-database-source.tar.zst" \
+            "$RUNNER_TEMP/release-bundle/SHA256SUMS" \
+            --draft \
+            --target "$GITHUB_SHA" \
+            --title "Aditzak database $RELEASE_TAG" \
+            --notes-file "$RUNNER_TEMP/release-bundle/RELEASE_NOTES.md"
