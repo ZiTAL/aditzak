@@ -1,37 +1,37 @@
-# Deploy-a GitHub Releaseko datu-basearekin
+# Deployment with a GitHub Release database
 
-Produkzioko bideak aplikazioaren kodea eta SQLite artefaktua bereizten ditu.
-Datu-basea GitHub Release bateko asset konprimitu eta aldaezin bat da; APIaren
-OCI irudiak build garaian deskargatu, SHA-256 bidez egiaztatu, deskonprimitu eta
-`PRAGMA integrity_check` exekutatzen du. Deno prozesuak ez du sarerik behar
-datu-basea lortzeko.
+The production workflow keeps the application code separate from the SQLite
+artifact. The database is an immutable, compressed asset attached to a GitHub
+Release. During the build, the API OCI image downloads it, verifies its SHA-256
+checksum, decompresses it, and runs `PRAGMA integrity_check`. The Deno process
+does not need network access to obtain the database at runtime.
 
-## 1. Draft Release-a prestatu
+## 1. Prepare a draft Release
 
-GitHubeko **Actions → Prepare database release → Run workflow** aukeran eman
-`db-v0.1.0` gisako etiketa. Workflowak:
+In GitHub, go to **Actions → Prepare database release → Run workflow** and enter
+a tag such as `db-v0.1.0`. The workflow:
 
-1. datu-basea iturburu finkoetatik eraikitzen du;
-2. testak eta lau estaldura-auditak exekutatzen ditu;
-3. SQLite integritatea eta `complete: true` egiaztatzen ditu;
-4. assetak konprimitu eta SHA-256 balioak sortzen ditu;
-5. GitHub Release bat **draft** egoeran sortzen du.
+1. builds the database from pinned sources;
+2. runs the tests and all four coverage audits;
+3. verifies SQLite integrity and `complete: true`;
+4. compresses the assets and generates SHA-256 checksums;
+5. creates a GitHub Release in **draft** state.
 
-Ez du Release-a automatikoki publiko egiten. Draft-a berrikusi eta GitHubeko
-**Publish release** ekintza eskuz erabili behar da.
+The workflow never publishes the Release automatically. Review the draft and
+use GitHub's **Publish release** action manually.
 
-Assetak:
+The assets are:
 
-- `aditzak.sqlite.zst`: produkzioko datu-base konprimitu eta aldaezina;
-- `coverage.json`: estaldura-laburpena;
-- `SHA256SUMS`: hiru asseten hash kriptografikoak;
-- `aditzak-database-source.tar.zst`: kodea, datu-iturri birbanagarriak,
-  lizentziak eta datu-basea berreraikitzeko scriptak.
+- `aditzak.sqlite.zst`: the compressed, immutable production database;
+- `coverage.json`: the coverage summary;
+- `SHA256SUMS`: cryptographic hashes for the three content assets;
+- `aditzak-database-source.tar.zst`: the code, redistributable data sources,
+  licenses, and scripts required to rebuild the database.
 
-Euskaltzaindiaren PDFak auditatzeko deskargatzen dira, baina ez dira Releasean
-birbanatzen.
+The Euskaltzaindia PDFs are downloaded for auditing, but they are not
+redistributed in the Release.
 
-Asset berak lokalean prestatzeko, Release-rik sortu gabe:
+To prepare the same assets locally without creating a Release:
 
 ```sh
 npm run data:fetch
@@ -39,23 +39,23 @@ npm run data:build
 npm run data:release:package -- /tmp/aditzak-release db-v0.1.0
 ```
 
-Irteera-direktorioak hutsik egon behar du, lehengo asset bat isilean ez
-gainidazteko. Git lan-zuhaitzak ere garbi egon behar du; horrela source
-artxiboa eta datu-basea commit beretik datozela bermatzen da.
+The output directory must be empty so that an existing asset cannot be
+silently overwritten. The Git working tree must also be clean; this guarantees
+that the source archive and database come from the same commit.
 
-## 2. Release finkoarekin eraiki eta abiarazi
+## 2. Build and start with a pinned Release
 
-Argitaratutako Releaseko `SHA256SUMS` fitxategitik hartu
-`aditzak.sqlite.zst` lerroko hash-a. `docker/.env` fitxategian ezarri:
+Copy the hash from the `aditzak.sqlite.zst` line in the published Release's
+`SHA256SUMS` file. Set the following values in `docker/.env`:
 
 ```dotenv
 WEB_BIND_ADDRESS=127.0.0.1
 WEB_PORT=8006
 DATABASE_RELEASE_URL=https://github.com/ZiTAL/aditzak/releases/download/db-v0.1.0/aditzak.sqlite.zst
-DATABASE_RELEASE_SHA256=HEMEN_64_KARAKTEREKO_SHA256_BALIOA
+DATABASE_RELEASE_SHA256=REPLACE_WITH_THE_64_CHARACTER_SHA256
 ```
 
-Ondoren:
+Then run:
 
 ```sh
 cd docker
@@ -65,11 +65,14 @@ curl --fail http://127.0.0.1:8006/health
 curl --fail http://127.0.0.1:8006/api/v1/meta
 ```
 
-`compose.release.yaml` fitxategiak URL edo hash hutsa duen deploy-a berehala
-geldiarazten du. Containerfileak hash okerra, SQLite hondatua edo
-`complete: true` ez duen datu-basea ere baztertzen du.
+`compose.release.yaml` immediately rejects a deployment with a missing URL or
+checksum. The Containerfile also rejects an incorrect checksum, a corrupt
+SQLite database, or a database whose coverage metadata is not
+`complete: true`.
 
-Proxy korporatiboaren CA behar bada:
+No proxy or custom CA configuration is required on a normal server. If a
+corporate TLS inspection proxy requires a custom CA, explicitly add the
+optional override:
 
 ```sh
 podman compose \
@@ -79,38 +82,41 @@ podman compose \
   up --build -d
 ```
 
-## 3. Eguneraketa eta rollback-a
+Do not use `compose.ca.yaml` on a server without such a proxy.
 
-Datu-base berria zabaltzeko, aldatu bi aldagaiak Release berriaren URL eta
-hash-era, eta errepikatu `up --build -d`. API irudi berriak datu-base berria
-barruan izango du; web irudia ez da datu-basearen mende eraikitzen.
+## 3. Updates and rollbacks
 
-Rollback-erako, aurreko Releasearen URL eta hash-a berrezarri eta komando bera
-exekutatu. URLak etiketa zehatz bat erabiltzen du eta SHA-256 balioak edukia
-finkatzen du; ez erabili `latest/download` URL aldakorrik.
+To deploy a new database, change both variables to the new Release URL and
+checksum, then run `up --build -d` again. The new API image will contain the
+new database; the web image is built independently of the database.
 
-## 4. Tokiko fallback-a
+To roll back, restore the previous Release URL and checksum and run the same
+command. The URL uses an exact tag, and the SHA-256 checksum pins its contents.
+Do not use a mutable `latest/download` URL.
 
-`DATABASE_RELEASE_URL` eta `DATABASE_RELEASE_SHA256` biak hutsik badaude,
-oinarrizko `compose.yaml` fluxuak datu-basea iturburuetatik eraikitzen jarraitzen
-du. Bat bakarrik ematea errorea da.
+## 4. Local fallback
+
+When both `DATABASE_RELEASE_URL` and `DATABASE_RELEASE_SHA256` are empty, the
+base `compose.yaml` workflow builds the database from its sources. Providing
+only one of the two values is an error.
 
 ```sh
 cd docker
 podman compose up --build -d
 ```
 
-## 5. Internetera irekitzea
+## 5. Network exposure
 
-Uneko Compose konfigurazioak frontend-a, APIa eta `/health` sarrera bakarrean
-argitaratzen ditu: `127.0.0.1:8006`. API edukiontziaren `3000` ataka Compose
-sare pribatuan bakarrik dago. LANetik `8006` atakara zuzenean sartzeko,
-`WEB_BIND_ADDRESS=0.0.0.0` ezarri `docker/.env` fitxategian.
-Produkzio publikorako bi aukera daude:
+The current Compose configuration exposes the frontend, API, and `/health`
+through a single entry point: `127.0.0.1:8006`. The API container's port `3000`
+is available only inside the private Compose network. To access port `8006`
+directly from the LAN, set `WEB_BIND_ADDRESS=0.0.0.0` in `docker/.env`.
 
-- zerbitzariaren kanpoko reverse proxy/TLS geruzak `127.0.0.1:8006` helbidera
-  bideratzea; edo
-- Caddyri benetako domeinua eman eta 80/443 atakak argitaratzea.
+There are two options for a public production deployment:
 
-Domeinua eta zerbitzariaren sare-eredua aukeratu arte ez da komeni bigarren
-aukera automatikoki ezartzea.
+- route the server's external reverse proxy/TLS layer to
+  `127.0.0.1:8006`; or
+- configure Caddy with a real domain and publish ports 80 and 443.
+
+The second option should not be enabled automatically until the domain and the
+server's network model have been chosen.
